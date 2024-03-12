@@ -1,0 +1,13 @@
+[workspace]
+members = ["schema", "lib"]
+resolver = "2"
+
+[workspace.package]
+version = "1.0.0"
+authors = ["m00n"]
+edition = "2021"
+license = "MPL"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"]}
+strum = "0.26"
