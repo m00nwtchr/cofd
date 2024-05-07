@@ -1,8 +1,9 @@
+use std::ops::Index;
 use serde::{Deserialize, Serialize};
 
 use crate::is_zero;
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub enum Wound {
 	#[default]
 	None,
@@ -11,34 +12,9 @@ pub enum Wound {
 	Aggravated,
 }
 
-impl Wound {
-	#[must_use]
-	pub fn inc(&self) -> Wound {
-		match self {
-			Wound::None => Wound::Bashing,
-			Wound::Bashing => Wound::Lethal,
-			Wound::Lethal => Wound::Aggravated,
-			Wound::Aggravated => Wound::Aggravated,
-		}
-	}
-
-	#[must_use]
-	pub fn poke(&self) -> Wound {
-		if let Wound::Aggravated = self {
-			Wound::None
-		} else {
-			self.inc()
-		}
-	}
-
-	pub fn poke_mut(&mut self) {
-		*self = self.poke();
-	}
-}
-
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default)]
-pub struct Damage {
+pub struct WoundTracker {
 	#[serde(skip_serializing_if = "is_zero")]
 	aggravated: u16,
 	#[serde(skip_serializing_if = "is_zero")]
@@ -47,15 +23,7 @@ pub struct Damage {
 	bashing: u16,
 }
 
-impl Damage {
-	pub fn new(bashing: u16, lethal: u16, aggravated: u16) -> Self {
-		Self {
-			aggravated,
-			lethal,
-			bashing,
-		}
-	}
-
+impl WoundTracker {
 	pub fn get(&self, wound: &Wound) -> u16 {
 		match wound {
 			Wound::None => 0,
@@ -65,26 +33,11 @@ impl Damage {
 		}
 	}
 
-	pub fn get_i(&self, i: usize) -> Wound {
-		// println!("{i}");
-		if i < self.aggravated as usize {
-			Wound::Aggravated
-		} else if i >= self.aggravated as usize && i < (self.aggravated + self.lethal) as usize {
-			Wound::Lethal
-		} else if i >= (self.aggravated + self.lethal) as usize
-			&& i < (self.aggravated + self.lethal + self.bashing) as usize
-		{
-			Wound::Bashing
-		} else {
-			Wound::None
-		}
-	}
-
-	pub fn sum(&self) -> u16 {
+	pub fn total(&self) -> u16 {
 		self.bashing + self.lethal + self.aggravated
 	}
 
-	pub fn dec(&mut self, wound: &Wound) {
+	pub fn decrement(&mut self, wound: &Wound) {
 		match wound {
 			Wound::None => {}
 			Wound::Bashing => {
@@ -105,7 +58,7 @@ impl Damage {
 		}
 	}
 
-	pub fn inc(&mut self, wound: &Wound) {
+	pub fn increment(&mut self, wound: &Wound) {
 		match wound {
 			Wound::None => {}
 			Wound::Bashing => self.bashing += 1,
@@ -134,6 +87,24 @@ impl Damage {
 					self.aggravated -= 1;
 				}
 			}
+		}
+	}
+}
+
+impl Index<usize> for WoundTracker {
+	type Output = Wound;
+
+	fn index(&self, index: usize) -> &Self::Output {
+		if index < self.aggravated as usize {
+			&Wound::Aggravated
+		} else if index >= self.aggravated as usize && index < (self.aggravated + self.lethal) as usize {
+			&Wound::Lethal
+		} else if index >= (self.aggravated + self.lethal) as usize
+			&& index < (self.aggravated + self.lethal + self.bashing) as usize
+		{
+			&Wound::Bashing
+		} else {
+			&Wound::None
 		}
 	}
 }

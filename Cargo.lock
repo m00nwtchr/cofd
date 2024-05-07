@@ -60,6 +60,7 @@ dependencies = [
 name = "cofd"
 version = "0.1.0"
 dependencies = [
+ "cofd-schema",
  "serde",
 ]
 

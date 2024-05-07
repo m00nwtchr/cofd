@@ -9,5 +9,7 @@ edition = "2021"
 license = "MPL"
 
 [workspace.dependencies]
-serde = { version = "1", features = ["derive"]}
+cofd-schema = { path = "schema" }
+
+serde = { version = "1", features = ["derive"] }
 strum = "0.26"
