@@ -19,3 +19,12 @@ pub enum Auspice {
 	Ithaeur,
 	Rahu,
 }
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, EnumString, PartialEq, Eq, Hash)]
+pub enum Form {
+	Hishu,
+	Dalu,
+	Gauru,
+	Urhan,
+	Urshul,
+}

@@ -1,12 +1,13 @@
+use derive_more::From;
 use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 use strum::{AsRefStr, Display, EnumIs, EnumString};
+use crate::traits::SkillMarker;
 
-pub(crate) trait SkillMarker {}
 
 #[derive(
-	Debug, Clone, Copy, Serialize, Deserialize, EnumString, Display, AsRefStr, PartialEq, Eq,
+	Hash, Debug, Clone, Copy, Serialize, Deserialize, EnumString, Display, AsRefStr, PartialEq, Eq,
 )]
 #[strum(ascii_case_insensitive)]
 pub enum MentalSkill {
@@ -24,7 +25,7 @@ pub enum MentalSkill {
 }
 
 #[derive(
-	Debug, Clone, Copy, Serialize, Deserialize, EnumString, Display, AsRefStr, PartialEq, Eq,
+	Hash, Debug, Clone, Copy, Serialize, Deserialize, EnumString, Display, AsRefStr, PartialEq, Eq,
 )]
 #[strum(ascii_case_insensitive)]
 pub enum PhysicalSkill {
@@ -43,7 +44,7 @@ pub enum PhysicalSkill {
 }
 
 #[derive(
-	Debug, Clone, Copy, Serialize, Deserialize, EnumString, Display, AsRefStr, PartialEq, Eq,
+	Hash, Debug, Clone, Copy, Serialize, Deserialize, EnumString, Display, AsRefStr, PartialEq, Eq,
 )]
 #[strum(ascii_case_insensitive)]
 pub enum SocialSkill {
@@ -58,7 +59,17 @@ pub enum SocialSkill {
 }
 
 #[derive(
-	Debug, Clone, Copy, Serialize, Deserialize, EnumIs, PartialEq, Eq, derive_more::Display,
+	Hash,
+	Debug,
+	Clone,
+	Copy,
+	Serialize,
+	Deserialize,
+	EnumIs,
+	PartialEq,
+	Eq,
+	derive_more::Display,
+	From,
 )]
 #[serde(untagged)]
 pub enum Skill {
@@ -70,7 +81,6 @@ pub enum Skill {
 impl SkillMarker for MentalSkill {}
 impl SkillMarker for PhysicalSkill {}
 impl SkillMarker for SocialSkill {}
-impl SkillMarker for Skill {}
 
 impl FromStr for Skill {
 	type Err = strum::ParseError;
@@ -90,23 +100,5 @@ impl AsRef<str> for Skill {
 			Skill::Physical(s) => s.as_ref(),
 			Skill::Social(s) => s.as_ref(),
 		}
-	}
-}
-
-impl From<MentalSkill> for Skill {
-	fn from(value: MentalSkill) -> Self {
-		Skill::Mental(value)
-	}
-}
-
-impl From<PhysicalSkill> for Skill {
-	fn from(value: PhysicalSkill) -> Self {
-		Skill::Physical(value)
-	}
-}
-
-impl From<SocialSkill> for Skill {
-	fn from(value: SocialSkill) -> Self {
-		Skill::Social(value)
 	}
 }

@@ -1,3 +1,4 @@
+use derive_more::From;
 use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
@@ -6,7 +7,7 @@ use strum::{AsRefStr, Display, EnumIs, EnumString};
 pub(crate) trait AttributeMarker {}
 
 #[derive(
-	Debug, Clone, Copy, Serialize, Deserialize, EnumString, Display, AsRefStr, PartialEq, Eq,
+	Hash, Debug, Clone, Copy, Serialize, Deserialize, EnumString, Display, AsRefStr, PartialEq, Eq,
 )]
 #[strum(ascii_case_insensitive)]
 pub enum MentalAttribute {
@@ -16,7 +17,7 @@ pub enum MentalAttribute {
 }
 
 #[derive(
-	Debug, Clone, Copy, Serialize, Deserialize, EnumString, Display, AsRefStr, PartialEq, Eq,
+	Hash, Debug, Clone, Copy, Serialize, Deserialize, EnumString, Display, AsRefStr, PartialEq, Eq,
 )]
 #[strum(ascii_case_insensitive)]
 pub enum PhysicalAttribute {
@@ -26,7 +27,7 @@ pub enum PhysicalAttribute {
 }
 
 #[derive(
-	Debug, Clone, Copy, Serialize, Deserialize, EnumString, Display, AsRefStr, PartialEq, Eq,
+	Hash, Debug, Clone, Copy, Serialize, Deserialize, EnumString, Display, AsRefStr, PartialEq, Eq,
 )]
 #[strum(ascii_case_insensitive)]
 pub enum SocialAttribute {
@@ -36,7 +37,17 @@ pub enum SocialAttribute {
 }
 
 #[derive(
-	Debug, Clone, Copy, Serialize, Deserialize, EnumIs, PartialEq, Eq, derive_more::Display,
+	Hash,
+	Debug,
+	Clone,
+	Copy,
+	Serialize,
+	Deserialize,
+	EnumIs,
+	PartialEq,
+	Eq,
+	derive_more::Display,
+	From,
 )]
 #[serde(untagged)]
 pub enum Attribute {
@@ -48,7 +59,6 @@ pub enum Attribute {
 impl AttributeMarker for MentalAttribute {}
 impl AttributeMarker for PhysicalAttribute {}
 impl AttributeMarker for SocialAttribute {}
-impl AttributeMarker for Attribute {}
 
 impl AsRef<str> for Attribute {
 	fn as_ref(&self) -> &str {
@@ -68,23 +78,5 @@ impl FromStr for Attribute {
 			.map(Into::into)
 			.or_else(|_| PhysicalAttribute::from_str(s).map(Into::into))
 			.or_else(|_| SocialAttribute::from_str(s).map(Into::into))
-	}
-}
-
-impl From<MentalAttribute> for Attribute {
-	fn from(value: MentalAttribute) -> Self {
-		Attribute::Mental(value)
-	}
-}
-
-impl From<PhysicalAttribute> for Attribute {
-	fn from(value: PhysicalAttribute) -> Self {
-		Attribute::Physical(value)
-	}
-}
-
-impl From<SocialAttribute> for Attribute {
-	fn from(value: SocialAttribute) -> Self {
-		Attribute::Social(value)
 	}
 }
