@@ -61,7 +61,9 @@ name = "cofd"
 version = "0.1.0"
 dependencies = [
  "cofd-schema",
+ "derive_more",
  "serde",
+ "sos",
 ]
 
 [[package]]
@@ -215,6 +217,14 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.52",
+]
+
+[[package]]
+name = "sos"
+version = "0.1.0"
+dependencies = [
+ "itertools",
+ "once_cell",
 ]
 
 [[package]]

@@ -1,7 +1,7 @@
-use std::ops::Index;
 use serde::{Deserialize, Serialize};
+use std::ops::Index;
 
-use crate::is_zero;
+use super::is_zero;
 
 #[derive(Default, Debug, Copy, Clone)]
 pub enum Wound {
@@ -97,7 +97,9 @@ impl Index<usize> for WoundTracker {
 	fn index(&self, index: usize) -> &Self::Output {
 		if index < self.aggravated as usize {
 			&Wound::Aggravated
-		} else if index >= self.aggravated as usize && index < (self.aggravated + self.lethal) as usize {
+		} else if index >= self.aggravated as usize
+			&& index < (self.aggravated + self.lethal) as usize
+		{
 			&Wound::Lethal
 		} else if index >= (self.aggravated + self.lethal) as usize
 			&& index < (self.aggravated + self.lethal + self.bashing) as usize

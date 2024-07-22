@@ -9,5 +9,8 @@ license.workspace = true
 
 [dependencies]
 cofd-schema.workspace = true
+derive_more.workspace = true
+
+sos = { path = "../../../sos" }
 
 serde.workspace = true

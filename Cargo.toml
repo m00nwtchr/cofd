@@ -13,3 +13,6 @@ cofd-schema = { path = "schema" }
 
 serde = { version = "1", features = ["derive"] }
 strum = "0.26"
+
+
+derive_more = { version = "0.99", default-features = false, features = ["display", "from"] }
