@@ -5,9 +5,13 @@ authors.workspace = true
 edition.workspace = true
 license.workspace = true
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-cofd-schema.workspace = true
+serde = { version = "1", features = ["derive"] }
+erased-serde = "0.3"
+convert_case = "0.6"
 
-serde.workspace = true
+cofd-util.workspace = true
+cofd-macros.workspace = true
+
+[dev-dependencies]
+ron.workspace = true

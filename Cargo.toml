@@ -1,5 +1,5 @@
 [workspace]
-members = ["schema", "lib"]
+members = ["schema", "lib", "derive", "macros", "util"]
 resolver = "2"
 
 [workspace.package]
@@ -10,6 +10,11 @@ license = "MPL"
 
 [workspace.dependencies]
 cofd-schema = { path = "schema" }
+cofd-macros = { path = "macros" }
+cofd-util = { path = "util" }
+cofd-derive = { path = "derive" }
 
 serde = { version = "1", features = ["derive"] }
 strum = "0.26"
+
+ron = "0.9.0-alpha.0"
