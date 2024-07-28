@@ -1,3 +1,4 @@
+use crate::prelude::Skill;
 use serde::{Deserialize, Serialize};
 use strum::EnumString;
 
@@ -18,4 +19,12 @@ pub enum Auspice {
 	Irraka,
 	Ithaeur,
 	Rahu,
+	// _Custom {
+	// 	name: String,
+	// 	skills: [Skill; 3],
+	// 	renown: Renown,
+	// 	// moon_gift: MoonGift,
+	// 	// shadow_gifts: Box<[ShadowGift; 2]>,
+	// 	// hunters_aspect: HuntersAspect,
+	// },
 }

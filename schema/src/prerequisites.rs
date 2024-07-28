@@ -4,10 +4,11 @@ use derive_more::Display;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
+use crate::splat::Template;
 use crate::{
 	dot_range::{dots_to_num, num_to_dots},
 	error,
-	traits::{Template, Trait},
+	traits::Trait,
 };
 
 /**

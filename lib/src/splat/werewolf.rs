@@ -1,14 +1,148 @@
+use cofd_schema::traits::DerivedTrait;
+use cofd_util::VariantName;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use cofd_util::VariantName;
-
-use super::{ability::Ability, Merit, NameKey, Splat};
+use super::{ability::Ability, Merit, NameKey, Splat, SplatTrait, XSplat, YSplat, ZSplat};
+use crate::splat::mage::{Legacy, Mage, MageMerit, Order, Path};
 use crate::{
 	character::modifier::{Modifier, ModifierOp, ModifierTarget},
 	dice_pool::DicePool,
 	prelude::*,
 };
+
+#[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(default)]
+pub struct Werewolf {
+	pub auspice: Option<Auspice>,
+	pub tribe: Option<Tribe>,
+	pub lodge: Option<Lodge>,
+
+	skill_bonus: Option<Skill>,
+	pub form: Form,
+	// pub moon_gifts: BTreeMap<MoonGift, AbilityVal>,
+	pub triggers: KuruthTriggers,
+	pub moon_gifts: HashMap<MoonGift, u16>,
+	pub shadow_gifts: Vec<ShadowGift>,
+	pub wolf_gifts: Vec<WolfGift>,
+	pub rites: Vec<Rite>,
+}
+
+impl Werewolf {
+	pub fn new() -> Self {
+		Werewolf::default()
+	}
+
+	#[must_use]
+	pub fn with_auspice(mut self, auspice: Auspice) -> Self {
+		self.auspice = Some(auspice);
+		self
+	}
+
+	#[must_use]
+	pub fn with_tribe(mut self, tribe: Tribe) -> Self {
+		self.tribe = Some(tribe);
+		self
+	}
+
+	#[must_use]
+	pub fn with_lodge(mut self, lodge: Lodge) -> Self {
+		self.lodge = Some(lodge);
+		self
+	}
+
+	pub fn skill_bonus(&self) -> Option<&Skill> {
+		if self.auspice.is_some() {
+			self.skill_bonus.as_ref()
+		} else {
+			None
+		}
+	}
+
+	pub fn set_skill_bonus(&mut self, skill: Skill) {
+		if let Some(auspice) = &self.auspice {
+			if auspice.skills().contains(&skill) {
+				self.skill_bonus = self.skill_bonus
+			}
+		}
+	}
+}
+
+impl SplatTrait for Werewolf {
+	fn set_xsplat(&mut self, splat: Option<XSplat>) {
+		match splat {
+			Some(XSplat::Werewolf(auspice)) => self.auspice = Some(auspice),
+			_ => self.auspice = None,
+		}
+	}
+
+	fn set_ysplat(&mut self, splat: Option<YSplat>) {
+		match splat {
+			Some(YSplat::Werewolf(tribe)) => self.tribe = Some(tribe),
+			_ => self.tribe = None,
+		}
+	}
+
+	fn set_zsplat(&mut self, splat: Option<ZSplat>) {
+		match splat {
+			Some(ZSplat::Werewolf(lodge)) => self.lodge = Some(lodge),
+			_ => self.lodge = None,
+		}
+	}
+
+	fn xsplats(&self) -> Vec<XSplat> {
+		Auspice::all().into_iter().map(Into::into).collect()
+	}
+
+	fn ysplats(&self) -> Vec<YSplat> {
+		Tribe::all().into_iter().map(Into::into).collect()
+	}
+
+	fn zsplats(&self) -> Vec<ZSplat> {
+		Lodge::all().into_iter().map(Into::into).collect()
+	}
+
+	fn custom_xsplat(&self, name: String) -> Option<XSplat> {
+		Some(
+			Auspice::_Custom(
+				name,
+				[Skill::Academics, Skill::AnimalKen, Skill::Athletics],
+				Renown::Cunning,
+				MoonGift::_Custom(String::from("Custom")),
+				Box::new([ShadowGift::Death, ShadowGift::Dominance]),
+				HuntersAspect::Monstrous,
+			)
+			.into(),
+		)
+	}
+
+	fn custom_ysplat(&self, name: String) -> Option<YSplat> {
+		Some(
+			Tribe::_Custom(
+				name,
+				Renown::Cunning,
+				Box::new([
+					ShadowGift::Death,
+					ShadowGift::Dominance,
+					ShadowGift::Elementals,
+				]),
+			)
+			.into(),
+		)
+	}
+
+	fn custom_zsplat(&self, name: String) -> Option<ZSplat> {
+		Some(Lodge::_Custom(name).into())
+	}
+
+	fn all_abilities(&self) -> Option<Vec<Ability>> {
+		Some(Renown::all().into_iter().map(Into::into).collect())
+	}
+
+	fn merits(&self) -> Vec<Merit> {
+		WerewolfMerit::all().map(Into::into).to_vec()
+	}
+}
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct KuruthTriggerSet {
@@ -112,20 +246,6 @@ impl KuruthTriggers {
 	}
 }
 
-#[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(default)]
-pub struct WerewolfData {
-	pub skill_bonus: Option<Skill>,
-	pub form: Form,
-	// pub moon_gifts: BTreeMap<MoonGift, AbilityVal>,
-	pub triggers: KuruthTriggers,
-	pub hunters_aspect: Option<HuntersAspect>,
-	pub moon_gifts: HashMap<MoonGift, u16>,
-	pub shadow_gifts: Vec<ShadowGift>,
-	pub wolf_gifts: Vec<WolfGift>,
-	pub rites: Vec<Rite>,
-}
-
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, VariantName)]
 pub enum HuntersAspect {
 	Monstrous,
@@ -168,7 +288,7 @@ pub enum Auspice {
 }
 
 impl Auspice {
-	pub fn get_skills(&self) -> &[Skill; 3] {
+	pub fn skills(&self) -> &[Skill; 3] {
 		match self {
 			Auspice::Cahalith => &[Skill::Crafts, Skill::Expression, Skill::Persuasion],
 			Auspice::Elodoth => &[Skill::Empathy, Skill::Investigation, Skill::Politics],
@@ -387,13 +507,13 @@ pub enum Gift {
 }
 
 impl MoonGift {
-	pub fn get_modifiers(&self, value: u16) -> Vec<crate::character::modifier::Modifier> {
+	pub fn get_modifiers(&self, value: u16) -> Vec<Modifier> {
 		match self {
 			// MoonGift::Crescent => vec![],
 			MoonGift::Full => {
 				if value > 2 {
 					vec![Modifier::new(
-						Trait::Health,
+						Trait::DerivedTrait(DerivedTrait::Health),
 						Ability::Renown(Renown::Purity),
 						ModifierOp::Add,
 					)]
@@ -461,37 +581,57 @@ impl Form {
 	#[allow(clippy::too_many_lines)]
 	pub fn get_modifiers(&self) -> Vec<Modifier> {
 		match self {
-			Form::Hishu => vec![Modifier::new(Trait::Perception, 1, ModifierOp::Add)],
+			Form::Hishu => vec![Modifier::new(
+				Trait::DerivedTrait(DerivedTrait::Perception),
+				1,
+				ModifierOp::Add,
+			)],
 			Form::Dalu => vec![
 				Modifier::new(Attribute::Strength, 1, ModifierOp::Add),
 				Modifier::new(Attribute::Stamina, 1, ModifierOp::Add),
 				Modifier::new(Attribute::Manipulation, -1, ModifierOp::Add),
-				Modifier::new(Trait::Size, 1, ModifierOp::Add),
-				Modifier::new(Trait::Perception, 2, ModifierOp::Add),
+				Modifier::new(Trait::DerivedTrait(DerivedTrait::Size), 1, ModifierOp::Add),
+				Modifier::new(
+					Trait::DerivedTrait(DerivedTrait::Perception),
+					2,
+					ModifierOp::Add,
+				),
 			],
 			Form::Gauru => vec![
 				Modifier::new(Attribute::Strength, 3, ModifierOp::Add),
 				Modifier::new(Attribute::Dexterity, 1, ModifierOp::Add),
 				Modifier::new(Attribute::Stamina, 2, ModifierOp::Add),
-				Modifier::new(Trait::Size, 2, ModifierOp::Add),
-				Modifier::new(Trait::Perception, 3, ModifierOp::Add),
+				Modifier::new(Trait::DerivedTrait(DerivedTrait::Size), 2, ModifierOp::Add),
+				Modifier::new(
+					Trait::DerivedTrait(DerivedTrait::Perception),
+					3,
+					ModifierOp::Add,
+				),
 			],
 			Form::Urshul => vec![
 				Modifier::new(Attribute::Strength, 2, ModifierOp::Add),
 				Modifier::new(Attribute::Dexterity, 2, ModifierOp::Add),
 				Modifier::new(Attribute::Stamina, 2, ModifierOp::Add),
 				Modifier::new(Attribute::Manipulation, -1, ModifierOp::Add),
-				Modifier::new(Trait::Size, 1, ModifierOp::Add),
-				Modifier::new(Trait::Speed, 3, ModifierOp::Add),
-				Modifier::new(Trait::Perception, 3, ModifierOp::Add),
+				Modifier::new(Trait::DerivedTrait(DerivedTrait::Size), 1, ModifierOp::Add),
+				Modifier::new(Trait::DerivedTrait(DerivedTrait::Speed), 3, ModifierOp::Add),
+				Modifier::new(
+					Trait::DerivedTrait(DerivedTrait::Perception),
+					3,
+					ModifierOp::Add,
+				),
 			],
 			Form::Urhan => vec![
 				Modifier::new(Attribute::Dexterity, 2, ModifierOp::Add),
 				Modifier::new(Attribute::Stamina, 1, ModifierOp::Add),
 				Modifier::new(Attribute::Manipulation, -1, ModifierOp::Add),
-				Modifier::new(Trait::Size, -1, ModifierOp::Add),
-				Modifier::new(Trait::Speed, 3, ModifierOp::Add),
-				Modifier::new(Trait::Perception, 4, ModifierOp::Add),
+				Modifier::new(Trait::DerivedTrait(DerivedTrait::Size), -1, ModifierOp::Add),
+				Modifier::new(Trait::DerivedTrait(DerivedTrait::Speed), 3, ModifierOp::Add),
+				Modifier::new(
+					Trait::DerivedTrait(DerivedTrait::Perception),
+					4,
+					ModifierOp::Add,
+				),
 			],
 		}
 	}
@@ -500,34 +640,89 @@ impl Form {
 		// match self {
 		vec![
 			//
-			Modifier::conditional(Trait::Perception, 1, ModifierOp::Add, Form::Hishu),
+			Modifier::conditional(
+				Trait::DerivedTrait(DerivedTrait::Perception),
+				1,
+				ModifierOp::Add,
+				Form::Hishu,
+			),
 			//
 			Modifier::conditional(Attribute::Strength, 1, ModifierOp::Add, Form::Dalu),
 			Modifier::conditional(Attribute::Stamina, 1, ModifierOp::Add, Form::Dalu),
 			Modifier::conditional(Attribute::Manipulation, -1, ModifierOp::Add, Form::Dalu),
-			Modifier::conditional(Trait::Size, 1, ModifierOp::Add, Form::Dalu),
-			Modifier::conditional(Trait::Perception, 2, ModifierOp::Add, Form::Dalu),
+			Modifier::conditional(
+				Trait::DerivedTrait(DerivedTrait::Size),
+				1,
+				ModifierOp::Add,
+				Form::Dalu,
+			),
+			Modifier::conditional(
+				Trait::DerivedTrait(DerivedTrait::Perception),
+				2,
+				ModifierOp::Add,
+				Form::Dalu,
+			),
 			//
 			Modifier::conditional(Attribute::Strength, 3, ModifierOp::Add, Form::Gauru),
 			Modifier::conditional(Attribute::Dexterity, 1, ModifierOp::Add, Form::Gauru),
 			Modifier::conditional(Attribute::Stamina, 2, ModifierOp::Add, Form::Gauru),
-			Modifier::conditional(Trait::Size, 2, ModifierOp::Add, Form::Gauru),
-			Modifier::conditional(Trait::Perception, 3, ModifierOp::Add, Form::Gauru),
+			Modifier::conditional(
+				Trait::DerivedTrait(DerivedTrait::Size),
+				2,
+				ModifierOp::Add,
+				Form::Gauru,
+			),
+			Modifier::conditional(
+				Trait::DerivedTrait(DerivedTrait::Perception),
+				3,
+				ModifierOp::Add,
+				Form::Gauru,
+			),
 			//
 			Modifier::conditional(Attribute::Strength, 2, ModifierOp::Add, Form::Urshul),
 			Modifier::conditional(Attribute::Dexterity, 2, ModifierOp::Add, Form::Urshul),
 			Modifier::conditional(Attribute::Stamina, 2, ModifierOp::Add, Form::Urshul),
 			Modifier::conditional(Attribute::Manipulation, -1, ModifierOp::Add, Form::Urshul),
-			Modifier::conditional(Trait::Size, 1, ModifierOp::Add, Form::Urshul),
-			Modifier::conditional(Trait::Speed, 3, ModifierOp::Add, Form::Urshul),
-			Modifier::conditional(Trait::Perception, 3, ModifierOp::Add, Form::Urshul),
+			Modifier::conditional(
+				Trait::DerivedTrait(DerivedTrait::Size),
+				1,
+				ModifierOp::Add,
+				Form::Urshul,
+			),
+			Modifier::conditional(
+				Trait::DerivedTrait(DerivedTrait::Speed),
+				3,
+				ModifierOp::Add,
+				Form::Urshul,
+			),
+			Modifier::conditional(
+				Trait::DerivedTrait(DerivedTrait::Perception),
+				3,
+				ModifierOp::Add,
+				Form::Urshul,
+			),
 			//
 			Modifier::conditional(Attribute::Dexterity, 2, ModifierOp::Add, Form::Urhan),
 			Modifier::conditional(Attribute::Stamina, 1, ModifierOp::Add, Form::Urhan),
 			Modifier::conditional(Attribute::Manipulation, -1, ModifierOp::Add, Form::Urhan),
-			Modifier::conditional(Trait::Size, -1, ModifierOp::Add, Form::Urhan),
-			Modifier::conditional(Trait::Speed, 3, ModifierOp::Add, Form::Urhan),
-			Modifier::conditional(Trait::Perception, 4, ModifierOp::Add, Form::Urhan),
+			Modifier::conditional(
+				Trait::DerivedTrait(DerivedTrait::Size),
+				-1,
+				ModifierOp::Add,
+				Form::Urhan,
+			),
+			Modifier::conditional(
+				Trait::DerivedTrait(DerivedTrait::Speed),
+				3,
+				ModifierOp::Add,
+				Form::Urhan,
+			),
+			Modifier::conditional(
+				Trait::DerivedTrait(DerivedTrait::Perception),
+				4,
+				ModifierOp::Add,
+				Form::Urhan,
+			),
 		]
 	}
 }
@@ -576,13 +771,13 @@ impl WerewolfMerit {
 				if value == 2 {
 					vec![
 						Modifier::conditional(
-							Trait::Defense,
+							Trait::DerivedTrait(DerivedTrait::Defense),
 							DicePool::max(Attribute::Wits, Attribute::Dexterity),
 							ModifierOp::Set,
 							Form::Urhan,
 						),
 						Modifier::conditional(
-							Trait::Defense,
+							Trait::DerivedTrait(DerivedTrait::Defense),
 							DicePool::max(Attribute::Wits, Attribute::Dexterity),
 							ModifierOp::Set,
 							Form::Urshul,
@@ -604,7 +799,7 @@ impl From<WerewolfMerit> for Merit {
 }
 
 pub fn get_form_trait(character: &Character, form: &Form, target: &ModifierTarget) -> i16 {
-	let Splat::Werewolf(.., data) = &character.splat else {
+	let Splat::Werewolf(data) = &character.splat else {
 		unreachable!()
 	};
 	let active_form = &data.form;
@@ -622,19 +817,19 @@ pub fn get_form_trait(character: &Character, form: &Form, target: &ModifierTarge
 	} else {
 		let modifiers = match target {
 			ModifierTarget::Trait(trait_) => match trait_ {
-				Trait::Speed => {
+				Trait::DerivedTrait(DerivedTrait::Speed) => {
 					form_modifier(character, form, &Attribute::Dexterity)
 						+ form_modifier(character, form, &Attribute::Strength)
 						- form_modifier(character, active_form, &Attribute::Dexterity)
 						- form_modifier(character, active_form, &Attribute::Strength)
 				}
-				Trait::Initative => {
+				Trait::DerivedTrait(DerivedTrait::Initiative) => {
 					form_modifier(character, form, &Attribute::Dexterity)
 						+ form_modifier(character, form, &Attribute::Composure)
 						- form_modifier(character, active_form, &Attribute::Dexterity)
 						- form_modifier(character, active_form, &Attribute::Composure)
 				}
-				Trait::Defense => {
+				Trait::DerivedTrait(DerivedTrait::Defense) => {
 					// let active_form_pool = form_pool(character, active_form, target);
 					// let form_pool = form_pool(character, form, target);
 

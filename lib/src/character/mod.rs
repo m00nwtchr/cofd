@@ -1,18 +1,20 @@
+use crate::prelude::VariantName;
+use crate::splat::{ability::Ability, Merit, Splat};
+use cofd_schema::dice_pool::DicePool;
+use cofd_schema::prelude::{Attribute, Skill};
 use serde::{Deserialize, Serialize};
 use std::{
 	cmp::{max, min},
 	collections::HashMap,
-	ops::{Add, Index, Sub},
+	ops::{Add, Sub},
 };
 
-use crate::splat::{ability::Ability, Merit, Splat};
-use crate::{dice_pool::DicePool, prelude::VariantName};
-
 pub mod modifier;
-pub mod traits;
+// pub mod traits;
 
+use crate::dice_pool::DicePoolExt;
+use crate::traits::*;
 use modifier::*;
-use traits::*;
 
 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 pub fn add(a: u16, b: i16) -> u16 {
@@ -103,7 +105,7 @@ impl CharacterBuilder {
 
 	#[must_use]
 	pub fn build(self) -> Character {
-		let power = if let Splat::Mortal = &self.splat {
+		let power = if matches!(self.splat, Splat::Mortal(..)) {
 			0
 		} else if self.power > 0 {
 			self.power
@@ -129,10 +131,6 @@ impl CharacterBuilder {
 
 		character.fuel = self.fuel.unwrap_or_else(|| character.max_fuel());
 		character.willpower = character.max_willpower();
-
-		if let Splat::Werewolf(Some(auspice), .., data) = &mut character.splat {
-			data.hunters_aspect = Some(auspice.get_hunters_aspect().clone());
-		}
 
 		character
 	}
@@ -373,21 +371,27 @@ impl Character {
 
 	pub fn get_trait(&self, trait_: &Trait) -> u16 {
 		match trait_ {
-			Trait::Speed => self.speed(),
-			Trait::Defense => self.defense(),
-			Trait::Initative => self.initative(),
-			Trait::Perception => self.perception(),
-			Trait::Health => self.max_health(),
-			Trait::Size => self.size(),
-			Trait::Beats => self.beats,
-			Trait::Armor(Some(armor)) => match armor {
-				Armor::General => self.armor().general,
-				Armor::Ballistic => self.armor().ballistic,
+			Trait::DerivedTrait(dt) => match dt {
+				DerivedTrait::Speed => self.speed(),
+				DerivedTrait::Defense => self.defense(),
+				DerivedTrait::Initiative => self.initative(),
+				DerivedTrait::Perception => self.perception(),
+				DerivedTrait::Health => self.max_health(),
+				DerivedTrait::Willpower => self.max_willpower(),
+				DerivedTrait::Size => self.size(),
+				DerivedTrait::Beats => self.beats,
 			},
-			Trait::Willpower => self.max_willpower(),
+
+			// Trait::Armor(Some(armor)) => match armor {
+			// 	Armor::General => self.armor().general,
+			// 	Armor::Ballistic => self.armor().ballistic,
+			// },
 			Trait::Power => self.power,
 			Trait::Fuel => self.fuel,
 			Trait::Integrity => self.integrity,
+			
+			Trait::Attribute(attr) => *self.attributes().get(attr),
+			Trait::Skill(skill) => self.skills().get(*skill),
 			_ => 0,
 		}
 	}
@@ -517,7 +521,8 @@ impl Character {
 
 		add(
 			self.size() + attributes.stamina,
-			self.modifiers.get_modifier(self, Trait::Health),
+			self.modifiers
+				.get_modifier(self, Trait::DerivedTrait(DerivedTrait::Health)),
 		)
 	}
 
@@ -548,7 +553,8 @@ impl Character {
 	pub fn size(&self) -> u16 {
 		add(
 			self.base_size,
-			self.modifiers.get_modifier(self, Trait::Size),
+			self.modifiers
+				.get_modifier(self, Trait::DerivedTrait(DerivedTrait::Size)),
 		)
 	}
 	pub fn speed(&self) -> u16 {
@@ -556,11 +562,22 @@ impl Character {
 
 		add(
 			5 + attributes.dexterity + attributes.strength,
-			self.modifiers.get_modifier(self, Trait::Speed),
+			self.modifiers
+				.get_modifier(self, Trait::DerivedTrait(DerivedTrait::Speed)),
 		)
 	}
+
+	#[allow(clippy::cast_sign_loss)]
 	pub fn defense(&self) -> u16 {
-		max::<i16>(0, self.get_pool(Trait::Defense).unwrap().value(self)) as u16
+		let res = self.get_pool(Trait::DerivedTrait(DerivedTrait::Defense))
+			.unwrap()
+			.value(self);
+
+		if res > 0 {
+			res as u16
+		} else {
+			0
+		}
 	}
 	pub fn armor(&self) -> ArmorStruct {
 		ArmorStruct {
@@ -576,7 +593,8 @@ impl Character {
 
 		add(
 			attributes.dexterity + attributes.composure,
-			self.modifiers.get_modifier(self, Trait::Initative),
+			self.modifiers
+				.get_modifier(self, Trait::DerivedTrait(DerivedTrait::Initiative)),
 		)
 	}
 	pub fn perception(&self) -> u16 {
@@ -584,7 +602,8 @@ impl Character {
 
 		add(
 			attributes.wits + attributes.composure,
-			self.modifiers.get_modifier(self, Trait::Perception),
+			self.modifiers
+				.get_modifier(self, Trait::DerivedTrait(DerivedTrait::Perception)),
 		)
 	}
 	pub fn experience(&self) -> u16 {

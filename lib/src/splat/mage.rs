@@ -1,16 +1,137 @@
+use cofd_util::{AllVariants, VariantName};
 use serde::{Deserialize, Serialize};
 
-use cofd_util::{AllVariants, VariantName};
-
-use super::{ability::Ability, Merit, NameKey, Splat};
+use super::{ability::Ability, Merit, NameKey, Splat, SplatTrait, XSplat, YSplat, ZSplat};
 use crate::prelude::{Attribute, Character, Skill};
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 #[serde(default)]
-pub struct MageData {
-	pub attr_bonus: Option<Attribute>,
+pub struct Mage {
+	pub path: Path,
+	pub order: Option<Order>, // TODO: Some(Order) = free order status, high speech merit
+	pub legacy: Option<Legacy>,
+
+	free_resistance_dot: Attribute,
 	pub obsessions: Vec<String>,
 	pub rotes: Vec<Rote>,
+}
+
+impl Mage {
+	pub fn new(path: Path) -> Self {
+		Self {
+			path,
+			..Default::default()
+		}
+	}
+
+	#[must_use]
+	pub fn with_order(mut self, order: Order) -> Self {
+		self.order = Some(order);
+		self
+	}
+
+	#[must_use]
+	pub fn with_legacy(mut self, legacy: Legacy) -> Self {
+		self.legacy = Some(legacy);
+		self
+	}
+
+	pub fn attr_bonus(&self) -> &Attribute {
+		&self.free_resistance_dot
+	}
+
+	pub fn set_attr_bonus(&mut self, attribute: Attribute) {
+		if matches!(
+			attribute,
+			Attribute::Resolve | Attribute::Stamina | Attribute::Composure
+		) {
+			self.free_resistance_dot = attribute
+		}
+	}
+}
+
+impl SplatTrait for Mage {
+	fn set_xsplat(&mut self, splat: Option<XSplat>) {
+		if let Some(XSplat::Mage(path)) = splat {
+			self.path = path;
+		}
+	}
+
+	fn set_ysplat(&mut self, splat: Option<YSplat>) {
+		match splat {
+			Some(YSplat::Mage(order)) => self.order = Some(order),
+			_ => self.order = None,
+		}
+	}
+
+	fn set_zsplat(&mut self, splat: Option<ZSplat>) {
+		match splat {
+			Some(ZSplat::Mage(legacy)) => self.legacy = Some(legacy),
+			_ => self.legacy = None,
+		}
+	}
+
+	// fn xsplat(&self) -> Option<XSplat> {
+	// 	Some(self.path.clone().into())
+	// }
+	//
+	// fn ysplat(&self) -> Option<YSplat> {
+	// 	self.order.clone().map(Into::into)
+	// }
+	//
+	// fn zsplat(&self) -> Option<ZSplat> {
+	// 	self.legacy.clone().map(Into::into)
+	// }
+
+	fn xsplats(&self) -> Vec<XSplat> {
+		Path::all().into_iter().map(Into::into).collect()
+	}
+
+	fn ysplats(&self) -> Vec<YSplat> {
+		Order::all().into_iter().map(Into::into).collect()
+	}
+
+	fn zsplats(&self) -> Vec<ZSplat> {
+		Legacy::all().into_iter().map(Into::into).collect()
+	}
+
+	fn custom_xsplat(&self, name: String) -> Option<XSplat> {
+		Some(Path::_Custom(name, [Arcanum::Death, Arcanum::Fate], Arcanum::Forces).into())
+	}
+
+	fn custom_ysplat(&self, name: String) -> Option<YSplat> {
+		Some(Order::_Custom(name, [Skill::Academics, Skill::AnimalKen, Skill::Athletics]).into())
+	}
+
+	fn custom_zsplat(&self, name: String) -> Option<ZSplat> {
+		Some(Legacy::_Custom(name, None).into())
+	}
+
+	fn all_abilities(&self) -> Option<Vec<Ability>> {
+		Some(Arcanum::all().into_iter().map(Into::into).collect())
+	}
+
+	fn alternate_beats_optional(&self) -> bool {
+		false
+	}
+
+	fn merits(&self) -> Vec<Merit> {
+		MageMerit::all().map(Into::into).to_vec()
+	}
+}
+
+impl Default for Mage {
+	fn default() -> Self {
+		Self {
+			path: Path::default(),
+			order: None,
+			legacy: None,
+
+			free_resistance_dot: Attribute::Resolve,
+			obsessions: Vec::new(),
+			rotes: Vec::new(),
+		}
+	}
 }
 
 #[derive(

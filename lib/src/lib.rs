@@ -14,15 +14,14 @@
 pub mod character;
 pub mod dice_pool;
 pub mod splat;
+pub mod traits;
 
 #[macro_use]
 extern crate cofd_util;
 
 pub mod prelude {
-	pub use crate::character::{
-		traits::{Attribute, Skill, Trait},
-		Attributes, Character, Skills,
-	};
+	pub use crate::character::{Attributes, Character, Skills};
+	pub use crate::traits::{attribute::Attribute, skill::Skill, Trait};
 	pub use cofd_util::{AllVariants, VariantName};
 }
 
@@ -30,11 +29,13 @@ pub mod prelude {
 mod tests {
 	use ron::ser::PrettyConfig;
 
+	use crate::splat::vampire::Vampire;
+	use crate::splat::werewolf::Werewolf;
 	use crate::{
 		character::CharacterInfo,
 		prelude::*,
 		splat::{
-			mage::{Arcanum, MageData, MageMerit, Order, Path},
+			mage::{Arcanum, Mage, MageMerit, Order, Path},
 			vampire::{Bloodline, Clan, Covenant, Discipline, VampireMerit},
 			werewolf::{Auspice, Form, Renown, Tribe, WerewolfMerit},
 			Merit, Splat,
@@ -50,7 +51,7 @@ mod tests {
 	#[allow(clippy::too_many_lines)]
 	fn it_works() {
 		let vampire_character = Character::builder()
-			.with_splat(Splat::Vampire(
+			.with_splat(Splat::Vampire(Vampire::new(
 				Clan::Ventrue,
 				Some(Covenant::OrdoDracul),
 				Some(Bloodline::_Custom(
@@ -62,8 +63,7 @@ mod tests {
 						Discipline::Auspex,
 					]),
 				)),
-				Default::default(),
-			))
+			)))
 			.with_info(CharacterInfo {
 				name: String::from("Darren Webb"),
 				player: String::from("m00n"),
@@ -128,6 +128,8 @@ mod tests {
 			])
 			.build();
 
+		vampire_character.splat.vice_anchor();
+		
 		println!("{:?}", vampire_character);
 		println!("{:?}", vampire_character.attributes());
 
@@ -142,10 +144,9 @@ mod tests {
 
 		let mut werewolf_character = Character::builder()
 			.with_splat(Splat::Werewolf(
-				Some(Auspice::Rahu),
-				Some(Tribe::BloodTalons),
-				None,
-				Default::default(),
+				Werewolf::new()
+					.with_auspice(Auspice::Rahu)
+					.with_tribe(Tribe::BloodTalons),
 			))
 			.with_info(CharacterInfo {
 				name: String::from("Amos Gray"),
@@ -215,14 +216,7 @@ mod tests {
 
 		let mut mage_character = Character::builder()
 			.with_splat(Splat::Mage(
-				Path::Mastigos,
-				Some(Order::Mysterium),
-				None,
-				Box::new(MageData {
-					attr_bonus: Some(Attribute::Intelligence),
-					obsessions: vec![],
-					rotes: vec![],
-				}),
+				Mage::new(Path::Mastigos).with_order(Order::Mysterium),
 			))
 			.with_info(CharacterInfo {
 				name: String::from("Polaris"),
@@ -291,7 +285,7 @@ mod tests {
 		mage_character.calc_mod_map();
 
 		if let Splat::Mage(.., data) = &mut mage_character.splat {
-			data.attr_bonus = Some(Attribute::Resolve);
+			data.set_attr_bonus(Attribute::Resolve);
 		}
 
 		mage_character.calc_mod_map();

@@ -14,10 +14,8 @@ pub mod traits;
 pub mod prelude {
 	pub use super::book::BookInfo;
 	pub use super::dot_range::DotRange;
-	pub use super::traits::attribute::{
-		Attribute, MentalAttribute, PhysicalAttribute, SocialAttribute,
-	};
-	pub use super::traits::skill::{MentalSkill, PhysicalSkill, Skill, SocialSkill};
+	pub use super::traits::attribute::Attribute;
+	pub use super::traits::skill::Skill;
 }
 
 pub static DOT_CHAR: char = '•';

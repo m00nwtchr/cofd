@@ -1,28 +1,119 @@
 use serde::{Deserialize, Serialize};
 
-use super::{Merit, NameKey, Splat};
+use super::{Merit, NameKey, Splat, SplatTrait, XSplat, YSplat, ZSplat};
+use crate::splat::mage::Mage;
 use crate::{
-	character::{
-		traits::{AttributeCategory, AttributeType},
-		Character, Damage,
-	},
+	character::{Character, Damage},
 	prelude::*,
 };
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default)]
-pub struct ChangelingData {
-	pub attr_bonus: Option<Attribute>,
-	pub regalia: Option<Regalia>,
+pub struct Changeling {
+	pub seeming: Seeming,
+	pub court: Option<Court>,
+	pub kith: Option<Kith>,
+
+	attr_bonus: Attribute,
+	pub regalia: Regalia,
 	pub frailties: Vec<String>,
 	pub clarity: Damage,
 	pub contracts: Vec<Contract>,
 }
 
-impl ChangelingData {
-	pub fn max_clarity(&self, character: &Character) -> u16 {
-		let attributes = character.attributes();
+impl Changeling {
+	pub fn max_clarity(&self, attributes: &Attributes) -> u16 {
 		attributes.wits + attributes.composure
+	}
+
+	pub fn attr_bonus(&self) -> &Attribute {
+		&self.attr_bonus
+	}
+
+	pub fn set_attr_bonus(&mut self, attribute: Attribute) {
+		if self.seeming.favored_attributes().contains(&attribute) {
+			self.attr_bonus = attribute
+		}
+	}
+}
+
+impl SplatTrait for Changeling {
+	fn set_xsplat(&mut self, splat: Option<XSplat>) {
+		if let Some(XSplat::Changeling(seeming)) = splat {
+			self.seeming = seeming;
+		}
+	}
+
+	fn set_ysplat(&mut self, splat: Option<YSplat>) {
+		match splat {
+			Some(YSplat::Changeling(court)) => self.court = Some(court),
+			_ => self.court = None,
+		}
+	}
+
+	fn set_zsplat(&mut self, splat: Option<ZSplat>) {
+		match splat {
+			Some(ZSplat::Changeling(kith)) => self.kith = Some(kith),
+			_ => self.kith = None,
+		}
+	}
+
+	fn xsplats(&self) -> Vec<XSplat> {
+		Seeming::all().into_iter().map(Into::into).collect()
+	}
+
+	fn ysplats(&self) -> Vec<YSplat> {
+		Court::all().into_iter().map(Into::into).collect()
+	}
+
+	fn zsplats(&self) -> Vec<ZSplat> {
+		Kith::all().into_iter().map(Into::into).collect()
+	}
+
+	fn custom_xsplat(&self, name: String) -> Option<XSplat> {
+		Some(
+			Seeming::_Custom(
+				name,
+				Regalia::Crown,
+				// AttributeType::Power
+			)
+			.into(),
+		)
+	}
+
+	fn custom_ysplat(&self, name: String) -> Option<YSplat> {
+		Some(Court::_Custom(name).into())
+	}
+
+	fn custom_zsplat(&self, name: String) -> Option<ZSplat> {
+		Some(Kith::_Custom(name).into())
+	}
+
+	fn merits(&self) -> Vec<Merit> {
+		ChangelingMerit::all().map(Into::into).to_vec()
+	}
+}
+
+impl Default for Changeling {
+	fn default() -> Self {
+		let seeming = Seeming::default();
+		let attr_bonus = seeming.favored_attributes()[0];
+		let regalia = Regalia::all()
+			.into_iter()
+			.find(|f| !seeming.get_favored_regalia().eq(f))
+			.unwrap();
+
+		Self {
+			seeming: Seeming::default(),
+			court: None,
+			kith: None,
+
+			attr_bonus,
+			regalia,
+			frailties: Vec::new(),
+			clarity: Damage::default(),
+			contracts: Vec::new(),
+		}
 	}
 }
 
@@ -37,7 +128,11 @@ pub enum Seeming {
 	Fairest,
 	Ogre,
 	Wizened,
-	_Custom(String, Regalia, AttributeType),
+	_Custom(
+		String,
+		Regalia,
+		// AttributeType
+	),
 }
 
 impl Seeming {
@@ -53,16 +148,22 @@ impl Seeming {
 		}
 	}
 
-	pub fn get_favored_attributes(&self) -> [Attribute; 3] {
-		Attribute::get(AttributeCategory::Type(match self {
-			Seeming::Beast => AttributeType::Resistance,
-			Seeming::Darkling => AttributeType::Finesse,
-			Seeming::Elemental => AttributeType::Resistance,
-			Seeming::Fairest => AttributeType::Power,
-			Seeming::Ogre => AttributeType::Power,
-			Seeming::Wizened => AttributeType::Finesse,
-			Seeming::_Custom(.., _type) => _type.clone(),
-		}))
+	pub fn favored_attributes(&self) -> [Attribute; 3] {
+		// Attribute::get(AttributeCategory::Type(match self {
+		// 	Seeming::Beast => AttributeType::Resistance,
+		// 	Seeming::Darkling => AttributeType::Finesse,
+		// 	Seeming::Elemental => AttributeType::Resistance,
+		// 	Seeming::Fairest => AttributeType::Power,
+		// 	Seeming::Ogre => AttributeType::Power,
+		// 	Seeming::Wizened => AttributeType::Finesse,
+		// 	Seeming::_Custom(.., _type) => _type.clone(),
+		// }))
+		// TODO
+		[
+			Attribute::Intelligence,
+			Attribute::Intelligence,
+			Attribute::Intelligence,
+		]
 	}
 }
 

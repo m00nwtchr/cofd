@@ -1,19 +1,127 @@
+use cofd_util::{AllVariants, VariantName};
 use serde::{Deserialize, Serialize};
-
-use cofd_util::VariantName;
-
-use super::{ability::Ability, Merit, Splat};
+use cofd_schema::traits::DerivedTrait;
+use super::{ability::Ability, Merit, Splat, SplatTrait, XSplat, YSplat, ZSplat};
+use crate::splat::mage::{Legacy, MageMerit, Order, Path};
 use crate::{
 	character::modifier::{Modifier, ModifierOp},
 	dice_pool::DicePool,
 	prelude::{Attribute, Attributes, Skills, Trait},
 };
 
-#[derive(Clone, Default, Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(default)]
-pub struct VampireData {
-	pub attr_bonus: Option<Attribute>,
+pub struct Vampire {
+	pub clan: Clan,
+	pub covenant: Option<Covenant>,
+	pub bloodline: Option<Bloodline>,
+
+	attr_bonus: Attribute,
 	pub banes: Vec<String>,
+}
+
+impl Vampire {
+	pub fn new(clan: Clan, covenant: Option<Covenant>, bloodline: Option<Bloodline>) -> Self {
+		Vampire {
+			clan,
+			covenant,
+			bloodline,
+			..Default::default()
+		}
+	}
+
+	pub fn attr_bonus(&self) -> &Attribute {
+		&self.attr_bonus
+	}
+
+	pub fn set_attr_bonus(&mut self, attribute: Attribute) {
+		if self.clan.favored_attributes().contains(&attribute) {
+			self.attr_bonus = attribute
+		}
+	}
+}
+
+impl SplatTrait for Vampire {
+	fn set_xsplat(&mut self, splat: Option<XSplat>) {
+		if let Some(XSplat::Vampire(clan)) = splat {
+			self.clan = clan;
+		}
+	}
+
+	fn set_ysplat(&mut self, splat: Option<YSplat>) {
+		match splat {
+			Some(YSplat::Vampire(covenant)) => self.covenant = Some(covenant),
+			_ => self.covenant = None,
+		}
+	}
+
+	fn set_zsplat(&mut self, splat: Option<ZSplat>) {
+		match splat {
+			Some(ZSplat::Vampire(bloodline)) => self.bloodline = Some(bloodline),
+			_ => self.bloodline = None,
+		}
+	}
+
+	fn xsplats(&self) -> Vec<XSplat> {
+		Clan::all().into_iter().map(Into::into).collect()
+	}
+
+	fn ysplats(&self) -> Vec<YSplat> {
+		Covenant::all().into_iter().map(Into::into).collect()
+	}
+
+	fn zsplats(&self) -> Vec<ZSplat> {
+		Bloodline::all().into_iter().map(Into::into).collect()
+	}
+
+	fn custom_xsplat(&self, name: String) -> Option<XSplat> {
+		Some(
+			Clan::_Custom(
+				name,
+				Box::new([
+					Discipline::Animalism,
+					Discipline::Auspex,
+					Discipline::Celerity,
+				]),
+				[Attribute::Composure, Attribute::Dexterity],
+			)
+			.into(),
+		)
+	}
+
+	fn custom_ysplat(&self, name: String) -> Option<YSplat> {
+		Some(Covenant::_Custom(name).into())
+	}
+
+	fn custom_zsplat(&self, name: String) -> Option<ZSplat> {
+		Some(Bloodline::_Custom(name, None).into())
+	}
+
+	fn all_abilities(&self) -> Option<Vec<Ability>> {
+		Some(Discipline::all().into_iter().map(Into::into).collect())
+	}
+
+	fn custom_ability(&self, name: String) -> Option<Ability> {
+		Some(Discipline::_Custom(name).into())
+	}
+
+	fn merits(&self) -> Vec<Merit> {
+		VampireMerit::all().map(Into::into).to_vec()
+	}
+}
+
+impl Default for Vampire {
+	fn default() -> Self {
+		let clan = Clan::default();
+		let attr_bonus = clan.favored_attributes()[0];
+		Vampire {
+			clan,
+			covenant: None,
+			bloodline: None,
+			banes: Vec::new(),
+			attr_bonus,
+		}
+	}
 }
 
 #[derive(
@@ -56,14 +164,28 @@ impl Clan {
 			Clan::_Custom(_, disciplines, _) => disciplines,
 		}
 	}
-	pub fn get_favored_attributes(&self) -> &[Attribute; 2] {
+	pub fn favored_attributes(&self) -> &[Attribute; 2] {
 		match self {
 			Clan::Daeva => &[Attribute::Dexterity, Attribute::Manipulation],
-			Clan::Gangrel => &[Attribute::Composure, Attribute::Stamina],
-			Clan::Mekhet => &[Attribute::Intelligence, Attribute::Wits],
-			Clan::Nosferatu => &[Attribute::Composure, Attribute::Strength],
-			Clan::Ventrue => &[Attribute::Presence, Attribute::Resolve],
+			// ],
+			// Clan::Gangrel => &[
+			// 	SocialAttribute::Composure.into(),
+			// 	PhysicalAttribute::Stamina.into(),
+			// ],
+			// Clan::Mekhet => &[
+			// 	MentalAttribute::Intelligence.into(),
+			// 	MentalAttribute::Wits.into(),
+			// ],
+			// Clan::Nosferatu => &[
+			// 	SocialAttribute::Composure.into(),
+			// 	PhysicalAttribute::Strength.into(),
+			// ],
+			// Clan::Ventrue => &[
+			// 	SocialAttribute::Presence.into(),
+			// 	MentalAttribute::Resolve.into(),
+			// ],
 			Clan::_Custom(_, _, attributes) => attributes,
+			_ => todo!(),
 		}
 	}
 }
@@ -115,7 +237,7 @@ impl Discipline {
 	pub fn get_modifiers(&self, value: u16) -> Vec<crate::character::modifier::Modifier> {
 		match self {
 			Discipline::Celerity => {
-				vec![Modifier::new(Trait::Defense, value, ModifierOp::Add)]
+				vec![Modifier::new(Trait::DerivedTrait(DerivedTrait::Defense), value, ModifierOp::Add)]
 			}
 			Discipline::Resilience => {
 				vec![Modifier::new(Attribute::Stamina, value, ModifierOp::Add)]
@@ -242,7 +364,13 @@ impl VampireMerit {
 				}
 				// VampireMerit::Cutthroat => todo!(), // Not Enticing or Atrocious
 				VampireMerit::DreamVisions => {
-					matches!(character.splat, Splat::Vampire(Clan::Mekhet, ..))
+					matches!(
+						character.splat,
+						Splat::Vampire(Vampire {
+							clan: Clan::Mekhet,
+							..
+						})
+					)
 				}
 				// VampireMerit::Enticing => todo!(), // Not Cutthroat or Atrocious
 				// VampireMerit::FeedingGrounds(_) => todo!(),
@@ -250,14 +378,32 @@ impl VampireMerit {
 				// VampireMerit::HoneyTrap => todo!(), // Not a Revenant
 				// VampireMerit::KindredStatus(_) => todo!(),
 				VampireMerit::KissOfTheSuccubus => {
-					matches!(character.splat, Splat::Vampire(Clan::Daeva, ..))
+					matches!(
+						character.splat,
+						Splat::Vampire(Vampire {
+							clan: Clan::Daeva,
+							..
+						})
+					)
 				}
 				// VampireMerit::Lineage(_) => todo!(), Clan Status
 				VampireMerit::LingeringDreams => {
-					matches!(character.splat, Splat::Vampire(Clan::Mekhet, ..))
+					matches!(
+						character.splat,
+						Splat::Vampire(Vampire {
+							clan: Clan::Mekhet,
+							..
+						})
+					)
 				} // Dream Visions
 				VampireMerit::PackAlpha => {
-					matches!(character.splat, Splat::Vampire(Clan::Gangrel, ..))
+					matches!(
+						character.splat,
+						Splat::Vampire(Vampire {
+							clan: Clan::Gangrel,
+							..
+						})
+					)
 				}
 				VampireMerit::ReceptiveMind => {
 					character.power >= 6
@@ -276,7 +422,13 @@ impl VampireMerit {
 						.unwrap_or(&0) >= 4
 				}
 				VampireMerit::UnsettlingGaze => {
-					matches!(character.splat, Splat::Vampire(Clan::Nosferatu, ..))
+					matches!(
+						character.splat,
+						Splat::Vampire(Vampire {
+							clan: Clan::Nosferatu,
+							..
+						})
+					)
 				}
 
 				// VampireMerit::CacophonySavvy => todo!(), // City Status

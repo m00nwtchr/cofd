@@ -1,13 +1,10 @@
+use enum_dispatch::enum_dispatch;
 use serde::{Deserialize, Serialize};
+use std::ops::Deref;
 
 use cofd_util::{AllVariants, NameKey, SplatEnum, VariantName};
 
 use self::ability::Ability;
-use crate::{
-	character::modifier::{Modifier, ModifierOp, ModifierTarget, ModifierValue},
-	character::traits::AttributeType,
-	prelude::{Attribute, Attributes, Character, Skill, Skills, Trait},
-};
 
 pub mod ability;
 pub mod merits;
@@ -21,6 +18,7 @@ pub mod werewolf;
 pub mod changeling;
 // pub mod hunter;
 pub mod geist;
+mod mortal;
 // pub mod mummy;
 // pub mod demon;
 // pub mod beast;
@@ -31,200 +29,170 @@ use vampire::*;
 use werewolf::*;
 // use promethean::*;
 use changeling::*;
+use cofd_schema::splat::Template;
 // use hunter::*;
 use geist::*;
+use mortal::*;
 // use mummy::*;
 // use demon::*;
 // use beast::*;
 // use deviant:*;
 
-#[derive(
-	Clone,
-	Default,
-	Serialize,
-	Deserialize,
-	Debug,
-	VariantName,
-	SplatEnum,
-	AllVariants,
-	PartialEq,
-	Eq,
-)]
+#[derive(Clone, Serialize, Deserialize, Debug, VariantName, AllVariants)]
+#[enum_dispatch(SplatTrait)]
 pub enum Splat {
-	#[default]
-	Mortal,
-	#[splat(
-		virtue_anchor = "mask",
-		vice_anchor = "dirge",
-		ability = "disciplines",
-		st = "blood_potency",
-		alt_beats = "blood",
-		fuel = "vitae",
-		integrity = "humanity",
-		abilities_finite = false
-	)]
-	Vampire(Clan, Option<Covenant>, Option<Bloodline>, Box<VampireData>),
-	#[splat(
-		virtue_anchor = "blood",
-		vice_anchor = "bone",
-		ability = "renown",
-		st = "primal_urge",
-		fuel = "essence",
-		integrity = "harmony"
-	)]
-	Werewolf(
-		Option<Auspice>,
-		Option<Tribe>,
-		Option<Lodge>,
-		Box<WerewolfData>,
-	),
-	#[splat(
-		ability = "arcana",
-		st = "gnosis",
-		alt_beats = "arcane",
-		fuel = "mana",
-		integrity = "wisdom"
-	)]
-	Mage(Path, Option<Order>, Option<Legacy>, Box<MageData>), // TODO: Order = free order status, high speech merit
+	Mortal(Mortal),
+	// #[splat(
+	// 	virtue_anchor = Anchor::Mask,
+	// 	vice_anchor = Anchor::Dirge,
+	// 	ability = "disciplines",
+	// 	st = SupernaturalTolerance::BloodPotency,
+	// 	alt_beats = "blood",
+	// 	fuel = "vitae",
+	// 	integrity = Integrity::Humanity,
+	// 	abilities_finite = false
+	// )]
+	Vampire(Vampire),
+	// #[splat(
+	// 	virtue_anchor = Anchor::Blood,
+	// 	vice_anchor = Anchor::Bone,
+	// 	ability = "renown",
+	// 	st = SupernaturalTolerance::PrimalUrge,
+	// 	fuel = "essence",
+	// 	integrity = Integrity::Harmony
+	// )]
+	Werewolf(Werewolf),
+	// #[splat(
+	// 	ability = "arcana",
+	// 	st = SupernaturalTolerance::Gnosis,
+	// 	alt_beats = "arcane",
+	// 	fuel = "mana",
+	// 	integrity = Integrity::Wisdom
+	// )]
+	Mage(Mage),
 	// Promethean(Lineage),
-	#[splat(
-		virtue_anchor = "thread",
-		vice_anchor = "needle",
-		ability = "disciplines",
-		st = "wyrd",
-		fuel = "glamour",
-		integrity = "clarity",
-		abilities_finite = false
-	)]
-	Changeling(Seeming, Option<Court>, Option<Kith>, Box<ChangelingData>),
+	// #[splat(
+	// 	virtue_anchor = Anchor::Thread,
+	// 	vice_anchor = Anchor::Needle,
+	// 	ability = "disciplines",
+	// 	st = SupernaturalTolerance::Wyrd,
+	// 	fuel = "glamour",
+	// 	integrity = Integrity::Clarity,
+	// 	abilities_finite = false
+	// )]
+	Changeling(Changeling),
 	// Hunter(Tier),
-	#[splat(
-		virtue_anchor = "root",
-		vice_anchor = "bloom",
-		ability = "haunts",
-		st = "synergy",
-		fuel = "plasm",
-		integrity = "synergy",
-		abilities_finite = false
-	)]
-	Bound(Burden, Archetype, #[skip] BoundData),
+	// #[splat(
+	// 	virtue_anchor = Anchor::Root,
+	// 	vice_anchor = Anchor::Bloom,
+	// 	ability = "haunts",
+	// 	st = SupernaturalTolerance::Synergy,
+	// 	fuel = "plasm",
+	// 	integrity = Integrity::Synergy,
+	// 	abilities_finite = false
+	// )]
+	Bound(Bound),
 	// Mummy(Decree, Guild),
 	// Demon(Incarnation, Vec<Agenda>),
 	// Beast(Hunger),
 	// Deviant(Origin, Clade, Vec<Form>),
 }
 
-impl Splat {
-	pub fn custom_xsplat(&self, name: String) -> Option<XSplat> {
+impl Deref for Splat {
+	type Target = Template;
+
+	fn deref(&self) -> &Self::Target {
 		match self {
-			Self::Mortal => None,
-			Self::Vampire(..) => Some(
-				Clan::_Custom(
-					name,
-					Box::new([
-						Discipline::Animalism,
-						Discipline::Auspex,
-						Discipline::Celerity,
-					]),
-					[Attribute::Composure, Attribute::Dexterity],
-				)
-				.into(),
-			),
-			Self::Werewolf(..) => Some(
-				Auspice::_Custom(
-					name,
-					[Skill::Academics, Skill::AnimalKen, Skill::Athletics],
-					Renown::Cunning,
-					MoonGift::_Custom(String::from("Custom")),
-					Box::new([ShadowGift::Death, ShadowGift::Dominance]),
-					HuntersAspect::Monstrous,
-				)
-				.into(),
-			),
-			Self::Mage(..) => {
-				Some(Path::_Custom(name, [Arcanum::Death, Arcanum::Fate], Arcanum::Forces).into())
-			}
-			Self::Changeling(..) => {
-				Some(Seeming::_Custom(name, Regalia::Crown, AttributeType::Power).into())
-			}
-			Self::Bound(..) => {
-				Some(Burden::_Custom(name, [Haunt::Boneyard, Haunt::Caul, Haunt::Curse]).into())
-			}
+			Splat::Mortal(_) => &Template::Mortal,
+			Splat::Vampire(_) => &Template::Vampire,
+			Splat::Werewolf(_) => &Template::Werewolf,
+			Splat::Mage(_) => &Template::Mage,
+			Splat::Changeling(_) => &Template::Changeling,
+			Splat::Bound(_) => &Template::Bound,
 		}
+	}
+}
+
+#[enum_dispatch]
+trait SplatTrait {
+	fn set_xsplat(&mut self, splat: Option<XSplat>);
+
+	fn set_ysplat(&mut self, splat: Option<YSplat>);
+
+	fn set_zsplat(&mut self, splat: Option<ZSplat>);
+
+	fn xsplat(&self) -> Option<XSplat> {
+		// unimplemented!();
+		None
+	}
+	fn ysplat(&self) -> Option<YSplat> {
+		// unimplemented!();
+		None
+	}
+	fn zsplat(&self) -> Option<ZSplat> {
+		// unimplemented!();
+		None
 	}
 
-	pub fn custom_ysplat(&self, name: String) -> Option<YSplat> {
-		match self {
-			Self::Mortal => None,
-			Self::Vampire(..) => Some(Covenant::_Custom(name).into()),
-			Self::Werewolf(..) => Some(
-				Tribe::_Custom(
-					name,
-					Renown::Cunning,
-					Box::new([
-						ShadowGift::Death,
-						ShadowGift::Dominance,
-						ShadowGift::Elementals,
-					]),
-				)
-				.into(),
-			),
-			Self::Mage(..) => Some(
-				Order::_Custom(name, [Skill::Academics, Skill::AnimalKen, Skill::Athletics]).into(),
-			),
-			Self::Changeling(..) => Some(Court::_Custom(name).into()),
-			Self::Bound(..) => Some(Archetype::_Custom(name).into()),
-		}
+	fn xsplats(&self) -> Vec<XSplat>;
+	fn ysplats(&self) -> Vec<YSplat>;
+	fn zsplats(&self) -> Vec<ZSplat>;
+
+	fn custom_xsplat(&self, name: String) -> Option<XSplat> {
+		None
 	}
 
-	pub fn custom_zsplat(&self, name: String) -> Option<ZSplat> {
-		match self {
-			Splat::Vampire(..) => Some(Bloodline::_Custom(name, None).into()),
-			Splat::Werewolf(..) => Some(Lodge::_Custom(name).into()),
-			Splat::Mage(..) => Some(Legacy::_Custom(name, None).into()),
-			Splat::Changeling(..) => Some(Kith::_Custom(name).into()),
-			_ => None,
-		}
+	fn custom_ysplat(&self, name: String) -> Option<YSplat> {
+		None
 	}
 
-	pub fn all_abilities(&self) -> Option<Vec<Ability>> {
-		match self {
-			Splat::Vampire(..) => Some(Discipline::all().into_iter().map(Into::into).collect()),
-			Splat::Werewolf(..) => Some(Renown::all().into_iter().map(Into::into).collect()),
-			Splat::Mage(..) => Some(Arcanum::all().into_iter().map(Into::into).collect()),
-			Splat::Bound(..) => Some(Haunt::all().into_iter().map(Into::into).collect()),
-			_ => None,
-		}
+	fn custom_zsplat(&self, name: String) -> Option<ZSplat> {
+		None
 	}
 
-	pub fn custom_ability(&self, name: String) -> Option<Ability> {
-		match self {
-			Splat::Vampire(..) => Some(Discipline::_Custom(name).into()),
-			Splat::Werewolf(..) => Some(MoonGift::_Custom(name).into()),
-			Splat::Bound(..) => Some(Haunt::_Custom(name).into()),
-			_ => None,
-		}
+	fn all_abilities(&self) -> Option<Vec<Ability>> {
+		None
 	}
 
-	pub fn alternate_beats_optional(&self) -> bool {
-		match self {
-			Self::Mage(..) => false,
-			// Promethean
-			// Demon
-			_ => true,
-		}
+	fn custom_ability(&self, name: String) -> Option<Ability> {
+		None
 	}
 
-	pub fn merits(&self) -> Vec<Merit> {
-		match self {
-			Self::Mortal => Merit::all(),
-			Self::Vampire(..) => VampireMerit::all().map(Into::into).to_vec(),
-			Self::Werewolf(..) => WerewolfMerit::all().map(Into::into).to_vec(),
-			Self::Mage(..) => MageMerit::all().map(Into::into).to_vec(),
-			Self::Changeling(..) => ChangelingMerit::all().map(Into::into).to_vec(),
-			Self::Bound(..) => vec![],
-		}
+	fn alternate_beats_optional(&self) -> bool {
+		true
 	}
+
+	fn merits(&self) -> Vec<Merit>;
+}
+
+impl Default for Splat {
+	fn default() -> Self {
+		Splat::Mortal(Mortal)
+	}
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, VariantName, derive_more::From, derive_more::TryInto)]
+pub enum XSplat {
+	Vampire(Clan),
+	Werewolf(Auspice),
+	Mage(Path),
+	Changeling(Seeming),
+	Bound(Burden),
+}
+#[derive(Debug, Clone, PartialEq, Eq, VariantName, derive_more::From, derive_more::TryInto)]
+pub enum YSplat {
+	Vampire(Covenant),
+	Werewolf(Tribe),
+	Mage(Order),
+	Changeling(Court),
+	Bound(Archetype),
+}
+#[derive(Debug, Clone, PartialEq, Eq, VariantName, derive_more::From, derive_more::TryInto)]
+pub enum ZSplat {
+	Vampire(Bloodline),
+	Werewolf(Lodge),
+	Mage(Legacy),
+	Changeling(Kith),
 }
 
 impl XSplat {

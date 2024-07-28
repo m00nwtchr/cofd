@@ -1,13 +1,7 @@
 use serde::{Deserialize, Serialize};
 use strum::EnumString;
 
-use crate::prelude::{MentalSkill, PhysicalSkill, SocialSkill};
 use crate::traits::skill::Skill;
-use {
-	MentalSkill::{Academics, Crafts, Investigation, Medicine, Occult, Politics, Science},
-	PhysicalSkill::{Athletics, Larceny, Stealth, Survival},
-	SocialSkill::{Empathy, Expression, Intimidation, Persuasion, Subterfuge},
-};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, EnumString, PartialEq, Eq)]
 pub enum Arcanum {
@@ -114,62 +108,26 @@ pub enum Ministry {
 
 impl Order {
 	#[must_use]
-	pub fn get_rote_skills(&self) -> &[Skill; 3] {
+	pub fn rote_skills(&self) -> &[Skill; 3] {
 		match self {
-			Order::AdamantineArrow => &[
-				Skill::Physical(Athletics),
-				Skill::Social(Intimidation),
-				Skill::Mental(Medicine),
-			],
-			Order::GuardiansOfTheVeil => &[
-				Skill::Mental(Investigation),
-				Skill::Physical(Stealth),
-				Skill::Social(Subterfuge),
-			],
-			Order::Mysterium => &[
-				Skill::Mental(Investigation),
-				Skill::Mental(Occult),
-				Skill::Physical(Survival),
-			],
-			Order::SilverLadder => &[
-				Skill::Social(Expression),
-				Skill::Social(Persuasion),
-				Skill::Social(Subterfuge),
-			],
-			Order::FreeCouncil => &[
-				Skill::Mental(Crafts),
-				Skill::Social(Persuasion),
-				Skill::Mental(Science),
-			],
+			Order::AdamantineArrow => &[Skill::Athletics, Skill::Intimidation, Skill::Medicine],
+			Order::GuardiansOfTheVeil => &[Skill::Investigation, Skill::Stealth, Skill::Subterfuge],
+			Order::Mysterium => &[Skill::Investigation, Skill::Occult, Skill::Survival],
+			Order::SilverLadder => &[Skill::Expression, Skill::Persuasion, Skill::Subterfuge],
+			Order::FreeCouncil => &[Skill::Crafts, Skill::Persuasion, Skill::Science],
 			Order::SeersOfTheThrone(ministry) => match ministry {
 				Some(ministry) => match ministry {
-					Ministry::Hegemony => &[
-						Skill::Mental(Politics),
-						Skill::Social(Persuasion),
-						Skill::Social(Empathy),
-					],
-					Ministry::Panopticon => &[
-						Skill::Mental(Investigation),
-						Skill::Physical(Stealth),
-						Skill::Social(Subterfuge),
-					],
-					Ministry::Paternoster => &[
-						Skill::Mental(Academics),
-						Skill::Mental(Occult),
-						Skill::Social(Expression),
-					],
-					Ministry::Praetorian => &[
-						Skill::Physical(Athletics),
-						Skill::Physical(Larceny),
-						Skill::Social(Intimidation),
-					],
+					Ministry::Hegemony => &[Skill::Politics, Skill::Persuasion, Skill::Empathy],
+					Ministry::Panopticon => {
+						&[Skill::Investigation, Skill::Stealth, Skill::Subterfuge]
+					}
+					Ministry::Paternoster => &[Skill::Academics, Skill::Occult, Skill::Expression],
+					Ministry::Praetorian => {
+						&[Skill::Athletics, Skill::Larceny, Skill::Intimidation]
+					}
 					Ministry::_Custom { rote_skills, .. } => rote_skills,
 				},
-				None => &[
-					Skill::Mental(Investigation),
-					Skill::Mental(Occult),
-					Skill::Social(Persuasion),
-				],
+				None => &[Skill::Investigation, Skill::Occult, Skill::Persuasion],
 			},
 			Order::_Custom { rote_skills, .. } => rote_skills,
 		}

@@ -1,14 +1,15 @@
-use serde::{Deserialize, Serialize};
-
+use cofd_schema::splat::Anchor;
 use cofd_util::{AllVariants, VariantName};
-
+use serde::{Deserialize, Serialize};
+use cofd_schema::prelude::Skill;
+use cofd_schema::traits::DerivedTrait;
 use super::{
 	ability::Ability, changeling::ChangelingMerit, mage::MageMerit, vampire::VampireMerit,
 	werewolf::WerewolfMerit,
 };
 use crate::{
 	character::modifier::{Modifier, ModifierOp, ModifierTarget, ModifierValue},
-	prelude::{Attributes, Character, Skill, Skills, Trait},
+	prelude::{Attributes, Character, Skills, Trait},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, AllVariants, VariantName)]
@@ -274,7 +275,7 @@ impl Merit {
 		match &self {
 			Merit::DefensiveCombat(true, Some(skill)) => {
 				vec![Modifier::new(
-					ModifierTarget::Trait(Trait::Defense),
+					ModifierTarget::Trait(Trait::DerivedTrait(DerivedTrait::Defense)),
 					ModifierValue::Skill(*skill),
 					ModifierOp::Set,
 				)]
@@ -282,7 +283,7 @@ impl Merit {
 			Merit::Giant => {
 				if value == 3 {
 					vec![Modifier::new(
-						ModifierTarget::Trait(Trait::Size),
+						ModifierTarget::Trait(Trait::DerivedTrait(DerivedTrait::Size)),
 						ModifierValue::Num(1),
 						ModifierOp::Add,
 					)]
@@ -304,15 +305,16 @@ impl Merit {
 		match self {
 			Merit::_Custom(_) => true,
 
-			Merit::AreaOfExpertise(_) => character.attributes().resolve > 1,
-			Merit::EyeForTheStrange => {
+			Self::AreaOfExpertise(_) => character.attributes().resolve > 1,
+			// Self::Anonymity => // No Fame
+			Self::EyeForTheStrange => {
 				character.attributes().resolve > 1 && character.skills().occult > 0
 			}
-			Merit::FastReflexes => {
+			Self::FastReflexes => {
 				let attr = character.attributes();
 				attr.wits > 2 || attr.dexterity > 2
 			}
-			Merit::GoodTimeManagement => {
+			Self::GoodTimeManagement => {
 				let skills = character.skills();
 				skills.academics > 1 || skills.science > 1
 			}
@@ -329,8 +331,8 @@ impl Merit {
 				let attrs = character.attributes();
 				attrs.wits > 2 || attrs.composure > 2
 			}
-			Self::ViceRidden(_) if character.splat.vice_anchor() != "vice" => false,
-			Self::Virtuous(_) if character.splat.virtue_anchor() != "virtue" => false,
+			// Self::ViceRidden(_) if character.splat.vice_anchor() != Anchor::Vice => false,
+			// Self::Virtuous(_) if character.splat.virtue_anchor() != Anchor::Virtue => false,
 
 			// Self::Ambidextrous // Character creation only
 			Self::AutomotiveGenius => {
@@ -365,7 +367,7 @@ impl Merit {
 			Self::Relentless => {
 				character.skills().athletics > 1 && character.attributes().stamina > 2
 			}
-			// Self::Roadkill // Merit Dep Aggresive Driving 2
+			// Self::Roadkill // Merit Dep Aggressive Driving 2
 			Self::SeizingTheEdge => {
 				let attr = character.attributes();
 				attr.wits > 2 && attr.composure > 2
@@ -382,7 +384,7 @@ impl Merit {
 			}
 			Self::CohesiveUnit => character.attributes().presence > 2,
 			Self::Empath => character.skills().empathy > 1,
-			// Self::Fame // No Anonimity Merit
+			// Self::Fame // No Anonymity Merit
 			// Self::Fixer => character.attributes().wits > 2 // Contacts 2
 			Self::HobbyistClique(_, Some(skill)) => character.skills().get(*skill) > 1,
 			Self::Inspiring => character.attributes().presence > 2,
@@ -397,7 +399,7 @@ impl Merit {
 				let attr = character.attributes();
 				attr.composure > 2 && attr.manipulation > 2 && attr.wits > 2
 			}
-			Self::TakesOneToKnowOne if character.splat.vice_anchor() != "vice" => false,
+			// Self::TakesOneToKnowOne if character.splat.vice_anchor() != Anchor::Vice => false,
 			Self::Taste(_, _) => character.skills().crafts > 1,
 			Self::Untouchable => {
 				character.attributes().manipulation > 2 && character.skills().subterfuge > 1

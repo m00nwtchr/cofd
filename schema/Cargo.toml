@@ -9,6 +9,8 @@ license.workspace = true
 serde = { version = "1", features = ["derive"] }
 thiserror = "1"
 
+cofd-util.workspace = true
+
 chrono = { version = "0.4", features = ["serde"] }
 strum = { workspace = true, features = ["derive"] }
 derive_more = { version = "0.99", default-features = false, features = ["display"] }

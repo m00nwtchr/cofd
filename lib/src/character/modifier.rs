@@ -1,14 +1,13 @@
+use super::Character;
+use crate::dice_pool::{DicePool, DicePoolExt};
+use crate::prelude::Trait;
+use crate::splat::{ability::Ability, werewolf::Form, Splat};
+use crate::traits::{attribute::Attribute, skill::Skill};
+use cofd_schema::traits::DerivedTrait;
+use serde::{Deserialize, Serialize};
 use std::{
 	collections::HashMap,
 	sync::{Arc, RwLock},
-};
-
-use serde::{Deserialize, Serialize};
-
-use super::{traits::*, Character};
-use crate::{
-	dice_pool::DicePool,
-	splat::{ability::Ability, werewolf::Form, Splat},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -99,7 +98,7 @@ impl ModifierValue {
 				*character.get_ability_value(ability).unwrap_or(&0) as i16
 			}
 			ModifierValue::Skill(skill) => character.skills.get(*skill) as i16,
-			ModifierValue::DicePool(pool) => pool.value(character),
+			ModifierValue::DicePool(pool) => pool.value(character) as i16,
 		}
 	}
 }
@@ -155,7 +154,7 @@ impl Condition {
 	pub fn check(&self, character: &Character) -> bool {
 		match self {
 			Self::WerewolfForm(form) => {
-				if let Splat::Werewolf(.., data) = &character.splat {
+				if let Splat::Werewolf(data) = &character.splat {
 					form.eq(&data.form)
 				} else {
 					false
@@ -239,11 +238,11 @@ impl Modifiers {
 		);
 
 		match &character.splat {
-			Splat::Werewolf(auspice, .., data) => {
+			Splat::Werewolf(data) => {
 				// modifiers.extend(data.form.get_modifiers());
 				modifiers.extend(Form::modifiers());
 
-				if let Some(auspice) = auspice {
+				if let Some(auspice) = &data.auspice {
 					modifiers.extend(
 						auspice.get_moon_gift().get_modifiers(
 							*character
@@ -252,10 +251,10 @@ impl Modifiers {
 						),
 					);
 
-					if let Some(skill_bonus) = data.skill_bonus {
-						if auspice.get_skills().contains(&skill_bonus) {
+					if let Some(skill_bonus) = data.skill_bonus() {
+						if auspice.skills().contains(&skill_bonus) {
 							modifiers.push(Modifier::new(
-								ModifierTarget::BaseSkill(skill_bonus),
+								ModifierTarget::BaseSkill(skill_bonus.clone()),
 								1,
 								ModifierOp::Add,
 							));
@@ -263,9 +262,9 @@ impl Modifiers {
 					}
 				}
 			}
-			Splat::Mage(_, order, _, data) => {
+			Splat::Mage(data) => {
 				// TODO: High Speech merit, Order Status merit
-				if order.is_some() {
+				if data.order.is_some() {
 					modifiers.push(Modifier::new(
 						ModifierTarget::BaseSkill(Skill::Occult),
 						1,
@@ -273,37 +272,26 @@ impl Modifiers {
 					));
 				}
 
-				if let Some(attr_bonus) = data.attr_bonus {
-					if attr_bonus.get_type() == AttributeType::Resistance {
-						modifiers.push(Modifier::new(
-							ModifierTarget::BaseAttribute(attr_bonus),
-							1,
-							ModifierOp::Add,
-						));
-					}
-				}
+				let attr_bonus = data.attr_bonus();
+				modifiers.push(Modifier::new(
+					ModifierTarget::BaseAttribute(attr_bonus.clone()),
+					1,
+					ModifierOp::Add,
+				));
 			}
-			Splat::Vampire(clan, .., data) => {
-				if let Some(attr_bonus) = data.attr_bonus {
-					if clan.get_favored_attributes().contains(&attr_bonus) {
-						modifiers.push(Modifier::new(
-							ModifierTarget::BaseAttribute(attr_bonus),
-							1,
-							ModifierOp::Add,
-						));
-					}
-				}
+			Splat::Vampire(data) => {
+				modifiers.push(Modifier::new(
+					ModifierTarget::BaseAttribute(data.attr_bonus().clone()),
+					1,
+					ModifierOp::Add,
+				));
 			}
-			Splat::Changeling(seeming, .., data) => {
-				if let Some(attr_bonus) = data.attr_bonus {
-					if seeming.get_favored_attributes().contains(&attr_bonus) {
-						modifiers.push(Modifier::new(
-							ModifierTarget::BaseAttribute(attr_bonus),
-							1,
-							ModifierOp::Add,
-						));
-					}
-				}
+			Splat::Changeling(data) => {
+				modifiers.push(Modifier::new(
+					ModifierTarget::BaseAttribute(data.attr_bonus().clone()),
+					1,
+					ModifierOp::Add,
+				));
 			}
 
 			_ => {}
@@ -370,7 +358,7 @@ impl Modifiers {
 		let target = target.into();
 
 		match target {
-			ModifierTarget::Trait(Trait::Defense) => {
+			ModifierTarget::Trait(Trait::DerivedTrait(DerivedTrait::Defense)) => {
 				let mut defense_attribute = DicePool::min(Attribute::Wits, Attribute::Dexterity);
 				let mut defense_skill = Skill::Athletics;
 
@@ -415,7 +403,7 @@ impl Modifiers {
 		let condition = condition.into();
 
 		match target {
-			ModifierTarget::Trait(Trait::Defense) => {
+			ModifierTarget::Trait(Trait::DerivedTrait(DerivedTrait::Defense)) => {
 				let mut defense_attribute = DicePool::min(Attribute::Wits, Attribute::Dexterity);
 				let mut defense_skill = Skill::Athletics;
 
