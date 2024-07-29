@@ -21,7 +21,7 @@ macro_rules! derive_error {
 fn parse_args(variant: &Variant, map: &mut HashMap<String, TokenStream>) -> syn::Result<()> {
 	map.clear();
 	for attr in &variant.attrs {
-		if attr.path().is_ident("splat") {
+		if attr.path().is_ident("template") {
 			attr.parse_nested_meta(|meta| {
 				let val: syn::Expr = meta.value()?.parse()?;
 

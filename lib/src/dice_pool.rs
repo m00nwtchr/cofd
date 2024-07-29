@@ -1,6 +1,6 @@
-use crate::character::Character;
 use std::cmp::{max, min};
 
+use crate::character::Character;
 use crate::traits::Trait;
 pub use cofd_schema::dice_pool::DicePool;
 

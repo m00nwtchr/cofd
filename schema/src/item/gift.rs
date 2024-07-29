@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::splat::werewolf::{Auspice, Renown};
+use crate::template::werewolf::{Auspice, Renown};
 
 use super::{ActionFields, Item};
 

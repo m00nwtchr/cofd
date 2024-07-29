@@ -1,7 +1,7 @@
 use std::{convert::Into, str::FromStr};
 
 use self::{attribute::Attribute, skill::Skill};
-use crate::splat::SupernaturalTolerance;
+use crate::template::SupernaturalTolerance;
 use serde::{Deserialize, Serialize};
 use strum::{AsRefStr, Display, EnumString, ParseError};
 
@@ -13,35 +13,6 @@ pub enum TraitCategory {
 	Mental,
 	Physical,
 	Social,
-}
-
-#[derive(Debug, Serialize, Deserialize, EnumString)]
-#[strum(ascii_case_insensitive)]
-pub enum Fuel {
-	Mana,
-	Vitae,
-	Essence,
-	Pyros,
-	Glamour,
-	Plasm,
-	Pillar,
-	Aether,
-	// Satiety,
-}
-
-#[derive(Debug, Serialize, Deserialize, EnumString)]
-#[strum(ascii_case_insensitive)]
-pub enum Integrity {
-	Integrity,
-	Wisdom,
-	Humanity,
-	Harmony,
-	Pilgrimage,
-	Clarity,
-	Memory,
-	Cover,
-	Satiety,
-	Instability,
 }
 
 #[derive(

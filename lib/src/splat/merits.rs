@@ -1,4 +1,4 @@
-use cofd_schema::splat::Anchor;
+use cofd_schema::template::Anchor;
 use cofd_util::{AllVariants, VariantName};
 use serde::{Deserialize, Serialize};
 use cofd_schema::prelude::Skill;
@@ -331,8 +331,8 @@ impl Merit {
 				let attrs = character.attributes();
 				attrs.wits > 2 || attrs.composure > 2
 			}
-			// Self::ViceRidden(_) if character.splat.vice_anchor() != Anchor::Vice => false,
-			// Self::Virtuous(_) if character.splat.virtue_anchor() != Anchor::Virtue => false,
+			// Self::ViceRidden(_) if character.template.vice_anchor() != Anchor::Vice => false,
+			// Self::Virtuous(_) if character.template.virtue_anchor() != Anchor::Virtue => false,
 
 			// Self::Ambidextrous // Character creation only
 			Self::AutomotiveGenius => {
@@ -399,7 +399,7 @@ impl Merit {
 				let attr = character.attributes();
 				attr.composure > 2 && attr.manipulation > 2 && attr.wits > 2
 			}
-			// Self::TakesOneToKnowOne if character.splat.vice_anchor() != Anchor::Vice => false,
+			// Self::TakesOneToKnowOne if character.template.vice_anchor() != Anchor::Vice => false,
 			Self::Taste(_, _) => character.skills().crafts > 1,
 			Self::Untouchable => {
 				character.attributes().manipulation > 2 && character.skills().subterfuge > 1

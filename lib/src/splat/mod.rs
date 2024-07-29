@@ -29,7 +29,7 @@ use vampire::*;
 use werewolf::*;
 // use promethean::*;
 use changeling::*;
-use cofd_schema::splat::Template;
+use cofd_schema::template::Template;
 // use hunter::*;
 use geist::*;
 use mortal::*;
@@ -42,7 +42,7 @@ use mortal::*;
 #[enum_dispatch(SplatTrait)]
 pub enum Splat {
 	Mortal(Mortal),
-	// #[splat(
+	// #[template(
 	// 	virtue_anchor = Anchor::Mask,
 	// 	vice_anchor = Anchor::Dirge,
 	// 	ability = "disciplines",
@@ -53,7 +53,7 @@ pub enum Splat {
 	// 	abilities_finite = false
 	// )]
 	Vampire(Vampire),
-	// #[splat(
+	// #[template(
 	// 	virtue_anchor = Anchor::Blood,
 	// 	vice_anchor = Anchor::Bone,
 	// 	ability = "renown",
@@ -62,7 +62,7 @@ pub enum Splat {
 	// 	integrity = Integrity::Harmony
 	// )]
 	Werewolf(Werewolf),
-	// #[splat(
+	// #[template(
 	// 	ability = "arcana",
 	// 	st = SupernaturalTolerance::Gnosis,
 	// 	alt_beats = "arcane",
@@ -71,7 +71,7 @@ pub enum Splat {
 	// )]
 	Mage(Mage),
 	// Promethean(Lineage),
-	// #[splat(
+	// #[template(
 	// 	virtue_anchor = Anchor::Thread,
 	// 	vice_anchor = Anchor::Needle,
 	// 	ability = "disciplines",
@@ -82,7 +82,7 @@ pub enum Splat {
 	// )]
 	Changeling(Changeling),
 	// Hunter(Tier),
-	// #[splat(
+	// #[template(
 	// 	virtue_anchor = Anchor::Root,
 	// 	vice_anchor = Anchor::Bloom,
 	// 	ability = "haunts",

@@ -19,12 +19,19 @@ pub mod traits;
 #[macro_use]
 extern crate cofd_util;
 
+pub use cofd_schema::template;
+
 pub mod prelude {
 	pub use crate::character::{Attributes, Character, Skills};
-	pub use crate::traits::{
-		attribute::{Attribute, AttributeKind},
-		skill::Skill,
-		Trait, TraitCategory,
+	pub use crate::traits::Trait;
+
+	pub use cofd_schema::{
+		template::Template,
+		traits::{
+			attribute::{Attribute, AttributeKind},
+			skill::Skill,
+			TraitCategory,
+		},
 	};
 	pub use cofd_util::{AllVariants, VariantName};
 }
