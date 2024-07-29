@@ -21,7 +21,11 @@ extern crate cofd_util;
 
 pub mod prelude {
 	pub use crate::character::{Attributes, Character, Skills};
-	pub use crate::traits::{attribute::Attribute, skill::Skill, Trait};
+	pub use crate::traits::{
+		attribute::{Attribute, AttributeKind},
+		skill::Skill,
+		Trait, TraitCategory,
+	};
 	pub use cofd_util::{AllVariants, VariantName};
 }
 

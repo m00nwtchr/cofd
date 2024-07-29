@@ -1,40 +1,9 @@
 use cofd_schema::prelude::{Attribute, Skill};
 use serde::{Deserialize, Serialize};
-// use cofd_util::VariantName;
 
-// use super::Armor;
-// use crate::splat::NameKey;
-
-pub use cofd_schema::traits::DerivedTrait;
-pub use cofd_schema::traits::{attribute, skill};
-// #[derive(VariantName)]
-// pub enum TraitCategory {
-// 	Mental,
-// 	Physical,
-// 	Social,
-// }
-
-// impl TraitCategory {
-// 	pub fn unskilled(&self) -> u16 {
-// 		match self {
-// 			TraitCategory::Mental => 3,
-// 			TraitCategory::Physical => 1,
-// 			TraitCategory::Social => 1,
-// 		}
-// 	}
-// }
-
-// #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
-// pub enum AttributeType {
-// 	Power,
-// 	Finesse,
-// 	Resistance,
-// }
-//
-// pub enum AttributeCategory {
-// 	Type(AttributeType),
-// 	Trait(TraitCategory),
-// }
+pub use cofd_schema::traits::{
+	DerivedTrait, TraitCategory, {attribute, skill},
+};
 
 #[derive(
 	Debug,

@@ -16,13 +16,12 @@ pub enum AttributeKind {
 	Copy,
 	Serialize,
 	Deserialize,
-	EnumIs,
 	PartialEq,
 	Eq,
+	Hash,
 	Display,
 	AsRefStr,
 	EnumString,
-	Hash,
 	VariantArray,
 )]
 #[serde(untagged)]
