@@ -362,9 +362,8 @@ pub fn derive_all_variants(input: proc_macro::TokenStream) -> proc_macro::TokenS
 
 	let expanded = quote! {
 		impl #impl_generics cofd_util::AllVariants for #name #ty_generics #where_clause {
-			type T = #name;
 			const N: usize = #num;
-			fn all() -> [Self::T; Self::N] {
+			fn all() -> [Self; Self::N] {
 				[
 					#all_variants
 				]

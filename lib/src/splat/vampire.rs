@@ -173,23 +173,10 @@ impl Clan {
 	pub fn favored_attributes(&self) -> &[Attribute; 2] {
 		match self {
 			Clan::Daeva => &[Attribute::Dexterity, Attribute::Manipulation],
-			// ],
-			// Clan::Gangrel => &[
-			// 	SocialAttribute::Composure.into(),
-			// 	PhysicalAttribute::Stamina.into(),
-			// ],
-			// Clan::Mekhet => &[
-			// 	MentalAttribute::Intelligence.into(),
-			// 	MentalAttribute::Wits.into(),
-			// ],
-			// Clan::Nosferatu => &[
-			// 	SocialAttribute::Composure.into(),
-			// 	PhysicalAttribute::Strength.into(),
-			// ],
-			// Clan::Ventrue => &[
-			// 	SocialAttribute::Presence.into(),
-			// 	MentalAttribute::Resolve.into(),
-			// ],
+			Clan::Gangrel => &[Attribute::Composure, Attribute::Stamina],
+			Clan::Mekhet => &[Attribute::Intelligence, Attribute::Wits],
+			Clan::Nosferatu => &[Attribute::Composure, Attribute::Strength],
+			Clan::Ventrue => &[Attribute::Presence, Attribute::Resolve],
 			Clan::_Custom(_, _, attributes) => attributes,
 			_ => todo!(),
 		}

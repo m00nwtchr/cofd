@@ -16,8 +16,10 @@ where
 	}
 }
 
-pub trait AllVariants {
-	type T;
+pub trait AllVariants
+where
+	Self: Sized,
+{
 	const N: usize;
-	fn all() -> [Self::T; Self::N];
+	fn all() -> [Self; Self::N];
 }

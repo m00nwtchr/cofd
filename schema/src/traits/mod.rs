@@ -1,6 +1,7 @@
 use std::{convert::Into, str::FromStr};
 
-use self::{attribute::Attribute, skill::Skill};
+use self::skill::Skill;
+use crate::prelude::Attribute;
 use crate::template::SupernaturalTolerance;
 use serde::{Deserialize, Serialize};
 use strum::{AsRefStr, Display, EnumString, ParseError};

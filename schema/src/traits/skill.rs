@@ -1,6 +1,7 @@
-use crate::prelude::TraitCategory;
 use serde::{Deserialize, Serialize};
 use strum::{AsRefStr, Display, EnumString, VariantArray};
+
+use crate::traits::TraitCategory;
 
 #[derive(
 	Clone,
@@ -54,7 +55,7 @@ impl Skill {
 	/// # Examples
 	///
 	/// ```
-	/// # use cofd_schema::prelude::{Skill, TraitCategory};
+	/// # use cofd_schema::traits::{skill::Skill, TraitCategory};
 	/// let skill = Skill::Drive;
 	/// assert_eq!(skill.category(), TraitCategory::Physical);
 	/// ```
@@ -101,7 +102,7 @@ impl Skill {
 	/// # Examples
 	///
 	/// ```
-	/// # use cofd_schema::prelude::{Skill, TraitCategory};
+	/// # use cofd_schema::traits::{skill::Skill, TraitCategory};
 	/// let physical_skills = Skill::get_by_category(TraitCategory::Physical);
 	/// assert!(physical_skills.contains(&Skill::Drive));
 	/// ```

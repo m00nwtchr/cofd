@@ -42,55 +42,12 @@ use mortal::*;
 #[enum_dispatch(SplatTrait)]
 pub enum Splat {
 	Mortal(Mortal),
-	// #[template(
-	// 	virtue_anchor = Anchor::Mask,
-	// 	vice_anchor = Anchor::Dirge,
-	// 	ability = "disciplines",
-	// 	st = SupernaturalTolerance::BloodPotency,
-	// 	alt_beats = "blood",
-	// 	fuel = "vitae",
-	// 	integrity = Integrity::Humanity,
-	// 	abilities_finite = false
-	// )]
 	Vampire(Vampire),
-	// #[template(
-	// 	virtue_anchor = Anchor::Blood,
-	// 	vice_anchor = Anchor::Bone,
-	// 	ability = "renown",
-	// 	st = SupernaturalTolerance::PrimalUrge,
-	// 	fuel = "essence",
-	// 	integrity = Integrity::Harmony
-	// )]
 	Werewolf(Werewolf),
-	// #[template(
-	// 	ability = "arcana",
-	// 	st = SupernaturalTolerance::Gnosis,
-	// 	alt_beats = "arcane",
-	// 	fuel = "mana",
-	// 	integrity = Integrity::Wisdom
-	// )]
 	Mage(Mage),
 	// Promethean(Lineage),
-	// #[template(
-	// 	virtue_anchor = Anchor::Thread,
-	// 	vice_anchor = Anchor::Needle,
-	// 	ability = "disciplines",
-	// 	st = SupernaturalTolerance::Wyrd,
-	// 	fuel = "glamour",
-	// 	integrity = Integrity::Clarity,
-	// 	abilities_finite = false
-	// )]
 	Changeling(Changeling),
 	// Hunter(Tier),
-	// #[template(
-	// 	virtue_anchor = Anchor::Root,
-	// 	vice_anchor = Anchor::Bloom,
-	// 	ability = "haunts",
-	// 	st = SupernaturalTolerance::Synergy,
-	// 	fuel = "plasm",
-	// 	integrity = Integrity::Synergy,
-	// 	abilities_finite = false
-	// )]
 	Bound(Bound),
 	// Mummy(Decree, Guild),
 	// Demon(Incarnation, Vec<Agenda>),

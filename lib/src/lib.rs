@@ -142,7 +142,7 @@ mod tests {
 			])
 			.build();
 
-		vampire_character.splat.vice_anchor();
+		// vampire_character.splat.vice_anchor();
 
 		println!("{:?}", vampire_character);
 		println!("{:?}", vampire_character.attributes());

@@ -126,7 +126,6 @@ name = "cofd-util"
 version = "0.1.0"
 dependencies = [
  "cofd-derive",
- "serde",
 ]
 
 [[package]]

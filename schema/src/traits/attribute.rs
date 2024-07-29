@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use strum::{AsRefStr, Display, EnumIs, EnumString, VariantArray};
+use strum::{AsRefStr, Display, EnumString, VariantArray};
 
 use crate::traits::TraitCategory;
 
@@ -44,7 +44,7 @@ impl Attribute {
 	/// # Examples
 	///
 	/// ```
-	/// # use cofd_schema::prelude::{Attribute, TraitCategory};
+	/// # use cofd_schema::traits::{Attribute, TraitCategory};
 	/// let attr = Attribute::Dexterity;
 	/// assert_eq!(attr.category(), TraitCategory::Physical);
 	/// ```
@@ -65,7 +65,7 @@ impl Attribute {
 	/// # Examples
 	///
 	/// ```
-	/// # use cofd_schema::prelude::{Attribute, AttributeKind};
+	/// # use cofd_schema::traits::attribute::{Attribute, AttributeKind};
 	/// let attr = Attribute::Wits;
 	/// assert_eq!(attr.kind(), AttributeKind::Finesse);
 	/// ```
@@ -92,7 +92,7 @@ impl Attribute {
 	/// # Examples
 	///
 	/// ```
-	/// # use cofd_schema::prelude::{Attribute, TraitCategory};
+	/// # use cofd_schema::traits::{Attribute, TraitCategory};
 	/// let physical_attributes = Attribute::get_by_category(TraitCategory::Physical);
 	/// assert!(physical_attributes.contains(&Attribute::Strength));
 	/// ```
@@ -121,7 +121,7 @@ impl Attribute {
 	/// # Examples
 	///
 	/// ```
-	/// # use cofd_schema::prelude::{Attribute, AttributeKind};
+	/// # use cofd_schema::traits::attribute::{Attribute, AttributeKind};
 	/// let finesse_attributes = Attribute::get_by_kind(AttributeKind::Finesse);
 	/// assert!(finesse_attributes.contains(&Attribute::Dexterity));
 	/// ```
