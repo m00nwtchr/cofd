@@ -8,6 +8,13 @@ use strum::{AsRefStr, Display, EnumString, ParseError};
 pub mod attribute;
 pub mod skill;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum TraitCategory {
+	Mental,
+	Physical,
+	Social,
+}
+
 #[derive(Debug, Serialize, Deserialize, EnumString)]
 #[strum(ascii_case_insensitive)]
 pub enum Fuel {

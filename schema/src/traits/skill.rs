@@ -1,5 +1,6 @@
+use crate::prelude::TraitCategory;
 use serde::{Deserialize, Serialize};
-use strum::{AsRefStr, EnumString};
+use strum::{AsRefStr, Display, EnumString, VariantArray};
 
 #[derive(
 	Clone,
@@ -12,9 +13,10 @@ use strum::{AsRefStr, EnumString};
 	Ord,
 	Serialize,
 	Deserialize,
+	Display,
 	EnumString,
 	AsRefStr,
-	strum::Display,
+	VariantArray,
 )]
 #[strum(ascii_case_insensitive)]
 pub enum Skill {
@@ -47,50 +49,67 @@ pub enum Skill {
 }
 
 impl Skill {
-	// fn mental() -> [Skill; 8] {
-	// 	[
-	// 		Self::Academics,
-	// 		Self::Computer,
-	// 		Self::Crafts,
-	// 		Self::Investigation,
-	// 		Self::Medicine,
-	// 		Self::Occult,
-	// 		Self::Politics,
-	// 		Self::Science,
-	// 	]
-	// }
-	//
-	// fn physical() -> [Skill; 8] {
-	// 	[
-	// 		Self::Athletics,
-	// 		Self::Brawl,
-	// 		Self::Drive,
-	// 		Self::Firearms,
-	// 		Self::Larceny,
-	// 		Self::Stealth,
-	// 		Self::Survival,
-	// 		Self::Weaponry,
-	// 	]
-	// }
-	//
-	// fn social() -> [Skill; 8] {
-	// 	[
-	// 		Self::AnimalKen,
-	// 		Self::Empathy,
-	// 		Self::Expression,
-	// 		Self::Intimidation,
-	// 		Self::Persuasion,
-	// 		Self::Socialize,
-	// 		Self::Streetwise,
-	// 		Self::Subterfuge,
-	// 	]
-	// }
+	/// Returns the `TraitCategory` of the skill.
+	///
+	/// # Examples
+	///
+	/// ```
+	/// # use cofd_schema::prelude::{Skill, TraitCategory};
+	/// let skill = Skill::Drive;
+	/// assert_eq!(skill.category(), TraitCategory::Physical);
+	/// ```
+	pub fn category(&self) -> TraitCategory {
+		match self {
+			// Mental skills
+			Skill::Academics
+			| Skill::Computer
+			| Skill::Crafts
+			| Skill::Investigation
+			| Skill::Medicine
+			| Skill::Occult
+			| Skill::Politics
+			| Skill::Science => TraitCategory::Mental,
 
-	// pub fn get(cat: &TraitCategory) -> [Skill; 8] {
-	// 	match cat {
-	// 		TraitCategory::Mental => Self::mental(),
-	// 		TraitCategory::Physical => Self::physical(),
-	// 		TraitCategory::Social => Self::social(),
-	// 	}
-	// }
+			// Physical skills
+			Skill::Athletics
+			| Skill::Brawl
+			| Skill::Drive
+			| Skill::Firearms
+			| Skill::Larceny
+			| Skill::Stealth
+			| Skill::Survival
+			| Skill::Weaponry => TraitCategory::Physical,
+
+			// Social skills
+			Skill::AnimalKen
+			| Skill::Empathy
+			| Skill::Expression
+			| Skill::Intimidation
+			| Skill::Persuasion
+			| Skill::Socialize
+			| Skill::Streetwise
+			| Skill::Subterfuge => TraitCategory::Social,
+		}
+	}
+
+	/// Retrieves all skills that belong to a specific `TraitCategory`.
+	///
+	/// # Parameters
+	///
+	/// - `category`: The `TraitCategory` to filter by.
+	///
+	/// # Examples
+	///
+	/// ```
+	/// # use cofd_schema::prelude::{Skill, TraitCategory};
+	/// let physical_skills = Skill::get_by_category(TraitCategory::Physical);
+	/// assert!(physical_skills.contains(&Skill::Drive));
+	/// ```
+	pub fn get_by_category(category: TraitCategory) -> Vec<Skill> {
+		Self::VARIANTS
+			.into_iter()
+			.filter(|&skill| skill.category() == category)
+			.copied()
+			.collect()
+	}
 }

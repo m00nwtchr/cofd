@@ -51,19 +51,22 @@ mod tests {
 	#[allow(clippy::too_many_lines)]
 	fn it_works() {
 		let vampire_character = Character::builder()
-			.with_splat(Splat::Vampire(Vampire::new(
-				Clan::Ventrue,
-				Some(Covenant::OrdoDracul),
-				Some(Bloodline::_Custom(
-					"Dragolescu".to_string(),
-					Some([
-						Discipline::Animalism,
-						Discipline::Dominate,
-						Discipline::Resilience,
-						Discipline::Auspex,
-					]),
-				)),
-			)))
+			.with_splat(Splat::Vampire(
+				Vampire::new(
+					Clan::Ventrue,
+					Some(Covenant::OrdoDracul),
+					Some(Bloodline::_Custom(
+						"Dragolescu".to_string(),
+						Some([
+							Discipline::Animalism,
+							Discipline::Dominate,
+							Discipline::Resilience,
+							Discipline::Auspex,
+						]),
+					)),
+				)
+				.with_attr_bonus(Attribute::Resolve),
+			))
 			.with_info(CharacterInfo {
 				name: String::from("Darren Webb"),
 				player: String::from("m00n"),
@@ -129,7 +132,7 @@ mod tests {
 			.build();
 
 		vampire_character.splat.vice_anchor();
-		
+
 		println!("{:?}", vampire_character);
 		println!("{:?}", vampire_character.attributes());
 

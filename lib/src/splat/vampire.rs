@@ -1,6 +1,3 @@
-use cofd_util::{AllVariants, VariantName};
-use serde::{Deserialize, Serialize};
-use cofd_schema::traits::DerivedTrait;
 use super::{ability::Ability, Merit, Splat, SplatTrait, XSplat, YSplat, ZSplat};
 use crate::splat::mage::{Legacy, MageMerit, Order, Path};
 use crate::{
@@ -8,6 +5,9 @@ use crate::{
 	dice_pool::DicePool,
 	prelude::{Attribute, Attributes, Skills, Trait},
 };
+use cofd_schema::traits::DerivedTrait;
+use cofd_util::{AllVariants, VariantName};
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(default)]
@@ -36,8 +36,14 @@ impl Vampire {
 
 	pub fn set_attr_bonus(&mut self, attribute: Attribute) {
 		if self.clan.favored_attributes().contains(&attribute) {
-			self.attr_bonus = attribute
+			self.attr_bonus = attribute;
 		}
+	}
+
+	#[must_use]
+	pub fn with_attr_bonus(mut self, attribute: Attribute) -> Self {
+		self.set_attr_bonus(attribute);
+		self
 	}
 }
 
@@ -237,7 +243,11 @@ impl Discipline {
 	pub fn get_modifiers(&self, value: u16) -> Vec<crate::character::modifier::Modifier> {
 		match self {
 			Discipline::Celerity => {
-				vec![Modifier::new(Trait::DerivedTrait(DerivedTrait::Defense), value, ModifierOp::Add)]
+				vec![Modifier::new(
+					Trait::DerivedTrait(DerivedTrait::Defense),
+					value,
+					ModifierOp::Add,
+				)]
 			}
 			Discipline::Resilience => {
 				vec![Modifier::new(Attribute::Stamina, value, ModifierOp::Add)]
