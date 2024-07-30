@@ -5,21 +5,21 @@ use cofd_util::{AllVariants, VariantName};
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Bound {
-	burden: Burden,
-	archetype: Archetype,
+	pub burden: Burden,
+	pub archetype: Archetype,
 
 	pub keys: Vec<Key>,
 }
 
 impl SplatTrait for Bound {
 	fn set_xsplat(&mut self, splat: Option<XSplat>) {
-		if let Some(XSplat::Bound(burden)) = splat {
+		if let Some(XSplat::Burden(burden)) = splat {
 			self.burden = burden;
 		}
 	}
 
 	fn set_ysplat(&mut self, splat: Option<YSplat>) {
-		if let Some(YSplat::Bound(archetype)) = splat {
+		if let Some(YSplat::Archetype(archetype)) = splat {
 			self.archetype = archetype;
 		}
 	}

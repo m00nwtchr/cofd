@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use strum::{AsRefStr, Display, EnumString, VariantArray};
 
 use crate::traits::TraitCategory;
+use cofd_util::VariantName;
 
 #[derive(
 	Clone,
@@ -18,6 +19,7 @@ use crate::traits::TraitCategory;
 	EnumString,
 	AsRefStr,
 	VariantArray,
+	VariantName,
 )]
 #[strum(ascii_case_insensitive)]
 pub enum Skill {
@@ -50,6 +52,10 @@ pub enum Skill {
 }
 
 impl Skill {
+	pub fn all() -> &'static [Self] {
+		Self::VARIANTS
+	}
+
 	/// Returns the `TraitCategory` of the skill.
 	///
 	/// # Examples
@@ -112,5 +118,9 @@ impl Skill {
 			.filter(|&skill| skill.category() == category)
 			.copied()
 			.collect()
+	}
+
+	pub fn unskilled(&self) -> u8 {
+		self.category().unskilled()
 	}
 }

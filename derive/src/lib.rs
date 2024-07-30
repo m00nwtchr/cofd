@@ -21,7 +21,7 @@ macro_rules! derive_error {
 fn parse_args(variant: &Variant, map: &mut HashMap<String, TokenStream>) -> syn::Result<()> {
 	map.clear();
 	for attr in &variant.attrs {
-		if attr.path().is_ident("template") {
+		if attr.path().is_ident("splat") {
 			attr.parse_nested_meta(|meta| {
 				let val: syn::Expr = meta.value()?.parse()?;
 
@@ -133,9 +133,9 @@ pub fn derive_splat_enum(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 	);
 	gen_func("vice_anchor", "vice_anchor", "Anchor", Some("Anchor::Vice"));
 
-	// gen_func("xsplat", "xsplat_name", "Option<&str>", None);
-	// gen_func("ysplat", "ysplat_name", "Option<&str>", None);
-	// gen_func("zsplat", "zsplat_name", "Option<&str>", None);
+	gen_func("xsplat", "xsplat_name", "Option<&str>", None);
+	gen_func("ysplat", "ysplat_name", "Option<&str>", None);
+	gen_func("zsplat", "zsplat_name", "Option<&str>", None);
 
 	gen_func("ability", "ability_name", "Option<&str>", None);
 	gen_func(
@@ -211,7 +211,7 @@ pub fn derive_variant_name(input: proc_macro::TokenStream) -> proc_macro::TokenS
 				};
 
 				let variant_name_lower =
-					variant_name.to_string().to_case(convert_case::Case::Snake);
+					variant_name.to_string().to_case(convert_case::Case::Kebab);
 
 				if expand {
 					if let Fields::Unnamed(fields) = &variant.fields

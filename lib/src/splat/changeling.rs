@@ -22,6 +22,13 @@ pub struct Changeling {
 }
 
 impl Changeling {
+	pub fn new(seeming: Seeming) -> Self {
+		Self {
+			seeming,
+			..Default::default()
+		}
+	}
+
 	pub fn max_clarity(&self, attributes: &Attributes) -> u16 {
 		attributes.wits + attributes.composure
 	}
@@ -39,21 +46,21 @@ impl Changeling {
 
 impl SplatTrait for Changeling {
 	fn set_xsplat(&mut self, splat: Option<XSplat>) {
-		if let Some(XSplat::Changeling(seeming)) = splat {
+		if let Some(XSplat::Seeming(seeming)) = splat {
 			self.seeming = seeming;
 		}
 	}
 
 	fn set_ysplat(&mut self, splat: Option<YSplat>) {
 		match splat {
-			Some(YSplat::Changeling(court)) => self.court = Some(court),
+			Some(YSplat::Court(court)) => self.court = Some(court),
 			_ => self.court = None,
 		}
 	}
 
 	fn set_zsplat(&mut self, splat: Option<ZSplat>) {
 		match splat {
-			Some(ZSplat::Changeling(kith)) => self.kith = Some(kith),
+			Some(ZSplat::Kith(kith)) => self.kith = Some(kith),
 			_ => self.kith = None,
 		}
 	}

@@ -23,6 +23,7 @@ pub use cofd_schema::template;
 
 pub mod prelude {
 	pub use crate::character::{Attributes, Character, Skills};
+	pub use crate::splat::SplatTrait;
 	pub use crate::traits::Trait;
 
 	pub use cofd_schema::{
@@ -62,7 +63,7 @@ mod tests {
 	#[allow(clippy::too_many_lines)]
 	fn it_works() {
 		let vampire_character = Character::builder()
-			.with_splat(Splat::Vampire(
+			.with_splat(
 				Vampire::new(
 					Clan::Ventrue,
 					Some(Covenant::OrdoDracul),
@@ -77,7 +78,7 @@ mod tests {
 					)),
 				)
 				.with_attr_bonus(Attribute::Resolve),
-			))
+			)
 			.with_info(CharacterInfo {
 				name: String::from("Darren Webb"),
 				player: String::from("m00n"),
@@ -157,11 +158,11 @@ mod tests {
 		assert_eq!(vampire_character.max_fuel(), 10);
 
 		let mut werewolf_character = Character::builder()
-			.with_splat(Splat::Werewolf(
+			.with_splat(
 				Werewolf::new()
 					.with_auspice(Auspice::Rahu)
 					.with_tribe(Tribe::BloodTalons),
-			))
+			)
 			.with_info(CharacterInfo {
 				name: String::from("Amos Gray"),
 				player: String::from("m00n"),
@@ -229,9 +230,7 @@ mod tests {
 		assert_eq!(werewolf_character.perception(), 9);
 
 		let mut mage_character = Character::builder()
-			.with_splat(Splat::Mage(
-				Mage::new(Path::Mastigos).with_order(Order::Mysterium),
-			))
+			.with_splat(Mage::new(Path::Mastigos).with_order(Order::Mysterium))
 			.with_info(CharacterInfo {
 				name: String::from("Polaris"),
 				player: String::from("m00n"),

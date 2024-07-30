@@ -1,18 +1,32 @@
-use cofd_util::SplatEnum;
+use cofd_util::{SplatEnum, VariantName};
 use serde::{Deserialize, Serialize};
-use strum::{AsRefStr, Display, EnumString};
+use strum::{AsRefStr, Display, EnumDiscriminants, EnumString};
 
 pub mod mage;
+mod vampire;
 pub mod werewolf;
 
 #[derive(
-	SplatEnum, Debug, Clone, Copy, Serialize, Deserialize, EnumString, Display, PartialEq, Eq,
+	SplatEnum,
+	Debug,
+	Clone,
+	Copy,
+	Serialize,
+	Deserialize,
+	EnumString,
+	Display,
+	PartialEq,
+	Eq,
+	VariantName,
 )]
 #[strum(ascii_case_insensitive)]
 pub enum Template {
 	#[strum(to_string = "Mortal", serialize = "Human")]
 	Mortal,
 	#[splat(
+		xsplat = "path",
+		ysplat = "order",
+		zsplat = "legacy",
 		ability = "arcana",
 		st = SupernaturalTolerance::Gnosis,
 		alt_beats = "arcane",
@@ -22,6 +36,9 @@ pub enum Template {
 	#[strum(to_string = "Mage", serialize = "Awakened")]
 	Mage,
 	#[splat(
+		xsplat = "clan",
+		ysplat = "covenant",
+		zsplat = "bloodline",
 		virtue_anchor = Anchor::Mask,
 		vice_anchor = Anchor::Dirge,
 		ability = "disciplines",
@@ -34,6 +51,9 @@ pub enum Template {
 	#[strum(to_string = "Vampire", serialize = "Kindred")]
 	Vampire,
 	#[splat(
+		xsplat = "auspice",
+		ysplat = "tribe",
+		zsplat = "lodge",
 		virtue_anchor = Anchor::Blood,
 		vice_anchor = Anchor::Bone,
 		ability = "renown",
@@ -44,6 +64,9 @@ pub enum Template {
 	Werewolf,
 	Promethean,
 	#[splat(
+		xsplat = "seeming",
+		ysplat = "court",
+		zsplat = "kith",
 		virtue_anchor = Anchor::Thread,
 		vice_anchor = Anchor::Needle,
 		st = SupernaturalTolerance::Wyrd,
@@ -54,6 +77,8 @@ pub enum Template {
 	Changeling,
 	Hunter,
 	#[splat(
+		xsplat = "burden",
+		ysplat = "archetype",
 		virtue_anchor = Anchor::Root,
 		vice_anchor = Anchor::Bloom,
 		ability = "haunts",
@@ -88,7 +113,18 @@ pub enum Template {
 }
 
 #[derive(
-	Debug, Clone, Hash, Copy, Serialize, Deserialize, EnumString, AsRefStr, PartialEq, Eq, Display,
+	Debug,
+	Clone,
+	Hash,
+	Copy,
+	Serialize,
+	Deserialize,
+	EnumString,
+	AsRefStr,
+	PartialEq,
+	Eq,
+	Display,
+	VariantName,
 )]
 #[strum(ascii_case_insensitive)]
 pub enum SupernaturalTolerance {
@@ -106,7 +142,17 @@ pub enum SupernaturalTolerance {
 }
 
 #[derive(
-	Debug, Clone, Copy, Serialize, Deserialize, EnumString, AsRefStr, PartialEq, Eq, Display,
+	Debug,
+	Clone,
+	Copy,
+	Serialize,
+	Deserialize,
+	EnumString,
+	AsRefStr,
+	PartialEq,
+	Eq,
+	Display,
+	VariantName,
 )]
 #[strum(ascii_case_insensitive)]
 pub enum Anchor {
@@ -132,7 +178,17 @@ pub enum Anchor {
 }
 
 #[derive(
-	Debug, Clone, Copy, Serialize, Deserialize, EnumString, AsRefStr, PartialEq, Eq, Display,
+	Debug,
+	Clone,
+	Copy,
+	Serialize,
+	Deserialize,
+	EnumString,
+	AsRefStr,
+	PartialEq,
+	Eq,
+	Display,
+	VariantName,
 )]
 #[strum(ascii_case_insensitive)]
 pub enum Integrity {
@@ -150,7 +206,17 @@ pub enum Integrity {
 }
 
 #[derive(
-	Debug, Clone, Copy, Serialize, Deserialize, EnumString, AsRefStr, PartialEq, Eq, Display,
+	Debug,
+	Clone,
+	Copy,
+	Serialize,
+	Deserialize,
+	EnumString,
+	AsRefStr,
+	PartialEq,
+	Eq,
+	Display,
+	VariantName,
 )]
 #[strum(ascii_case_insensitive)]
 pub enum Fuel {
@@ -163,5 +229,4 @@ pub enum Fuel {
 	PillarPoint,
 	Aether,
 	// Satiety,
-
 }

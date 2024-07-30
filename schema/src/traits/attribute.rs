@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use strum::{AsRefStr, Display, EnumString, VariantArray};
 
+use cofd_util::VariantName;
+
 use crate::traits::TraitCategory;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -23,6 +25,7 @@ pub enum AttributeKind {
 	AsRefStr,
 	EnumString,
 	VariantArray,
+	VariantName,
 )]
 #[serde(untagged)]
 #[strum(ascii_case_insensitive)]

@@ -1,9 +1,21 @@
-use serde::{Deserialize, Serialize};
-use strum::EnumString;
-
 use crate::traits::skill::Skill;
+use cofd_util::{AllVariants, VariantName};
+use serde::{Deserialize, Serialize};
+use strum::{EnumString, VariantArray};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, EnumString, PartialEq, Eq)]
+#[derive(
+	Debug,
+	Clone,
+	Copy,
+	Serialize,
+	Deserialize,
+	EnumString,
+	PartialEq,
+	Eq,
+	VariantArray,
+	Hash,
+	VariantName,
+)]
 pub enum Arcanum {
 	Death,
 	Fate,
@@ -15,6 +27,12 @@ pub enum Arcanum {
 	Space,
 	Spirit,
 	Time,
+}
+
+impl Arcanum {
+	pub fn all() -> &'static [Self] {
+		Self::VARIANTS
+	}
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, EnumString, PartialEq, Eq)]
@@ -47,7 +65,6 @@ pub enum Path {
 	Obrimos,
 	Thyrsus,
 	_Custom {
-		// (String, [Arcanum; 2], Arcanum),
 		name: String,
 		ruling_arcana: [Arcanum; 2],
 		inferior_arcanum: Arcanum,

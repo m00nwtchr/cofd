@@ -38,7 +38,7 @@ use mortal::*;
 // use beast::*;
 // use deviant:*;
 
-#[derive(Clone, Serialize, Deserialize, Debug, VariantName, AllVariants)]
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize, Debug, VariantName, AllVariants)]
 #[enum_dispatch(SplatTrait)]
 pub enum Splat {
 	Mortal(Mortal),
@@ -71,7 +71,7 @@ impl Deref for Splat {
 }
 
 #[enum_dispatch]
-trait SplatTrait {
+pub trait SplatTrait {
 	fn set_xsplat(&mut self, splat: Option<XSplat>);
 
 	fn set_ysplat(&mut self, splat: Option<YSplat>);
@@ -130,36 +130,50 @@ impl Default for Splat {
 
 #[derive(Debug, Clone, PartialEq, Eq, VariantName, derive_more::From, derive_more::TryInto)]
 pub enum XSplat {
-	Vampire(Clan),
-	Werewolf(Auspice),
-	Mage(Path),
-	Changeling(Seeming),
-	Bound(Burden),
+	#[expand]
+	Clan(Clan),
+	#[expand]
+	Auspice(Auspice),
+	#[expand]
+	Path(Path),
+	#[expand]
+	Seeming(Seeming),
+	#[expand]
+	Burden(Burden),
 }
 #[derive(Debug, Clone, PartialEq, Eq, VariantName, derive_more::From, derive_more::TryInto)]
 pub enum YSplat {
-	Vampire(Covenant),
-	Werewolf(Tribe),
-	Mage(Order),
-	Changeling(Court),
-	Bound(Archetype),
+	#[expand]
+	Covenant(Covenant),
+	#[expand]
+	Tribe(Tribe),
+	#[expand]
+	Order(Order),
+	#[expand]
+	Court(Court),
+	#[expand]
+	Archetype(Archetype),
 }
 #[derive(Debug, Clone, PartialEq, Eq, VariantName, derive_more::From, derive_more::TryInto)]
 pub enum ZSplat {
-	Vampire(Bloodline),
-	Werewolf(Lodge),
-	Mage(Legacy),
-	Changeling(Kith),
+	#[expand]
+	Bloodline(Bloodline),
+	#[expand]
+	Lodge(Lodge),
+	#[expand]
+	Legacy(Legacy),
+	#[expand]
+	Kith(Kith),
 }
 
 impl XSplat {
 	pub fn name_mut(&mut self) -> Option<&mut String> {
 		match self {
-			Self::Vampire(Clan::_Custom(name, ..))
-			| Self::Werewolf(Auspice::_Custom(name, ..))
-			| Self::Mage(Path::_Custom(name, ..))
-			| Self::Changeling(Seeming::_Custom(name, ..))
-			| Self::Bound(Burden::_Custom(name, ..)) => Some(name),
+			Self::Clan(Clan::_Custom(name, ..))
+			| Self::Auspice(Auspice::_Custom(name, ..))
+			| Self::Path(Path::_Custom(name, ..))
+			| Self::Seeming(Seeming::_Custom(name, ..))
+			| Self::Burden(Burden::_Custom(name, ..)) => Some(name),
 			_ => None,
 		}
 	}
@@ -167,11 +181,11 @@ impl XSplat {
 	pub fn is_custom(&self) -> bool {
 		matches!(
 			self,
-			Self::Vampire(Clan::_Custom(..))
-				| Self::Werewolf(Auspice::_Custom(..))
-				| Self::Mage(Path::_Custom(..))
-				| Self::Changeling(Seeming::_Custom(..))
-				| Self::Bound(Burden::_Custom(..))
+			Self::Clan(Clan::_Custom(..))
+				| Self::Auspice(Auspice::_Custom(..))
+				| Self::Path(Path::_Custom(..))
+				| Self::Seeming(Seeming::_Custom(..))
+				| Self::Burden(Burden::_Custom(..))
 		)
 	}
 }
@@ -179,14 +193,14 @@ impl XSplat {
 impl YSplat {
 	pub fn name_mut(&mut self) -> Option<&mut String> {
 		match self {
-			Self::Vampire(Covenant::_Custom(name))
-			| Self::Werewolf(Tribe::_Custom(name, ..))
-			| Self::Mage(
+			Self::Covenant(Covenant::_Custom(name))
+			| Self::Tribe(Tribe::_Custom(name, ..))
+			| Self::Order(
 				Order::_Custom(name, ..)
 				| Order::SeersOfTheThrone(Some(Ministry::_Custom(name, ..))),
 			)
-			| Self::Changeling(Court::_Custom(name))
-			| Self::Bound(Archetype::_Custom(name, ..)) => Some(name),
+			| Self::Court(Court::_Custom(name))
+			| Self::Archetype(Archetype::_Custom(name, ..)) => Some(name),
 			_ => None,
 		}
 	}
@@ -194,12 +208,12 @@ impl YSplat {
 	pub fn is_custom(&self) -> bool {
 		matches!(
 			self,
-			YSplat::Vampire(Covenant::_Custom(..))
-				| YSplat::Werewolf(Tribe::_Custom(..))
-				| YSplat::Mage(
+			YSplat::Covenant(Covenant::_Custom(..))
+				| YSplat::Tribe(Tribe::_Custom(..))
+				| YSplat::Order(
 					Order::_Custom(..) | Order::SeersOfTheThrone(Some(Ministry::_Custom(..))),
-				) | YSplat::Changeling(Court::_Custom(..))
-				| Self::Bound(Archetype::_Custom(..))
+				) | YSplat::Court(Court::_Custom(..))
+				| Self::Archetype(Archetype::_Custom(..))
 		)
 	}
 }
@@ -207,10 +221,10 @@ impl YSplat {
 impl ZSplat {
 	pub fn name_mut(&mut self) -> Option<&mut String> {
 		match self {
-			ZSplat::Vampire(Bloodline::_Custom(name, ..))
-			| ZSplat::Werewolf(Lodge::_Custom(name))
-			| ZSplat::Mage(Legacy::_Custom(name, ..))
-			| ZSplat::Changeling(Kith::_Custom(name)) => Some(name),
+			ZSplat::Bloodline(Bloodline::_Custom(name, ..))
+			| ZSplat::Lodge(Lodge::_Custom(name))
+			| ZSplat::Legacy(Legacy::_Custom(name, ..))
+			| ZSplat::Kith(Kith::_Custom(name)) => Some(name),
 			_ => None,
 		}
 	}
@@ -218,10 +232,10 @@ impl ZSplat {
 	pub fn is_custom(&self) -> bool {
 		matches!(
 			self,
-			ZSplat::Vampire(Bloodline::_Custom(..))
-				| ZSplat::Werewolf(Lodge::_Custom(..))
-				| ZSplat::Mage(Legacy::_Custom(..))
-				| ZSplat::Changeling(Kith::_Custom(..))
+			ZSplat::Bloodline(Bloodline::_Custom(..))
+				| ZSplat::Lodge(Lodge::_Custom(..))
+				| ZSplat::Legacy(Legacy::_Custom(..))
+				| ZSplat::Kith(Kith::_Custom(..))
 		)
 	}
 }

@@ -18,6 +18,7 @@ pub struct Werewolf {
 	pub tribe: Option<Tribe>,
 	pub lodge: Option<Lodge>,
 
+	pub hunters_aspect: Option<HuntersAspect>,
 	skill_bonus: Option<Skill>,
 	pub form: Form,
 	// pub moon_gifts: BTreeMap<MoonGift, AbilityVal>,
@@ -71,21 +72,21 @@ impl Werewolf {
 impl SplatTrait for Werewolf {
 	fn set_xsplat(&mut self, splat: Option<XSplat>) {
 		match splat {
-			Some(XSplat::Werewolf(auspice)) => self.auspice = Some(auspice),
+			Some(XSplat::Auspice(auspice)) => self.auspice = Some(auspice),
 			_ => self.auspice = None,
 		}
 	}
 
 	fn set_ysplat(&mut self, splat: Option<YSplat>) {
 		match splat {
-			Some(YSplat::Werewolf(tribe)) => self.tribe = Some(tribe),
+			Some(YSplat::Tribe(tribe)) => self.tribe = Some(tribe),
 			_ => self.tribe = None,
 		}
 	}
 
 	fn set_zsplat(&mut self, splat: Option<ZSplat>) {
 		match splat {
-			Some(ZSplat::Werewolf(lodge)) => self.lodge = Some(lodge),
+			Some(ZSplat::Lodge(lodge)) => self.lodge = Some(lodge),
 			_ => self.lodge = None,
 		}
 	}
@@ -175,16 +176,6 @@ pub enum KuruthTriggers {
 	_Custom(KuruthTriggerSet),
 }
 
-impl NameKey for KuruthTriggers {
-	fn name_key(&self) -> String {
-		if let Some(name) = self.name() {
-			format!("kuruth-triggers.{name}")
-		} else {
-			"custom".to_string()
-		}
-	}
-}
-
 impl Default for KuruthTriggers {
 	fn default() -> Self {
 		Self::_Custom(Default::default())
@@ -194,12 +185,12 @@ impl Default for KuruthTriggers {
 impl KuruthTriggers {
 	pub fn name(&self) -> Option<&str> {
 		match self {
-			KuruthTriggers::Blood => Some("blood"),
-			KuruthTriggers::Moon => Some("moon"),
-			KuruthTriggers::TheOther => Some("the_other"),
-			KuruthTriggers::Pack => Some("pack"),
-			KuruthTriggers::Territory => Some("territory"),
-			KuruthTriggers::Wound => Some("wound"),
+			KuruthTriggers::Blood => Some("blood-trigger"),
+			KuruthTriggers::Moon => Some("moon-trigger"),
+			KuruthTriggers::TheOther => Some("the-other-trigger"),
+			KuruthTriggers::Pack => Some("pack-trigger"),
+			KuruthTriggers::Territory => Some("territory-trigger"),
+			KuruthTriggers::Wound => Some("wound-trigger"),
 			KuruthTriggers::_Custom(_) => None,
 		}
 	}

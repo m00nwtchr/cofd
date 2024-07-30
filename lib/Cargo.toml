@@ -7,14 +7,14 @@ license.workspace = true
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
-erased-serde = "0.4"
 convert_case = "0.6"
+
 derive_more = "0.99"
+enum_dispatch = "0.3"
 
 cofd-schema.workspace = true
 cofd-util.workspace = true
 cofd-macros.workspace = true
-enum_dispatch = "0.3.13"
 
 [dev-dependencies]
 ron.workspace = true

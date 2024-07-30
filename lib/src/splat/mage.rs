@@ -1,10 +1,10 @@
+use super::{ability::Ability, Merit, NameKey, Splat, SplatTrait, XSplat, YSplat, ZSplat};
+use crate::prelude::{Attribute, Character, Skill};
+pub use cofd_schema::template::mage::Arcanum;
 use cofd_util::{AllVariants, VariantName};
 use serde::{Deserialize, Serialize};
 
-use super::{ability::Ability, Merit, NameKey, Splat, SplatTrait, XSplat, YSplat, ZSplat};
-use crate::prelude::{Attribute, Character, Skill};
-
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize, Debug)]
 #[serde(default)]
 pub struct Mage {
 	pub path: Path,
@@ -36,6 +36,24 @@ impl Mage {
 		self
 	}
 
+	#[must_use]
+	pub fn with_attr_bonus(mut self, attribute: Attribute) -> Self {
+		self.set_attr_bonus(attribute);
+		self
+	}
+
+	#[must_use]
+	pub fn with_obsessions(mut self, obsessions: Vec<String>) -> Self {
+		self.obsessions = obsessions;
+		self
+	}
+
+	#[must_use]
+	pub fn with_rotes(mut self, rotes: Vec<Rote>) -> Self {
+		self.rotes = rotes;
+		self
+	}
+
 	pub fn attr_bonus(&self) -> &Attribute {
 		&self.free_resistance_dot
 	}
@@ -52,21 +70,21 @@ impl Mage {
 
 impl SplatTrait for Mage {
 	fn set_xsplat(&mut self, splat: Option<XSplat>) {
-		if let Some(XSplat::Mage(path)) = splat {
+		if let Some(XSplat::Path(path)) = splat {
 			self.path = path;
 		}
 	}
 
 	fn set_ysplat(&mut self, splat: Option<YSplat>) {
 		match splat {
-			Some(YSplat::Mage(order)) => self.order = Some(order),
+			Some(YSplat::Order(order)) => self.order = Some(order),
 			_ => self.order = None,
 		}
 	}
 
 	fn set_zsplat(&mut self, splat: Option<ZSplat>) {
 		match splat {
-			Some(ZSplat::Mage(legacy)) => self.legacy = Some(legacy),
+			Some(ZSplat::Legacy(legacy)) => self.legacy = Some(legacy),
 			_ => self.legacy = None,
 		}
 	}
@@ -108,7 +126,7 @@ impl SplatTrait for Mage {
 	}
 
 	fn all_abilities(&self) -> Option<Vec<Ability>> {
-		Some(Arcanum::all().into_iter().map(Into::into).collect())
+		Some(Arcanum::all().into_iter().copied().map(Into::into).collect())
 	}
 
 	fn alternate_beats_optional(&self) -> bool {
@@ -227,26 +245,6 @@ impl From<Ministry> for Order {
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, AllVariants, VariantName)]
 pub enum Legacy {
 	_Custom(String, Option<Arcanum>),
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, VariantName, AllVariants)]
-pub enum Arcanum {
-	Death,
-	Fate,
-	Forces,
-	Life,
-	Matter,
-	Mind,
-	Prime,
-	Space,
-	Spirit,
-	Time,
-}
-
-impl NameKey for Arcanum {
-	fn name_key(&self) -> String {
-		format!("mage.{}", self.name())
-	}
 }
 
 impl From<Arcanum> for Ability {

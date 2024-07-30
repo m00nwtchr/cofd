@@ -56,18 +56,6 @@ impl Ability {
 	}
 }
 
-impl NameKey for Ability {
-	fn name_key(&self) -> String {
-		match self {
-			Ability::Merit(merit) => format!("merit.{}", merit.name()),
-			Ability::Discipline(discipline) => format!("vampire.{}", discipline.name()),
-			Ability::Renown(renown) => format!("werewolf.{}", renown.name()),
-			Ability::MoonGift(moon_gift) => moon_gift.name_key(),
-			Ability::Arcanum(arcanum) => arcanum.name_key(),
-			Ability::Haunt(haunt) => format!("geist.{}", haunt.name()),
-		}
-	}
-}
 // #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Serialize, Deserialize)]
 // pub struct AbilityVal(pub Ability, pub u16);
 

@@ -49,21 +49,21 @@ impl Vampire {
 
 impl SplatTrait for Vampire {
 	fn set_xsplat(&mut self, splat: Option<XSplat>) {
-		if let Some(XSplat::Vampire(clan)) = splat {
+		if let Some(XSplat::Clan(clan)) = splat {
 			self.clan = clan;
 		}
 	}
 
 	fn set_ysplat(&mut self, splat: Option<YSplat>) {
 		match splat {
-			Some(YSplat::Vampire(covenant)) => self.covenant = Some(covenant),
+			Some(YSplat::Covenant(covenant)) => self.covenant = Some(covenant),
 			_ => self.covenant = None,
 		}
 	}
 
 	fn set_zsplat(&mut self, splat: Option<ZSplat>) {
 		match splat {
-			Some(ZSplat::Vampire(bloodline)) => self.bloodline = Some(bloodline),
+			Some(ZSplat::Bloodline(bloodline)) => self.bloodline = Some(bloodline),
 			_ => self.bloodline = None,
 		}
 	}

@@ -18,5 +18,3 @@ pub mod prelude {
 }
 
 pub static DOT_CHAR: char = '•';
-
-trait ByName {}

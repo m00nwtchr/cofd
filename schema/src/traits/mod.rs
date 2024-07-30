@@ -6,18 +6,40 @@ use crate::template::SupernaturalTolerance;
 use serde::{Deserialize, Serialize};
 use strum::{AsRefStr, Display, EnumString, ParseError};
 
+use cofd_util::VariantName;
+
 pub mod attribute;
 pub mod skill;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, VariantName)]
 pub enum TraitCategory {
 	Mental,
 	Physical,
 	Social,
 }
 
+impl TraitCategory {
+	pub fn unskilled(&self) -> u8 {
+		match self {
+			TraitCategory::Mental => 3,
+			TraitCategory::Physical | TraitCategory::Social => 1,
+		}
+	}
+}
+
 #[derive(
-	Debug, Clone, Hash, Copy, Serialize, Deserialize, EnumString, Display, AsRefStr, PartialEq, Eq,
+	Debug,
+	Clone,
+	Hash,
+	Copy,
+	Serialize,
+	Deserialize,
+	EnumString,
+	Display,
+	AsRefStr,
+	PartialEq,
+	Eq,
+	VariantName,
 )]
 #[strum(ascii_case_insensitive)]
 pub enum DerivedTrait {
@@ -27,8 +49,6 @@ pub enum DerivedTrait {
 	Perception,
 	Health,
 	Willpower,
-
-	Beats,
 
 	Size,
 }

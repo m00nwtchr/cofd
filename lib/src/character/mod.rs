@@ -47,8 +47,8 @@ pub struct CharacterBuilder {
 
 impl CharacterBuilder {
 	#[must_use]
-	pub fn with_splat(mut self, splat: Splat) -> Self {
-		self.splat = splat;
+	pub fn with_splat(mut self, splat: impl Into<Splat>) -> Self {
+		self.splat = splat.into();
 		self
 	}
 
@@ -379,8 +379,9 @@ impl Character {
 				DerivedTrait::Health => self.max_health(),
 				DerivedTrait::Willpower => self.max_willpower(),
 				DerivedTrait::Size => self.size(),
-				DerivedTrait::Beats => self.beats,
 			},
+
+			Trait::Beats => self.beats,
 
 			// Trait::Armor(Some(armor)) => match armor {
 			// 	Armor::General => self.armor().general,
@@ -389,7 +390,7 @@ impl Character {
 			Trait::Power => self.power,
 			Trait::Fuel => self.fuel,
 			Trait::Integrity => self.integrity,
-			
+
 			Trait::Attribute(attr) => *self.attributes().get(attr),
 			Trait::Skill(skill) => self.skills().get(*skill),
 			_ => 0,
@@ -569,7 +570,8 @@ impl Character {
 
 	#[allow(clippy::cast_sign_loss)]
 	pub fn defense(&self) -> u16 {
-		let res = self.get_pool(Trait::DerivedTrait(DerivedTrait::Defense))
+		let res = self
+			.get_pool(Trait::DerivedTrait(DerivedTrait::Defense))
 			.unwrap()
 			.value(self);
 

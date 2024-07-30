@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat};
 
-#[derive(Clone, Default, Serialize, Deserialize, Debug)]
+#[derive(Clone, Default, PartialEq, Eq, Serialize, Deserialize, Debug)]
 pub struct Mortal;
 
 impl SplatTrait for Mortal {
