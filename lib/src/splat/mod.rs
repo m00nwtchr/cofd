@@ -1,8 +1,8 @@
+use cofd_util::{AllVariants, NameKey, SplatEnum, VariantName};
 use enum_dispatch::enum_dispatch;
 use serde::{Deserialize, Serialize};
 use std::ops::Deref;
-
-use cofd_util::{AllVariants, NameKey, SplatEnum, VariantName};
+use strum::{EnumDiscriminants, VariantArray};
 
 use self::ability::Ability;
 
@@ -38,7 +38,10 @@ use mortal::*;
 // use beast::*;
 // use deviant:*;
 
-#[derive(Clone, PartialEq, Eq, Serialize, Deserialize, Debug, VariantName, AllVariants)]
+#[derive(
+	Clone, PartialEq, Eq, Serialize, Deserialize, Debug, VariantName, AllVariants, EnumDiscriminants,
+)]
+#[strum_discriminants(name(SplatKind), derive(strum::VariantArray, VariantName))]
 #[enum_dispatch(SplatTrait)]
 pub enum Splat {
 	Mortal(Mortal),
@@ -53,6 +56,25 @@ pub enum Splat {
 	// Demon(Incarnation, Vec<Agenda>),
 	// Beast(Hunger),
 	// Deviant(Origin, Clade, Vec<Form>),
+}
+
+impl SplatKind {
+	pub fn all() -> &'static [Self] {
+		Self::VARIANTS
+	}
+}
+
+impl From<SplatKind> for Splat {
+	fn from(value: SplatKind) -> Self {
+		match value {
+			SplatKind::Mortal => Splat::Mortal(Mortal),
+			SplatKind::Vampire => Splat::Vampire(Vampire::default()),
+			SplatKind::Werewolf => Splat::Werewolf(Werewolf::default()),
+			SplatKind::Mage => Splat::Mage(Mage::default()),
+			SplatKind::Changeling => Splat::Changeling(Changeling::default()),
+			SplatKind::Bound => Splat::Bound(Bound::default()),
+		}
+	}
 }
 
 impl Deref for Splat {

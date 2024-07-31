@@ -11,6 +11,7 @@ convert_case = "0.6"
 
 derive_more = "0.99"
 enum_dispatch = "0.3"
+strum = { workspace = true, features = ["derive"] }
 
 cofd-schema.workspace = true
 cofd-util.workspace = true
