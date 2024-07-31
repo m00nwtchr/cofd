@@ -68,6 +68,19 @@ impl SplatTrait for Vampire {
 		}
 	}
 
+	fn xsplat(&self) -> Option<XSplat> {
+		Some(self.clan.clone().into())
+	}
+
+	fn ysplat(&self) -> Option<YSplat> {
+		self.covenant.clone().map(Into::into)
+	}
+
+	fn zsplat(&self) -> Option<ZSplat> {
+		self.bloodline.clone().map(Into::into)
+	}
+
+
 	fn xsplats(&self) -> Vec<XSplat> {
 		Clan::all().into_iter().map(Into::into).collect()
 	}

@@ -90,17 +90,17 @@ impl SplatTrait for Mage {
 		}
 	}
 
-	// fn xsplat(&self) -> Option<XSplat> {
-	// 	Some(self.path.clone().into())
-	// }
-	//
-	// fn ysplat(&self) -> Option<YSplat> {
-	// 	self.order.clone().map(Into::into)
-	// }
-	//
-	// fn zsplat(&self) -> Option<ZSplat> {
-	// 	self.legacy.clone().map(Into::into)
-	// }
+	fn xsplat(&self) -> Option<XSplat> {
+		Some(self.path.clone().into())
+	}
+
+	fn ysplat(&self) -> Option<YSplat> {
+		self.order.clone().map(Into::into)
+	}
+
+	fn zsplat(&self) -> Option<ZSplat> {
+		self.legacy.clone().map(Into::into)
+	}
 
 	fn xsplats(&self) -> Vec<XSplat> {
 		Path::all().into_iter().map(Into::into).collect()

@@ -91,6 +91,19 @@ impl SplatTrait for Werewolf {
 		}
 	}
 
+	fn xsplat(&self) -> Option<XSplat> {
+		self.auspice.clone().map(Into::into)
+	}
+
+	fn ysplat(&self) -> Option<YSplat> {
+		self.tribe.clone().map(Into::into)
+	}
+
+	fn zsplat(&self) -> Option<ZSplat> {
+		self.lodge.clone().map(Into::into)
+	}
+
+
 	fn xsplats(&self) -> Vec<XSplat> {
 		Auspice::all().into_iter().map(Into::into).collect()
 	}

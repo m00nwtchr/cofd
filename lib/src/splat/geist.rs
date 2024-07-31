@@ -26,17 +26,13 @@ impl SplatTrait for Bound {
 
 	fn set_zsplat(&mut self, _splat: Option<ZSplat>) {}
 
-	// fn xsplat(&self) -> Option<XSplat> {
-	// 	Some(self.path.clone().into())
-	// }
-	//
-	// fn ysplat(&self) -> Option<YSplat> {
-	// 	self.order.clone().map(Into::into)
-	// }
-	//
-	// fn zsplat(&self) -> Option<ZSplat> {
-	// 	self.legacy.clone().map(Into::into)
-	// }
+	fn xsplat(&self) -> Option<XSplat> {
+		Some(self.burden.clone().into())
+	}
+
+	fn ysplat(&self) -> Option<YSplat> {
+		Some(self.archetype.clone().into())
+	}
 
 	fn xsplats(&self) -> Vec<XSplat> {
 		Burden::all().into_iter().map(Into::into).collect()

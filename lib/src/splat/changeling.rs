@@ -64,6 +64,18 @@ impl SplatTrait for Changeling {
 		}
 	}
 
+	fn xsplat(&self) -> Option<XSplat> {
+		Some(self.seeming.clone().into())
+	}
+
+	fn ysplat(&self) -> Option<YSplat> {
+		self.court.clone().map(Into::into)
+	}
+
+	fn zsplat(&self) -> Option<ZSplat> {
+		self.kith.clone().map(Into::into)
+	}
+
 	fn xsplats(&self) -> Vec<XSplat> {
 		Seeming::all().into_iter().map(Into::into).collect()
 	}
