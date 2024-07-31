@@ -380,7 +380,7 @@ impl Character {
 			Trait::DerivedTrait(dt) => match dt {
 				DerivedTrait::Speed => self.speed(),
 				DerivedTrait::Defense => self.defense(),
-				DerivedTrait::Initiative => self.initative(),
+				DerivedTrait::Initiative => self.initiative(),
 				DerivedTrait::Perception => self.perception(),
 				DerivedTrait::Health => self.max_health(),
 				DerivedTrait::Willpower => self.max_willpower(),
@@ -596,7 +596,7 @@ impl Character {
 	pub fn base_armor_mut(&mut self) -> &mut ArmorStruct {
 		&mut self.base_armor
 	}
-	pub fn initative(&self) -> u16 {
+	pub fn initiative(&self) -> u16 {
 		let attributes = self.attributes();
 
 		add(
