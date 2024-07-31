@@ -1,7 +1,8 @@
-use crate::traits::skill::Skill;
-use cofd_util::{AllVariants, VariantName};
+use cofd_util::VariantName;
 use serde::{Deserialize, Serialize};
 use strum::{EnumString, VariantArray};
+
+use crate::traits::skill::Skill;
 
 #[derive(
 	Debug,
@@ -30,7 +31,7 @@ pub enum Arcanum {
 }
 
 impl Arcanum {
-	pub fn all() -> &'static [Self] {
+	#[must_use] pub fn all() -> &'static [Self] {
 		Self::VARIANTS
 	}
 }

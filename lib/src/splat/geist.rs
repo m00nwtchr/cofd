@@ -1,7 +1,7 @@
+use cofd_util::{AllVariants, VariantName};
 use serde::{Deserialize, Serialize};
 
 use super::{ability::Ability, Merit, NameKey, SplatTrait, XSplat, YSplat, ZSplat};
-use cofd_util::{AllVariants, VariantName};
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Bound {

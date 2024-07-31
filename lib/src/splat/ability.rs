@@ -1,13 +1,12 @@
-use serde::{Deserialize, Serialize};
-
 use cofd_util::VariantName;
+use serde::{Deserialize, Serialize};
 
 use super::{
 	geist::Haunt,
 	mage::Arcanum,
 	vampire::Discipline,
 	werewolf::{MoonGift, Renown},
-	Merit, NameKey,
+	Merit,
 };
 use crate::character::modifier::Modifier;
 

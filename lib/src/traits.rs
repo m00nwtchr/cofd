@@ -1,8 +1,7 @@
 use cofd_schema::prelude::{Attribute, Skill};
-use serde::{Deserialize, Serialize};
-
 pub use cofd_schema::traits::{attribute, skill, DerivedTrait, TraitCategory};
 use cofd_util::VariantName;
+use serde::{Deserialize, Serialize};
 
 #[derive(
 	Debug,

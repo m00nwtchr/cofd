@@ -1,20 +1,26 @@
-use crate::prelude::VariantName;
-use crate::splat::{ability::Ability, Merit, Splat};
-use cofd_schema::dice_pool::DicePool;
-use cofd_schema::prelude::{Attribute, Skill};
-use serde::{Deserialize, Serialize};
 use std::{
-	cmp::{max, min},
+	cmp::min,
 	collections::HashMap,
 	ops::{Add, Sub},
+};
+
+use cofd_schema::{
+	dice_pool::DicePool,
+	prelude::{Attribute, Skill},
+};
+use serde::{Deserialize, Serialize};
+
+use crate::{
+	prelude::VariantName,
+	splat::{ability::Ability, Merit, Splat},
 };
 
 pub mod modifier;
 // pub mod traits;
 
-use crate::dice_pool::DicePoolExt;
-use crate::traits::*;
 use modifier::*;
+
+use crate::{dice_pool::DicePoolExt, traits::*};
 
 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 pub fn add(a: u16, b: i16) -> u16 {

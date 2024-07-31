@@ -22,10 +22,6 @@ extern crate cofd_util;
 pub use cofd_schema::template;
 
 pub mod prelude {
-	pub use crate::character::{Attributes, Character, Skills};
-	pub use crate::splat::SplatTrait;
-	pub use crate::traits::Trait;
-
 	pub use cofd_schema::{
 		template::Template,
 		traits::{
@@ -35,21 +31,25 @@ pub mod prelude {
 		},
 	};
 	pub use cofd_util::{AllVariants, VariantName};
+
+	pub use crate::{
+		character::{Attributes, Character, Skills},
+		splat::SplatTrait,
+		traits::Trait,
+	};
 }
 
 #[cfg(test)]
 mod tests {
 	use ron::ser::PrettyConfig;
 
-	use crate::splat::vampire::Vampire;
-	use crate::splat::werewolf::Werewolf;
 	use crate::{
 		character::CharacterInfo,
 		prelude::*,
 		splat::{
 			mage::{Arcanum, Mage, MageMerit, Order, Path},
-			vampire::{Bloodline, Clan, Covenant, Discipline, VampireMerit},
-			werewolf::{Auspice, Form, Renown, Tribe, WerewolfMerit},
+			vampire::{Bloodline, Clan, Covenant, Discipline, Vampire, VampireMerit},
+			werewolf::{Auspice, Form, Renown, Tribe, Werewolf, WerewolfMerit},
 			Merit, Splat,
 		},
 	};
@@ -145,7 +145,7 @@ mod tests {
 
 		// vampire_character.splat.vice_anchor();
 
-		println!("{:?}", vampire_character);
+		println!("{vampire_character:?}");
 		println!("{:?}", vampire_character.attributes());
 
 		println!(

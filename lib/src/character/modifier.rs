@@ -1,13 +1,17 @@
-use super::Character;
-use crate::dice_pool::{DicePool, DicePoolExt};
-use crate::prelude::Trait;
-use crate::splat::{ability::Ability, werewolf::Form, Splat};
-use crate::traits::{attribute::Attribute, skill::Skill};
-use cofd_schema::traits::DerivedTrait;
-use serde::{Deserialize, Serialize};
 use std::{
 	collections::HashMap,
 	sync::{Arc, RwLock},
+};
+
+use cofd_schema::traits::DerivedTrait;
+use serde::{Deserialize, Serialize};
+
+use super::Character;
+use crate::{
+	dice_pool::{DicePool, DicePoolExt},
+	prelude::Trait,
+	splat::{ability::Ability, werewolf::Form, Splat},
+	traits::{attribute::Attribute, skill::Skill},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -98,7 +102,7 @@ impl ModifierValue {
 				*character.get_ability_value(ability).unwrap_or(&0) as i16
 			}
 			ModifierValue::Skill(skill) => character.skills.get(*skill) as i16,
-			ModifierValue::DicePool(pool) => pool.value(character) as i16,
+			ModifierValue::DicePool(pool) => i16::from(pool.value(character)),
 		}
 	}
 }
@@ -252,9 +256,9 @@ impl Modifiers {
 					);
 
 					if let Some(skill_bonus) = data.skill_bonus() {
-						if auspice.skills().contains(&skill_bonus) {
+						if auspice.skills().contains(skill_bonus) {
 							modifiers.push(Modifier::new(
-								ModifierTarget::BaseSkill(skill_bonus.clone()),
+								ModifierTarget::BaseSkill(*skill_bonus),
 								1,
 								ModifierOp::Add,
 							));
@@ -274,21 +278,21 @@ impl Modifiers {
 
 				let attr_bonus = data.attr_bonus();
 				modifiers.push(Modifier::new(
-					ModifierTarget::BaseAttribute(attr_bonus.clone()),
+					ModifierTarget::BaseAttribute(*attr_bonus),
 					1,
 					ModifierOp::Add,
 				));
 			}
 			Splat::Vampire(data) => {
 				modifiers.push(Modifier::new(
-					ModifierTarget::BaseAttribute(data.attr_bonus().clone()),
+					ModifierTarget::BaseAttribute(*data.attr_bonus()),
 					1,
 					ModifierOp::Add,
 				));
 			}
 			Splat::Changeling(data) => {
 				modifiers.push(Modifier::new(
-					ModifierTarget::BaseAttribute(data.attr_bonus().clone()),
+					ModifierTarget::BaseAttribute(*data.attr_bonus()),
 					1,
 					ModifierOp::Add,
 				));

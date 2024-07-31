@@ -1,5 +1,6 @@
-use serde::{Deserialize, Serialize};
 use std::str::FromStr;
+
+use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(transparent)]

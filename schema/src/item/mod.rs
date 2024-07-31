@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
 
 use self::merit::Merit;
-use crate::modifiers::SuggestedModifiers;
 use crate::{
 	book::{BookReference, MoonGift, OtherGift},
 	dice_pool::DicePool,
+	modifiers::SuggestedModifiers,
 };
 
 pub mod gift;

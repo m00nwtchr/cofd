@@ -1,8 +1,9 @@
-use super::{ability::Ability, Merit, NameKey, Splat, SplatTrait, XSplat, YSplat, ZSplat};
-use crate::prelude::{Attribute, Character, Skill};
 pub use cofd_schema::template::mage::Arcanum;
 use cofd_util::{AllVariants, VariantName};
 use serde::{Deserialize, Serialize};
+
+use super::{ability::Ability, Merit, Splat, SplatTrait, XSplat, YSplat, ZSplat};
+use crate::prelude::{Attribute, Character, Skill};
 
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize, Debug)]
 #[serde(default)]
@@ -63,7 +64,7 @@ impl Mage {
 			attribute,
 			Attribute::Resolve | Attribute::Stamina | Attribute::Composure
 		) {
-			self.free_resistance_dot = attribute
+			self.free_resistance_dot = attribute;
 		}
 	}
 }
@@ -126,7 +127,13 @@ impl SplatTrait for Mage {
 	}
 
 	fn all_abilities(&self) -> Option<Vec<Ability>> {
-		Some(Arcanum::all().into_iter().copied().map(Into::into).collect())
+		Some(
+			Arcanum::all()
+				.iter()
+				.copied()
+				.map(Into::into)
+				.collect(),
+		)
 	}
 
 	fn alternate_beats_optional(&self) -> bool {

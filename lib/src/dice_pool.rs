@@ -1,8 +1,8 @@
 use std::cmp::{max, min};
 
-use crate::character::Character;
-use crate::traits::Trait;
 pub use cofd_schema::dice_pool::DicePool;
+
+use crate::{character::Character, traits::Trait};
 
 pub trait DicePoolExt {
 	fn value(&self, character: &Character) -> i8;
@@ -15,14 +15,14 @@ impl DicePoolExt for DicePool {
 
 			Self::Trait(trait_) => match trait_ {
 				cofd_schema::traits::Trait::DerivedTrait(dt) => {
-					character.get_trait(&Trait::DerivedTrait(dt.clone())) as i8
+					character.get_trait(&Trait::DerivedTrait(*dt)) as i8
 				}
 				cofd_schema::traits::Trait::Attribute(attr) => {
-					character.get_trait(&Trait::Attribute(attr.clone())) as i8
+					character.get_trait(&Trait::Attribute(*attr)) as i8
 				}
 
 				cofd_schema::traits::Trait::Skill(skill) => {
-					character.get_trait(&Trait::Skill(skill.clone())) as i8
+					character.get_trait(&Trait::Skill(*skill)) as i8
 				}
 				cofd_schema::traits::Trait::SupernaturalTolerance(_) => character.power as i8,
 			},

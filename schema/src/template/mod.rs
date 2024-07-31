@@ -1,6 +1,6 @@
 use cofd_util::{SplatEnum, VariantName};
 use serde::{Deserialize, Serialize};
-use strum::{AsRefStr, Display, EnumDiscriminants, EnumString};
+use strum::{AsRefStr, Display, EnumString};
 
 pub mod mage;
 mod vampire;

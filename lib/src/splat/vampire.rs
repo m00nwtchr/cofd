@@ -1,13 +1,13 @@
+use cofd_schema::traits::DerivedTrait;
+use cofd_util::{AllVariants, VariantName};
+use serde::{Deserialize, Serialize};
+
 use super::{ability::Ability, Merit, Splat, SplatTrait, XSplat, YSplat, ZSplat};
-use crate::splat::mage::{Legacy, MageMerit, Order, Path};
 use crate::{
 	character::modifier::{Modifier, ModifierOp},
 	dice_pool::DicePool,
 	prelude::{Attribute, Attributes, Skills, Trait},
 };
-use cofd_schema::traits::DerivedTrait;
-use cofd_util::{AllVariants, VariantName};
-use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(default)]

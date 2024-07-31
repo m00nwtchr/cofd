@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 use super::{Merit, NameKey, Splat, SplatTrait, XSplat, YSplat, ZSplat};
-use crate::splat::mage::Mage;
 use crate::{
 	character::{Character, Damage},
 	prelude::*,
@@ -39,7 +38,7 @@ impl Changeling {
 
 	pub fn set_attr_bonus(&mut self, attribute: Attribute) {
 		if self.seeming.favored_attributes().contains(&attribute) {
-			self.attr_bonus = attribute
+			self.attr_bonus = attribute;
 		}
 	}
 }

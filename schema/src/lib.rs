@@ -12,9 +12,11 @@ pub mod template;
 pub mod traits;
 
 pub mod prelude {
-	pub use super::book::BookInfo;
-	pub use super::dot_range::DotRange;
-	pub use super::traits::{attribute::Attribute, skill::Skill};
+	pub use super::{
+		book::BookInfo,
+		dot_range::DotRange,
+		traits::{attribute::Attribute, skill::Skill},
+	};
 }
 
 pub static DOT_CHAR: char = '•';

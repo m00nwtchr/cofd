@@ -1,7 +1,6 @@
+use cofd_util::VariantName;
 use serde::{Deserialize, Serialize};
 use strum::{AsRefStr, Display, EnumString, VariantArray};
-
-use cofd_util::VariantName;
 
 use crate::traits::TraitCategory;
 
@@ -51,7 +50,7 @@ impl Attribute {
 	/// let attr = Attribute::Dexterity;
 	/// assert_eq!(attr.category(), TraitCategory::Physical);
 	/// ```
-	pub fn category(&self) -> TraitCategory {
+	#[must_use] pub fn category(&self) -> TraitCategory {
 		match self {
 			Attribute::Intelligence | Attribute::Wits | Attribute::Resolve => TraitCategory::Mental,
 			Attribute::Strength | Attribute::Dexterity | Attribute::Stamina => {
@@ -72,7 +71,7 @@ impl Attribute {
 	/// let attr = Attribute::Wits;
 	/// assert_eq!(attr.kind(), AttributeKind::Finesse);
 	/// ```
-	pub fn kind(&self) -> AttributeKind {
+	#[must_use] pub fn kind(&self) -> AttributeKind {
 		match self {
 			Attribute::Intelligence | Attribute::Strength | Attribute::Presence => {
 				AttributeKind::Power
@@ -99,7 +98,7 @@ impl Attribute {
 	/// let physical_attributes = Attribute::get_by_category(TraitCategory::Physical);
 	/// assert!(physical_attributes.contains(&Attribute::Strength));
 	/// ```
-	pub fn get_by_category(category: TraitCategory) -> [Attribute; 3] {
+	#[must_use] pub fn get_by_category(category: TraitCategory) -> [Attribute; 3] {
 		match category {
 			TraitCategory::Mental => [Attribute::Intelligence, Attribute::Wits, Attribute::Resolve],
 			TraitCategory::Physical => [
@@ -128,7 +127,7 @@ impl Attribute {
 	/// let finesse_attributes = Attribute::get_by_kind(AttributeKind::Finesse);
 	/// assert!(finesse_attributes.contains(&Attribute::Dexterity));
 	/// ```
-	pub fn get_by_kind(kind: AttributeKind) -> [Attribute; 3] {
+	#[must_use] pub fn get_by_kind(kind: AttributeKind) -> [Attribute; 3] {
 		match kind {
 			AttributeKind::Power => [
 				Attribute::Intelligence,

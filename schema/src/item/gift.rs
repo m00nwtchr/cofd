@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-use crate::template::werewolf::{Auspice, Renown};
-
 use super::{ActionFields, Item};
+use crate::template::werewolf::{Auspice, Renown};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Moon {

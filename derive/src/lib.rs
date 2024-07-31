@@ -1,14 +1,13 @@
 #![feature(let_chains)]
 use std::collections::HashMap;
 
+use convert_case::Casing;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned};
 use syn::{
 	parse_macro_input, spanned::Spanned, Data, DeriveInput, Error, Fields, GenericArgument,
 	PathArguments, Type, Variant,
 };
-
-use convert_case::Casing;
 
 macro_rules! derive_error {
 	($string: tt) => {

@@ -1,13 +1,14 @@
 #![feature(let_chains)]
+use std::{env, fs, fs::File, path::Path};
+
+use cofd_schema::{
+	book::Book,
+	item::gift::GiftKind,
+};
 use convert_case::Casing;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
-use std::fs::File;
-use std::{env, fs, path::Path};
 use syn::Error;
-
-use cofd_schema::book::{Book, MeritItem, MoonGift, OtherGift};
-use cofd_schema::item::gift::GiftKind;
 
 macro_rules! derive_error {
 	($string: tt) => {

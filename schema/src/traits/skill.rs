@@ -1,8 +1,8 @@
+use cofd_util::VariantName;
 use serde::{Deserialize, Serialize};
 use strum::{AsRefStr, Display, EnumString, VariantArray};
 
 use crate::traits::TraitCategory;
-use cofd_util::VariantName;
 
 #[derive(
 	Clone,
@@ -52,7 +52,7 @@ pub enum Skill {
 }
 
 impl Skill {
-	pub fn all() -> &'static [Self] {
+	#[must_use] pub fn all() -> &'static [Self] {
 		Self::VARIANTS
 	}
 
@@ -65,7 +65,7 @@ impl Skill {
 	/// let skill = Skill::Drive;
 	/// assert_eq!(skill.category(), TraitCategory::Physical);
 	/// ```
-	pub fn category(&self) -> TraitCategory {
+	#[must_use] pub fn category(&self) -> TraitCategory {
 		match self {
 			// Mental skills
 			Skill::Academics
@@ -112,15 +112,15 @@ impl Skill {
 	/// let physical_skills = Skill::get_by_category(TraitCategory::Physical);
 	/// assert!(physical_skills.contains(&Skill::Drive));
 	/// ```
-	pub fn get_by_category(category: TraitCategory) -> Vec<Skill> {
+	#[must_use] pub fn get_by_category(category: TraitCategory) -> Vec<Skill> {
 		Self::VARIANTS
-			.into_iter()
+			.iter()
 			.filter(|&skill| skill.category() == category)
 			.copied()
 			.collect()
 	}
 
-	pub fn unskilled(&self) -> u8 {
+	#[must_use] pub fn unskilled(&self) -> u8 {
 		self.category().unskilled()
 	}
 }

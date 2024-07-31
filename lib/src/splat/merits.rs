@@ -1,15 +1,14 @@
-use cofd_schema::template::Anchor;
+use cofd_schema::{prelude::Skill, traits::DerivedTrait};
 use cofd_util::{AllVariants, VariantName};
 use serde::{Deserialize, Serialize};
-use cofd_schema::prelude::Skill;
-use cofd_schema::traits::DerivedTrait;
+
 use super::{
 	ability::Ability, changeling::ChangelingMerit, mage::MageMerit, vampire::VampireMerit,
 	werewolf::WerewolfMerit,
 };
 use crate::{
 	character::modifier::{Modifier, ModifierOp, ModifierTarget, ModifierValue},
-	prelude::{Attributes, Character, Skills, Trait},
+	prelude::{Attributes, Skills, Trait},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, AllVariants, VariantName)]

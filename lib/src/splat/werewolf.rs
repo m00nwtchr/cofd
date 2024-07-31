@@ -1,10 +1,10 @@
+use std::collections::HashMap;
+
 use cofd_schema::traits::DerivedTrait;
 use cofd_util::VariantName;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 use super::{ability::Ability, Merit, NameKey, Splat, SplatTrait, XSplat, YSplat, ZSplat};
-use crate::splat::mage::{Legacy, Mage, MageMerit, Order, Path};
 use crate::{
 	character::modifier::{Modifier, ModifierOp, ModifierTarget},
 	dice_pool::DicePool,
@@ -63,7 +63,7 @@ impl Werewolf {
 	pub fn set_skill_bonus(&mut self, skill: Skill) {
 		if let Some(auspice) = &self.auspice {
 			if auspice.skills().contains(&skill) {
-				self.skill_bonus = self.skill_bonus
+				self.skill_bonus = self.skill_bonus;
 			}
 		}
 	}
@@ -799,7 +799,7 @@ pub fn get_form_trait(character: &Character, form: &Form, target: &ModifierTarge
 		ModifierTarget::BaseAttribute(_)
 		| ModifierTarget::BaseSkill(_)
 		| ModifierTarget::Skill(_) => unreachable!(),
-		ModifierTarget::Attribute(attr) => *character.attributes().get(&attr) as i16,
+		ModifierTarget::Attribute(attr) => *character.attributes().get(attr) as i16,
 		ModifierTarget::Trait(trait_) => character.get_trait(trait_) as i16,
 	};
 

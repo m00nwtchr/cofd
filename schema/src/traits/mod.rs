@@ -1,12 +1,11 @@
 use std::{convert::Into, str::FromStr};
 
-use self::skill::Skill;
-use crate::prelude::Attribute;
-use crate::template::SupernaturalTolerance;
+use cofd_util::VariantName;
 use serde::{Deserialize, Serialize};
 use strum::{AsRefStr, Display, EnumString, ParseError};
 
-use cofd_util::VariantName;
+use self::skill::Skill;
+use crate::{prelude::Attribute, template::SupernaturalTolerance};
 
 pub mod attribute;
 pub mod skill;
@@ -19,7 +18,7 @@ pub enum TraitCategory {
 }
 
 impl TraitCategory {
-	pub fn unskilled(&self) -> u8 {
+	#[must_use] pub fn unskilled(&self) -> u8 {
 		match self {
 			TraitCategory::Mental => 3,
 			TraitCategory::Physical | TraitCategory::Social => 1,

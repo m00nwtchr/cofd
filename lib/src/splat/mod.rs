@@ -1,7 +1,8 @@
-use cofd_util::{AllVariants, NameKey, SplatEnum, VariantName};
+use std::ops::Deref;
+
+use cofd_util::{AllVariants, NameKey, VariantName};
 use enum_dispatch::enum_dispatch;
 use serde::{Deserialize, Serialize};
-use std::ops::Deref;
 use strum::{EnumDiscriminants, VariantArray};
 
 use self::ability::Ability;
@@ -24,15 +25,15 @@ mod mortal;
 // pub mod beast;
 // pub mod deviant;
 
-use mage::*;
-use vampire::*;
-use werewolf::*;
 // use promethean::*;
 use changeling::*;
 use cofd_schema::template::Template;
 // use hunter::*;
 use geist::*;
+use mage::*;
 use mortal::*;
+use vampire::*;
+use werewolf::*;
 // use mummy::*;
 // use demon::*;
 // use beast::*;
