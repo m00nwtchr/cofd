@@ -52,6 +52,12 @@ impl Werewolf {
 		self
 	}
 
+	#[must_use]
+	pub fn with_skill_bonus(mut self, skill: Skill) -> Self {
+		self.set_skill_bonus(skill);
+		self
+	}
+
 	pub fn skill_bonus(&self) -> Option<&Skill> {
 		if self.auspice.is_some() {
 			self.skill_bonus.as_ref()
@@ -63,7 +69,7 @@ impl Werewolf {
 	pub fn set_skill_bonus(&mut self, skill: Skill) {
 		if let Some(auspice) = &self.auspice {
 			if auspice.skills().contains(&skill) {
-				self.skill_bonus = self.skill_bonus;
+				self.skill_bonus = Some(skill);
 			}
 		}
 	}
@@ -102,7 +108,6 @@ impl SplatTrait for Werewolf {
 	fn zsplat(&self) -> Option<ZSplat> {
 		self.lodge.clone().map(Into::into)
 	}
-
 
 	fn xsplats(&self) -> Vec<XSplat> {
 		Auspice::all().into_iter().map(Into::into).collect()
