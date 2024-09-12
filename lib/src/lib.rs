@@ -15,6 +15,7 @@ pub mod character;
 pub mod dice_pool;
 pub mod splat;
 pub mod traits;
+mod observer;
 
 #[macro_use]
 extern crate cofd_util;
