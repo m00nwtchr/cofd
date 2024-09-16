@@ -1,6 +1,5 @@
 use std::{
 	fmt::{Debug, Formatter},
-	i8,
 	ops::{Add, Deref},
 	rc::Weak,
 	sync::RwLock,
@@ -18,13 +17,20 @@ pub struct RxAttribute {
 	base_value: Signal<i8>,
 }
 
+fn init_value(sink: &Sink<Signal<i8>>, base_value: Signal<i8>) -> Signal<i8> {
+	sink.stream()
+		.hold(Signal::new(0))
+		.map(move |_mod| lift!(|a, b| a + b, &base_value, &_mod))
+		.switch()
+}
+
 impl RxAttribute {
 	pub fn new(default: i8) -> Self {
 		let sink = Sink::new();
 		let mod_sink = Sink::new();
 
 		let base_value = sink.stream().hold(default);
-		let value = init_value(&mod_sink, &base_value);
+		let value = init_value(&mod_sink, base_value.clone());
 
 		Self {
 			sink: Some(sink),
@@ -57,25 +63,13 @@ impl RxAttribute {
 	}
 }
 
-fn init_value(sink: &Sink<Signal<i8>>, base_value: &Signal<i8>) -> Signal<i8> {
-	sink.stream()
-		.hold(Signal::new(0))
-		.map({
-			let base_value = base_value.clone();
-			move |_mod| lift!(|a, b| a + b, &base_value, &_mod)
-		})
-		.switch()
-}
-
 impl From<Signal<i8>> for RxAttribute {
 	fn from(base_value: Signal<i8>) -> Self {
-		let sink = Sink::new();
 		let mod_sink = Sink::new();
-
-		let value = init_value(&mod_sink, &base_value);
+		let value = init_value(&mod_sink, base_value.clone());
 
 		Self {
-			sink: Some(sink),
+			sink: None,
 			mod_sink,
 			value,
 			base_value,
