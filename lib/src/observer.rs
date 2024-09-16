@@ -1,10 +1,9 @@
-use std::i8;
-use std::sync::RwLock;
 use std::{
 	fmt::{Debug, Formatter},
-	ops::Add,
-	ops::Deref,
+	i8,
+	ops::{Add, Deref},
 	rc::Weak,
+	sync::RwLock,
 };
 
 use carboxyl::{lift, Signal, Sink, Stream};
