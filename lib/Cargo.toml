@@ -16,6 +16,7 @@ strum = { workspace = true, features = ["derive"] }
 cofd-schema.workspace = true
 cofd-util.workspace = true
 cofd-macros.workspace = true
+carboxyl = "0.2.2"
 
 [dev-dependencies]
 ron.workspace = true
