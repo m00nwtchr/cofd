@@ -12,13 +12,13 @@ use crate::{error, DOT_CHAR};
 #[derive(Serialize, Clone, Debug, Deserialize, PartialEq, Eq, Display)]
 #[serde(untagged)]
 pub enum DotRange {
-	#[display(fmt = "{}", "num_to_dots(*_0)")]
+	#[display("{}", "num_to_dots(*_0)")]
 	Num(u8),
-	#[display(fmt = "{}", "_0.iter().map(|n| num_to_dots(*n)).join(\", \")")]
+	#[display("{}", "_0.iter().map(|n| num_to_dots(*n)).join(\", \")")]
 	Set(Vec<u8>),
-	#[display(fmt = "{} to {}", "num_to_dots(*_0.start())", "num_to_dots(*_0.end())")]
+	#[display("{} to {}", "num_to_dots(*_0.start())", "num_to_dots(*_0.end())")]
 	Range(RangeInclusive<u8>),
-	#[display(fmt = "{}+", "num_to_dots(_0.start)")]
+	#[display("{}+", "num_to_dots(_0.start)")]
 	RangeFrom(RangeFrom<u8>),
 }
 

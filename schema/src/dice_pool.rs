@@ -15,16 +15,16 @@ pub enum DicePool {
 
 	Trait(Trait),
 
-	#[display(fmt = "Lower of {_0} and {_1}")]
+	#[display("Lower of {_0} and {_1}")]
 	Min(Box<DicePool>, Box<DicePool>),
-	#[display(fmt = "Higher of {_0} and {_1}")]
+	#[display("Higher of {_0} and {_1}")]
 	Max(Box<DicePool>, Box<DicePool>),
 
-	#[display(fmt = "{}", "_0.iter().join(\" + \")")]
+	#[display("{}", "_0.iter().join(\" + \")")]
 	Add(Vec<DicePool>),
-	#[display(fmt = "{_0} - {_1}")]
+	#[display("{_0} - {_1}")]
 	Sub(Box<DicePool>, Box<DicePool>),
-	#[display(fmt = "{_0} vs {_1}")]
+	#[display("{_0} vs {_1}")]
 	Vs(Box<DicePool>, Box<DicePool>),
 
 	Key(String),
