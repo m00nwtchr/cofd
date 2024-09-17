@@ -35,7 +35,7 @@ impl FromStr for RatedPrerequisiteKey {
  * Prerequisites with level ratings
  */
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Display)]
-#[display(fmt = "{_0} {}", "num_to_dots(*_1)")]
+#[display("{_0} {}", "num_to_dots(*_1)")]
 pub struct RatedPrerequisite(RatedPrerequisiteKey, u8);
 
 impl FromStr for RatedPrerequisite {
@@ -82,7 +82,7 @@ impl FromStr for PrerequisiteKey {
 #[serde(untagged)]
 pub enum Prerequisite {
 	Key(PrerequisiteKey),
-	#[display(fmt = "{}", "_0.iter().join(\" or \")")]
+	#[display("{}", "_0.iter().join(\" or \")")]
 	Or(Vec<PrerequisiteKey>),
 	Unknown(String),
 }
@@ -112,7 +112,7 @@ impl FromStr for Prerequisite {
  */
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Display)]
 #[serde(transparent)]
-#[display(fmt = "{}", "_0.iter().join(\", \")")]
+#[display("{}", "_0.iter().join(\", \")")]
 pub struct Prerequisites(Vec<Prerequisite>);
 
 impl From<Vec<Prerequisite>> for Prerequisites {

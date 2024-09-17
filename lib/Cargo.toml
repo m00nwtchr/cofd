@@ -9,7 +9,7 @@ license.workspace = true
 serde = { version = "1", features = ["derive"] }
 convert_case = "0.6"
 
-derive_more = "0.99"
+derive_more = { version = "1", features = ["from", "try_into", "display"] }
 enum_dispatch = "0.3"
 strum = { workspace = true, features = ["derive"] }
 

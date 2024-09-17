@@ -106,7 +106,7 @@ impl From<BookInfo> for Book {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, derive_more::Display)]
-#[display(fmt = "{_0} pg.{_1}")]
+#[display("{_0} pg.{_1}")]
 pub struct BookReference(pub BookId, pub usize);
 
 impl Default for BookReference {
