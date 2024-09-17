@@ -1,6 +1,6 @@
 use std::{
 	fmt::{Debug, Formatter},
-	ops::{Add, Deref},
+	ops::{Add, Deref, Neg, Sub},
 	rc::Weak,
 	sync::RwLock,
 };
@@ -40,6 +40,13 @@ impl RxAttribute {
 		}
 	}
 
+	pub fn map<F>(&self, function: F) -> Self
+	where
+		F: Fn(i8) -> i8 + Send + Sync + 'static,
+	{
+		RxAttribute::from(self.signal().map(function))
+	}
+
 	pub fn apply(&self, signal: Signal<i8>) {
 		self.mod_sink.send(signal);
 	}
@@ -52,10 +59,6 @@ impl RxAttribute {
 
 	pub fn signal(&self) -> &Signal<i8> {
 		&self.value
-	}
-
-	fn sink(&self) -> Option<&Sink<i8>> {
-		self.sink.as_ref()
 	}
 
 	pub fn value(&self) -> i8 {
@@ -91,20 +94,74 @@ impl<'a, 'b> Add<&'b RxAttribute> for &'a RxAttribute {
 	}
 }
 
+impl<'a, 'b> Sub<&'b RxAttribute> for &'a RxAttribute {
+	type Output = RxAttribute;
+
+	fn sub(self, rhs: &'b RxAttribute) -> Self::Output {
+		RxAttribute::from(lift!(|a, b| a - b, self.signal(), rhs.signal()))
+	}
+}
+
+impl<'a> Neg for &'a RxAttribute {
+	type Output = RxAttribute;
+
+	fn neg(self) -> Self::Output {
+		self.map(|a| -a)
+	}
+}
+
+#[derive(Clone)]
+pub struct DefenseCalc {
+	attributes: (Signal<i8>, Signal<i8>),
+	skill: Signal<i8>,
+	flag: Signal<bool>,
+}
+
 #[test]
 pub fn test() {
 	let wits = RxAttribute::new(1);
 	let composure = RxAttribute::new(1);
+	let dexterity = RxAttribute::new(2);
 
 	let perception = &wits + &composure;
 	wits.set(3);
 	composure.set(3);
 
 	assert_eq!(perception.value(), 6);
-
 	perception.apply(Signal::new(1));
 	assert_eq!(perception.value(), 7);
-
 	perception.apply(Signal::new(2));
 	assert_eq!(perception.value(), 8);
+
+	let defense_calc_sink: Sink<DefenseCalc> = Sink::new();
+	let defense_calc: Signal<i8> = defense_calc_sink
+		.stream()
+		.hold(DefenseCalc {
+			attributes: (wits.signal().clone(), dexterity.signal().clone()),
+			skill: Signal::new(1),
+			flag: Signal::new(false),
+		})
+		.map(|a| {
+			lift!(
+				|a1, a2, skill, flag| if flag {
+					i8::max(a1, a2) + skill
+				} else {
+					i8::min(a1, a2) + skill
+				},
+				&a.attributes.0,
+				&a.attributes.1,
+				&a.skill,
+				&a.flag
+			)
+		})
+		.switch();
+
+	let defense = RxAttribute::from(defense_calc);
+	assert_eq!(defense.value(), 3);
+
+	dexterity.set(4);
+	assert_eq!(defense.value(), 4);
+
+	wits.set(4);
+	assert_eq!(defense.value(), 5);
 }
