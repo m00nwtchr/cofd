@@ -270,7 +270,7 @@ impl Merit {
 		]
 	}
 
-	pub fn get_modifiers(&self, value: u16) -> Vec<Modifier> {
+	pub fn get_modifiers(&self, value: u8) -> Vec<Modifier> {
 		match &self {
 			Merit::DefensiveCombat(true, Some(skill)) => {
 				vec![Modifier::new(

@@ -28,7 +28,7 @@ impl Changeling {
 		}
 	}
 
-	pub fn max_clarity(&self, attributes: &Attributes) -> u16 {
+	pub fn max_clarity(&self, attributes: &Attributes) -> u8 {
 		attributes.wits + attributes.composure
 	}
 

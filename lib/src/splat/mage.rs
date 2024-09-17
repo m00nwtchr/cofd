@@ -280,7 +280,7 @@ impl From<MageMerit> for Merit {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Rote {
 	pub arcanum: Arcanum,
-	pub level: u16,
+	pub level: u8,
 	pub spell: String,
 	pub creator: String,
 	pub skill: Skill,

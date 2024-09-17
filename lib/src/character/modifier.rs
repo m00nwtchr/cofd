@@ -50,7 +50,7 @@ impl Modifier {
 		}
 	}
 
-	pub fn val(&self) -> Option<i16> {
+	pub fn val(&self) -> Option<i8> {
 		match self.value {
 			ModifierValue::Num(val) => Some(val),
 			ModifierValue::Skill(_) | ModifierValue::Ability(_) => None,
@@ -88,40 +88,40 @@ impl From<Trait> for ModifierTarget {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ModifierValue {
-	Num(i16),
+	Num(i8),
 	Ability(Ability),
 	Skill(Skill),
 	DicePool(DicePool),
 }
 
 impl ModifierValue {
-	pub fn value(&self, character: &Character) -> i16 {
+	pub fn value(&self, character: &Character) -> i8 {
 		match self {
 			ModifierValue::Num(value) => *value,
 			ModifierValue::Ability(ability) => {
-				*character.get_ability_value(ability).unwrap_or(&0) as i16
+				*character.get_ability_value(ability).unwrap_or(&0) as i8
 			}
-			ModifierValue::Skill(skill) => character.skills.get(*skill) as i16,
-			ModifierValue::DicePool(pool) => i16::from(pool.value(character)),
+			ModifierValue::Skill(skill) => character.skills.get(*skill) as i8,
+			ModifierValue::DicePool(pool) => i8::from(pool.value(character)),
 		}
 	}
 }
 
-impl From<i16> for ModifierValue {
-	fn from(value: i16) -> Self {
+impl From<i8> for ModifierValue {
+	fn from(value: i8) -> Self {
 		ModifierValue::Num(value)
 	}
 }
 
-impl From<u16> for ModifierValue {
-	fn from(value: u16) -> Self {
-		ModifierValue::Num(value as i16)
+impl From<u8> for ModifierValue {
+	fn from(value: u8) -> Self {
+		ModifierValue::Num(value as i8)
 	}
 }
 
 impl From<i32> for ModifierValue {
 	fn from(value: i32) -> Self {
-		ModifierValue::Num(value as i16)
+		ModifierValue::Num(value as i8)
 	}
 }
 
@@ -310,7 +310,7 @@ impl Modifiers {
 		// character._defense_pool = defense_attr + defense_skill;
 	}
 
-	pub fn get_modifier(&self, character: &Character, target: impl Into<ModifierTarget>) -> i16 {
+	pub fn get_modifier(&self, character: &Character, target: impl Into<ModifierTarget>) -> i8 {
 		let target = &target.into();
 		let mut count = 0;
 
@@ -340,7 +340,7 @@ impl Modifiers {
 		character: &Character,
 		target: impl Into<ModifierTarget>,
 		condition: impl Into<Condition>,
-	) -> Option<i16> {
+	) -> Option<i8> {
 		let target = &target.into();
 		let condition = &condition.into();
 

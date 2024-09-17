@@ -31,12 +31,12 @@ pub enum DicePool {
 }
 
 impl DicePool {
-	// pub fn value(&self, character: &Character) -> i16 {
+	// pub fn value(&self, character: &Character) -> i8 {
 	// 	match self {
 	// 		Self::Mod(val) => *val,
-	// 		Self::Attribute(attr) => *character.attributes().get(attr) as i16,
-	// 		Self::Skill(skill) => character.skills().get(*skill) as i16,
-	// 		Self::Trait(trait_) => character.get_trait(trait_) as i16,
+	// 		Self::Attribute(attr) => *character.attributes().get(attr) as i8,
+	// 		Self::Skill(skill) => character.skills().get(*skill) as i8,
+	// 		Self::Trait(trait_) => character.get_trait(trait_) as i8,
 	// 		Self::Add(p1, p2) => p1.value(character) + p2.value(character),
 	// 		Self::Sub(p1, p2) => p1.value(character) - p2.value(character),
 	// 		Self::Max(p1, p2) => max(p1.value(character), p2.value(character)),

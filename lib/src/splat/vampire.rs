@@ -240,7 +240,7 @@ pub enum Discipline {
 
 impl Discipline {
 	#[warn(clippy::cast_possible_wrap)]
-	pub fn get_modifiers(&self, value: u16) -> Vec<crate::character::modifier::Modifier> {
+	pub fn get_modifiers(&self, value: u8) -> Vec<crate::character::modifier::Modifier> {
 		match self {
 			Discipline::Celerity => {
 				vec![Modifier::new(
@@ -469,7 +469,7 @@ impl VampireMerit {
 			}
 	}
 
-	pub fn get_modifiers(&self, value: u16) -> Vec<Modifier> {
+	pub fn get_modifiers(&self, value: u8) -> Vec<Modifier> {
 		Vec::new()
 	}
 }
@@ -484,8 +484,8 @@ impl From<VampireMerit> for Merit {
 pub struct Devotion {
 	name: String,
 	cost: String,
-	disciplines: Vec<(Discipline, u16)>,
+	disciplines: Vec<(Discipline, u8)>,
 	dice_pool: DicePool,
 	book: String,
-	page: u16,
+	page: u8,
 }

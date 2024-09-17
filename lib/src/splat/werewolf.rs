@@ -23,7 +23,7 @@ pub struct Werewolf {
 	pub form: Form,
 	// pub moon_gifts: BTreeMap<MoonGift, AbilityVal>,
 	pub triggers: KuruthTriggers,
-	pub moon_gifts: HashMap<MoonGift, u16>,
+	pub moon_gifts: HashMap<MoonGift, u8>,
 	pub shadow_gifts: Vec<ShadowGift>,
 	pub wolf_gifts: Vec<WolfGift>,
 	pub rites: Vec<Rite>,
@@ -516,7 +516,7 @@ pub enum Gift {
 }
 
 impl MoonGift {
-	pub fn get_modifiers(&self, value: u16) -> Vec<Modifier> {
+	pub fn get_modifiers(&self, value: u8) -> Vec<Modifier> {
 		match self {
 			// MoonGift::Crescent => vec![],
 			MoonGift::Full => {
@@ -774,7 +774,7 @@ impl WerewolfMerit {
 		}
 	}
 
-	pub fn get_modifiers(&self, value: u16) -> Vec<Modifier> {
+	pub fn get_modifiers(&self, value: u8) -> Vec<Modifier> {
 		match self {
 			Self::InstinctiveDefense => {
 				if value == 2 {
@@ -807,7 +807,7 @@ impl From<WerewolfMerit> for Merit {
 	}
 }
 
-pub fn get_form_trait(character: &Character, form: &Form, target: &ModifierTarget) -> i16 {
+pub fn get_form_trait(character: &Character, form: &Form, target: &ModifierTarget) -> i8 {
 	let Splat::Werewolf(data) = &character.splat else {
 		unreachable!()
 	};
@@ -817,8 +817,8 @@ pub fn get_form_trait(character: &Character, form: &Form, target: &ModifierTarge
 		ModifierTarget::BaseAttribute(_)
 		| ModifierTarget::BaseSkill(_)
 		| ModifierTarget::Skill(_) => unreachable!(),
-		ModifierTarget::Attribute(attr) => *character.attributes().get(attr) as i16,
-		ModifierTarget::Trait(trait_) => character.get_trait(trait_) as i16,
+		ModifierTarget::Attribute(attr) => *character.attributes().get(attr) as i8,
+		ModifierTarget::Trait(trait_) => character.get_trait(trait_) as i8,
 	};
 
 	if form.eq(active_form) {
@@ -846,10 +846,10 @@ pub fn get_form_trait(character: &Character, form: &Form, target: &ModifierTarge
 					// println!("{active_form_pool} - {form_pool}");
 
 					// let attributes = character.attributes();
-					// let dex = attributes.dexterity as i16
+					// let dex = attributes.dexterity as i8
 					// 	+ form_modifier(character, form, &Attribute::Dexterity)
 					// 	- form_modifier(character, active_form, &Attribute::Dexterity);
-					// let wits = attributes.wits as i16
+					// let wits = attributes.wits as i8
 					// 	+ form_modifier(character, form, &Attribute::Wits)
 					// 	- form_modifier(character, active_form, &Attribute::Wits);
 
@@ -873,7 +873,7 @@ fn form_modifier(
 	character: &Character,
 	form: &Form,
 	target: &(impl Into<ModifierTarget> + Clone),
-) -> i16 {
+) -> i8 {
 	character
 		.get_conditional_modifier((*target).clone(), form.clone())
 		.unwrap_or(0)
