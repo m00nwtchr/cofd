@@ -66,6 +66,12 @@ impl RxAttribute {
 	}
 }
 
+impl Default for RxAttribute {
+	fn default() -> Self {
+		RxAttribute::new(1)
+	}
+}
+
 impl From<Signal<i8>> for RxAttribute {
 	fn from(base_value: Signal<i8>) -> Self {
 		let mod_sink = Sink::new();
@@ -110,6 +116,32 @@ impl<'a> Neg for &'a RxAttribute {
 	}
 }
 
+impl Serialize for RxAttribute {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: Serializer,
+	{
+		self.base_value.sample().serialize(serializer)
+	}
+}
+
+#[derive(Default)]
+pub struct RxAttributes {
+	pub intelligence: RxAttribute,
+	pub wits: RxAttribute,
+	pub resolve: RxAttribute,
+
+	pub strength: RxAttribute,
+	pub dexterity: RxAttribute,
+	pub stamina: RxAttribute,
+
+	pub presence: RxAttribute,
+	pub manipulation: RxAttribute,
+	pub composure: RxAttribute,
+}
+
+impl RxAttributes {}
+
 #[derive(Clone)]
 pub struct DefenseCalc {
 	attributes: (Signal<i8>, Signal<i8>),
@@ -119,13 +151,11 @@ pub struct DefenseCalc {
 
 #[test]
 pub fn test() {
-	let wits = RxAttribute::new(1);
-	let composure = RxAttribute::new(1);
-	let dexterity = RxAttribute::new(2);
+	let attributes = RxAttributes::default();
 
-	let perception = &wits + &composure;
-	wits.set(3);
-	composure.set(3);
+	let perception = &attributes.wits + &attributes.composure;
+	attributes.wits.set(3);
+	attributes.composure.set(3);
 
 	assert_eq!(perception.value(), 6);
 	perception.apply(Signal::new(1));
@@ -137,7 +167,10 @@ pub fn test() {
 	let defense_calc: Signal<i8> = defense_calc_sink
 		.stream()
 		.hold(DefenseCalc {
-			attributes: (wits.signal().clone(), dexterity.signal().clone()),
+			attributes: (
+				attributes.wits.signal().clone(),
+				attributes.dexterity.signal().clone(),
+			),
 			skill: Signal::new(1),
 			flag: Signal::new(false),
 		})
@@ -157,11 +190,11 @@ pub fn test() {
 		.switch();
 
 	let defense = RxAttribute::from(defense_calc);
-	assert_eq!(defense.value(), 3);
+	assert_eq!(defense.value(), 2);
 
-	dexterity.set(4);
+	attributes.dexterity.set(4);
 	assert_eq!(defense.value(), 4);
 
-	wits.set(4);
+	attributes.wits.set(4);
 	assert_eq!(defense.value(), 5);
 }
