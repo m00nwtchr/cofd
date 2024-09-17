@@ -4,6 +4,7 @@ use std::{
 	ops::{Add, Sub},
 };
 
+use carboxyl::{Signal, Sink};
 use cofd_schema::{
 	dice_pool::DicePool,
 	prelude::{Attribute, Skill},
@@ -20,7 +21,11 @@ pub mod modifier;
 
 use modifier::*;
 
-use crate::{dice_pool::DicePoolExt, traits::*};
+use crate::{
+	dice_pool::DicePoolExt,
+	observer::{RxAttribute, RxAttributes},
+	traits::*,
+};
 
 #[derive(Default)]
 pub struct CharacterBuilder {
@@ -110,7 +115,7 @@ impl CharacterBuilder {
 			splat: self.splat,
 			info: self.info,
 			power,
-			_attributes: self.attributes,
+			attributes: RxAttributes::from(self.attributes),
 			skills: self.skills,
 			abilities: self.abilities,
 			merits: self.merits,
@@ -278,21 +283,21 @@ pub fn is_five(n: &u8) -> bool {
 	*n == 5
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize)]
 #[serde(default)]
 pub struct Character {
 	pub splat: Splat,
 
 	pub info: CharacterInfo,
 
-	#[serde(rename = "attributes")]
-	_attributes: Attributes,
+	attributes: RxAttributes,
 	skills: Skills,
 	pub specialties: HashMap<Skill, Vec<String>>,
 
 	health: Damage,
 
-	pub willpower: u8,
+	pub willpower: Willpower,
+	pub max_willpower: RxAttribute<u8>,
 	pub power: u8,
 	pub fuel: u8,
 	pub integrity: u8,
@@ -308,7 +313,7 @@ pub struct Character {
 	pub weapons: Vec<Weapon>,
 
 	#[serde(skip_serializing_if = "is_five")]
-	pub base_size: u8,
+	pub size: RxAttribute<u8>,
 	base_armor: ArmorStruct,
 	pub beats: u8,
 	#[serde(skip_serializing_if = "is_zero")]
@@ -420,58 +425,43 @@ impl Character {
 		self.modifiers.get_conditional_pool(target, condition)
 	}
 
-	pub fn attributes(&self) -> Attributes {
-		Attributes {
-			intelligence: self._modified(Attribute::Intelligence),
-			wits: self._modified(Attribute::Wits),
-			resolve: self._modified(Attribute::Resolve),
-			strength: self._modified(Attribute::Strength),
-			dexterity: self._modified(Attribute::Dexterity),
-			stamina: self._modified(Attribute::Stamina),
-			presence: self._modified(Attribute::Presence),
-			manipulation: self._modified(Attribute::Manipulation),
-			composure: self._modified(Attribute::Composure),
-		}
-	}
-	pub fn base_attributes_mut(&mut self) -> &mut Attributes {
-		&mut self._attributes
-	}
-	pub fn base_attributes(&self) -> &Attributes {
-		&self._attributes
+	pub fn attributes(&self) -> &RxAttributes {
+		&self.attributes
 	}
 
 	pub fn _modified(&self, target: impl Into<ModifierTarget>) -> u8 {
-		let target = &target.into();
-		let base = match &target {
-			ModifierTarget::BaseAttribute(attr) | ModifierTarget::Attribute(attr) => {
-				*self._attributes.get(attr)
-			}
-			ModifierTarget::BaseSkill(skill) | ModifierTarget::Skill(skill) => {
-				self.skills.get(*skill)
-			}
-			_ => 0,
-		};
-
-		let modifier = match &target {
-			ModifierTarget::BaseAttribute(_) => 0,
-			ModifierTarget::BaseSkill(_) => 0,
-			_ => self.modifiers.get_modifier(self, target.clone()),
-		};
-		let base_modifier = self.modifiers.get_modifier(
-			self,
-			match *target {
-				ModifierTarget::Attribute(attr) => ModifierTarget::BaseAttribute(attr),
-				ModifierTarget::Skill(skill) => ModifierTarget::BaseSkill(skill),
-				_ => target.clone(),
-			},
-		);
-
-		let res = base.saturating_add_signed(base_modifier);
-		if res > 5 {
-			res
-		} else {
-			base.saturating_add_signed(base_modifier + modifier)
-		}
+		// let target = &target.into();
+		// let base = match &target {
+		// 	ModifierTarget::BaseAttribute(attr) | ModifierTarget::Attribute(attr) => {
+		// 		*self.attributes.get(attr)
+		// 	}
+		// 	ModifierTarget::BaseSkill(skill) | ModifierTarget::Skill(skill) => {
+		// 		self.skills.get(*skill)
+		// 	}
+		// 	_ => 0,
+		// };
+		//
+		// let modifier = match &target {
+		// 	ModifierTarget::BaseAttribute(_) => 0,
+		// 	ModifierTarget::BaseSkill(_) => 0,
+		// 	_ => self.modifiers.get_modifier(self, target.clone()),
+		// };
+		// let base_modifier = self.modifiers.get_modifier(
+		// 	self,
+		// 	match *target {
+		// 		ModifierTarget::Attribute(attr) => ModifierTarget::BaseAttribute(attr),
+		// 		ModifierTarget::Skill(skill) => ModifierTarget::BaseSkill(skill),
+		// 		_ => target.clone(),
+		// 	},
+		// );
+		//
+		// let res = base.saturating_add_signed(base_modifier);
+		// if res > 5 {
+		// 	res
+		// } else {
+		// 	base.saturating_add_signed(base_modifier + modifier)
+		// }
+		0
 	}
 
 	pub fn skills(&self) -> Skills {
@@ -514,7 +504,7 @@ impl Character {
 	pub fn max_health(&self) -> u8 {
 		let attributes = self.attributes();
 
-		(self.size() + attributes.stamina).saturating_add_signed(
+		(self.size() + attributes.stamina.value()).saturating_add_signed(
 			self.modifiers
 				.get_modifier(self, Trait::DerivedTrait(DerivedTrait::Health)),
 		)
@@ -538,25 +528,22 @@ impl Character {
 		}
 	}
 
-	pub fn max_willpower(&self) -> u8 {
+	pub fn max_willpower(&self) -> RxAttribute<u8> {
 		let attributes = self.attributes();
 
-		attributes.resolve + attributes.composure
+		&attributes.resolve + &attributes.composure
 	}
 
-	pub fn size(&self) -> u8 {
-		self.base_size.saturating_add_signed(
-			self.modifiers
-				.get_modifier(self, Trait::DerivedTrait(DerivedTrait::Size)),
-		)
+	pub fn size(&self) -> &RxAttribute<u8> {
+		&self.size
 	}
-	pub fn speed(&self) -> u8 {
+
+	pub fn speed(&self) -> RxAttribute<u8> {
 		let attributes = self.attributes();
 
-		(5 + attributes.dexterity + attributes.strength).saturating_add_signed(
-			self.modifiers
-				.get_modifier(self, Trait::DerivedTrait(DerivedTrait::Speed)),
-		)
+		// self.modifiers
+		// 	.get_modifier(self, Trait::DerivedTrait(DerivedTrait::Speed));
+		(&attributes.dexterity + &attributes.strength).map(|a| a + 5)
 	}
 
 	#[allow(clippy::cast_sign_loss)]
@@ -616,14 +603,50 @@ impl Character {
 	}
 }
 
+#[derive(Clone, Serialize)]
+pub struct Willpower {
+	max: RxAttribute<u8>,
+	current_sink: Sink<u8>,
+	current: Signal<u8>,
+}
+
+impl Willpower {
+	pub fn new(attributes: &RxAttributes) -> Self {
+		let current_sink = Sink::new();
+		let current = current_sink.stream().hold(0);
+
+		Self {
+			max: &attributes.resolve + &attributes.composure,
+			current_sink,
+			current,
+		}
+	}
+
+	pub fn max(&self) -> u8 {
+		self.max.value()
+	}
+
+	pub fn set_current(&self, current: u8) {
+		self.current_sink.send(current);
+	}
+
+	pub fn current(&self) -> u8 {
+		self.current.sample()
+	}
+}
+
 impl Default for Character {
 	fn default() -> Self {
+		let attributes = RxAttributes::default();
+
+		let max_willpower = &attributes.resolve + &attributes.composure;
+
 		Self {
 			splat: Default::default(),
 			info: Default::default(),
-			_attributes: Default::default(),
+			attributes,
 			skills: Default::default(),
-			base_size: 5,
+			size: RxAttribute::new(5),
 			abilities: Default::default(),
 			merits: Default::default(),
 			health: Default::default(),
