@@ -765,7 +765,7 @@ impl WerewolfMerit {
 		if matches!(character.splat, Splat::Werewolf(..)) {
 			match self {
 				Self::InstinctiveDefense => {
-					character.power >= 2 && character.skills().athletics >= 2
+					character.power.value() >= 2 && character.skills().athletics.value() >= 2
 				}
 				_ => true,
 			}
@@ -817,7 +817,7 @@ pub fn get_form_trait(character: &Character, form: &Form, target: &ModifierTarge
 		ModifierTarget::BaseAttribute(_)
 		| ModifierTarget::BaseSkill(_)
 		| ModifierTarget::Skill(_) => unreachable!(),
-		ModifierTarget::Attribute(attr) => *character.attributes().get(attr) as i8,
+		ModifierTarget::Attribute(attr) => character.attributes().get(*attr).value() as i8,
 		ModifierTarget::Trait(trait_) => character.get_trait(trait_) as i8,
 	};
 

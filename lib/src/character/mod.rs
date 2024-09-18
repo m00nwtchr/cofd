@@ -1,10 +1,12 @@
 use std::{
 	cmp::min,
 	collections::HashMap,
+	fmt,
+	fmt::{Debug, Formatter},
 	ops::{Add, Sub},
 };
 
-use carboxyl::{Signal, Sink};
+use carboxyl::{lift, Signal, Sink};
 use cofd_schema::{
 	dice_pool::DicePool,
 	prelude::{Attribute, Skill},
@@ -23,7 +25,7 @@ use modifier::*;
 
 use crate::{
 	dice_pool::DicePoolExt,
-	observer::{RxAttribute, RxAttributes},
+	observer::{RxAttribute, RxAttributes, RxSkills},
 	traits::*,
 };
 
@@ -103,23 +105,52 @@ impl CharacterBuilder {
 
 	#[must_use]
 	pub fn build(self) -> Character {
-		let power = if matches!(self.splat, Splat::Mortal(..)) {
+		let power = RxAttribute::new(if matches!(self.splat, Splat::Mortal(..)) {
 			0
 		} else if self.power > 0 {
 			self.power
 		} else {
 			1
-		};
+		});
+
+		let attributes = RxAttributes::from(self.attributes);
+		let skills = RxSkills::from(self.skills);
+
+		let perception = perception(&attributes);
+		let initiative = initiative(&attributes);
+		let speed = speed(&attributes);
+
+		let willpower = Willpower::new(&attributes);
+
+		let defense = Defense::new(&attributes, &skills);
 
 		let mut character = Character {
 			splat: self.splat,
 			info: self.info,
 			power,
-			attributes: RxAttributes::from(self.attributes),
-			skills: self.skills,
+			fuel: 0,
+			integrity: 0,
+			attributes,
+			skills,
 			abilities: self.abilities,
 			merits: self.merits,
+			weapons: vec![],
+			perception,
+			initiative,
+			speed,
+			base_armor: Default::default(),
+			beats: 0,
+			alternate_beats: 0,
+			conditions: vec![],
+			aspirations: vec![],
 			specialties: self.specialties,
+
+			health: Default::default(),
+			willpower,
+
+			touchstones: vec![],
+			modifiers: Default::default(),
+			defense,
 			..Default::default()
 		};
 
@@ -127,8 +158,8 @@ impl CharacterBuilder {
 			character.calc_mod_map();
 		}
 
-		character.fuel = self.fuel.unwrap_or_else(|| character.max_fuel());
-		character.willpower = character.max_willpower();
+		// character.fuel = self.fuel.unwrap_or_else(|| character.max_fuel());
+		// character.willpower = character.max_willpower();
 
 		character
 	}
@@ -270,10 +301,6 @@ impl Damage {
 	}
 }
 
-pub fn defense_pool() -> DicePool {
-	DicePool::min(Attribute::Wits, Attribute::Dexterity) + Skill::Athletics
-}
-
 pub fn is_empty_vec(vec: &Vec<String>) -> bool {
 	vec.is_empty()
 }
@@ -291,14 +318,13 @@ pub struct Character {
 	pub info: CharacterInfo,
 
 	attributes: RxAttributes,
-	skills: Skills,
+	skills: RxSkills,
 	pub specialties: HashMap<Skill, Vec<String>>,
 
 	health: Damage,
 
 	pub willpower: Willpower,
-	pub max_willpower: RxAttribute<u8>,
-	pub power: u8,
+	pub power: RxAttribute<u8>,
 	pub fuel: u8,
 	pub integrity: u8,
 
@@ -312,9 +338,13 @@ pub struct Character {
 
 	pub weapons: Vec<Weapon>,
 
-	#[serde(skip_serializing_if = "is_five")]
 	pub size: RxAttribute<u8>,
+	pub defense: Defense,
+	pub initiative: RxAttribute<u8>,
+	pub speed: RxAttribute<u8>,
 	base_armor: ArmorStruct,
+	pub perception: RxAttribute<u8>,
+
 	pub beats: u8,
 	#[serde(skip_serializing_if = "is_zero")]
 	pub alternate_beats: u8,
@@ -369,28 +399,27 @@ impl Character {
 
 	pub fn get_trait(&self, trait_: &Trait) -> u8 {
 		match trait_ {
-			Trait::DerivedTrait(dt) => match dt {
-				DerivedTrait::Speed => self.speed(),
-				DerivedTrait::Defense => self.defense(),
-				DerivedTrait::Initiative => self.initiative(),
-				DerivedTrait::Perception => self.perception(),
-				DerivedTrait::Health => self.max_health(),
-				DerivedTrait::Willpower => self.max_willpower(),
-				DerivedTrait::Size => self.size(),
-			},
-
+			// Trait::DerivedTrait(dt) => match dt {
+			// 	DerivedTrait::Speed => self.speed(),
+			// 	DerivedTrait::Defense => self.defense(),
+			// 	DerivedTrait::Initiative => self.initiative(),
+			// 	DerivedTrait::Perception => self.perception(),
+			// 	DerivedTrait::Health => self.max_health(),
+			// 	DerivedTrait::Willpower => self.max_willpower(),
+			// 	DerivedTrait::Size => self.size(),
+			// },
 			Trait::Beats => self.beats,
 
 			// Trait::Armor(Some(armor)) => match armor {
 			// 	Armor::General => self.armor().general,
 			// 	Armor::Ballistic => self.armor().ballistic,
 			// },
-			Trait::Power => self.power,
+			// Trait::Power => self.power,
 			Trait::Fuel => self.fuel,
 			Trait::Integrity => self.integrity,
 
-			Trait::Attribute(attr) => *self.attributes().get(attr),
-			Trait::Skill(skill) => self.skills().get(*skill),
+			Trait::Attribute(attr) => self.attributes().get(*attr).value(),
+			Trait::Skill(skill) => self.skills().get(*skill).value(),
 			_ => 0,
 		}
 	}
@@ -464,50 +493,12 @@ impl Character {
 		0
 	}
 
-	pub fn skills(&self) -> Skills {
-		Skills {
-			academics: self._modified(Skill::Academics),
-			computer: self._modified(Skill::Computer),
-			crafts: self._modified(Skill::Crafts),
-			investigation: self._modified(Skill::Investigation),
-			medicine: self._modified(Skill::Medicine),
-			occult: self._modified(Skill::Occult),
-			politics: self._modified(Skill::Politics),
-			science: self._modified(Skill::Science),
-
-			athletics: self._modified(Skill::Athletics),
-			brawl: self._modified(Skill::Brawl),
-			drive: self._modified(Skill::Drive),
-			firearms: self._modified(Skill::Firearms),
-			larceny: self._modified(Skill::Larceny),
-			stealth: self._modified(Skill::Stealth),
-			survival: self._modified(Skill::Survival),
-			weaponry: self._modified(Skill::Weaponry),
-
-			animal_ken: self._modified(Skill::AnimalKen),
-			empathy: self._modified(Skill::Empathy),
-			expression: self._modified(Skill::Expression),
-			intimidation: self._modified(Skill::Intimidation),
-			persuasion: self._modified(Skill::Persuasion),
-			socialize: self._modified(Skill::Socialize),
-			streetwise: self._modified(Skill::Streetwise),
-			subterfuge: self._modified(Skill::Subterfuge),
-		}
-	}
-	pub fn base_skills(&self) -> &Skills {
+	pub fn skills(&self) -> &RxSkills {
 		&self.skills
 	}
-	pub fn base_skills_mut(&mut self) -> &mut Skills {
-		&mut self.skills
-	}
 
-	pub fn max_health(&self) -> u8 {
-		let attributes = self.attributes();
-
-		(self.size() + attributes.stamina.value()).saturating_add_signed(
-			self.modifiers
-				.get_modifier(self, Trait::DerivedTrait(DerivedTrait::Health)),
-		)
+	pub fn max_health(&self) -> RxAttribute<u8> {
+		self.size() + &self.attributes().stamina
 	}
 
 	pub fn health(&self) -> &Damage {
@@ -518,32 +509,8 @@ impl Character {
 		&mut self.health
 	}
 
-	pub fn wound_penalty(&self) -> u8 {
-		let mh = self.max_health();
-		match mh - min(self.health.sum(), mh) {
-			2 => 1,
-			1 => 2,
-			0 => 3,
-			_ => 0,
-		}
-	}
-
-	pub fn max_willpower(&self) -> RxAttribute<u8> {
-		let attributes = self.attributes();
-
-		&attributes.resolve + &attributes.composure
-	}
-
 	pub fn size(&self) -> &RxAttribute<u8> {
 		&self.size
-	}
-
-	pub fn speed(&self) -> RxAttribute<u8> {
-		let attributes = self.attributes();
-
-		// self.modifiers
-		// 	.get_modifier(self, Trait::DerivedTrait(DerivedTrait::Speed));
-		(&attributes.dexterity + &attributes.strength).map(|a| a + 5)
 	}
 
 	#[allow(clippy::cast_sign_loss)]
@@ -568,55 +535,155 @@ impl Character {
 	pub fn base_armor_mut(&mut self) -> &mut ArmorStruct {
 		&mut self.base_armor
 	}
-	pub fn initiative(&self) -> u8 {
-		let attributes = self.attributes();
 
-		(attributes.dexterity + attributes.composure).saturating_add_signed(
-			self.modifiers
-				.get_modifier(self, Trait::DerivedTrait(DerivedTrait::Initiative)),
-		)
-	}
-	pub fn perception(&self) -> u8 {
-		let attributes = self.attributes();
-
-		(attributes.wits + attributes.composure).saturating_add_signed(
-			self.modifiers
-				.get_modifier(self, Trait::DerivedTrait(DerivedTrait::Perception)),
-		)
-	}
 	pub fn experience(&self) -> u8 {
 		self.beats / 5
 	}
 	pub fn alternate_experience(&self) -> u8 {
 		self.alternate_beats / 5
 	}
+}
 
-	pub fn max_fuel(&self) -> u8 {
-		match self.power {
-			0 => self.attributes().stamina,
-			1..=4 => 10 + self.power - 1,
-			5..=8 => 10 + (self.power - 4) * 5,
-			9 => 50,
-			10 => 75,
-			_ => 0,
+fn perception(attributes: &RxAttributes) -> RxAttribute<u8> {
+	&attributes.wits + &attributes.composure
+}
+
+pub fn initiative(attributes: &RxAttributes) -> RxAttribute<u8> {
+	&attributes.dexterity + &attributes.composure
+}
+
+pub fn speed(attributes: &RxAttributes) -> RxAttribute<u8> {
+	(&attributes.dexterity + &attributes.strength).map(|a| a + 5)
+}
+
+fn max_fuel(power: &RxAttribute<u8>, attributes: &RxAttributes) -> RxAttribute<u8> {
+	RxAttribute::from(lift!(
+		|power, stamina| {
+			match power {
+				0 => stamina,
+				1..=4 => 10 + power - 1,
+				5..=8 => 10 + (power - 4) * 5,
+				9 => 50,
+				10 => 75,
+				_ => 0,
+			}
+		},
+		power.signal(),
+		attributes.stamina.signal()
+	))
+}
+
+#[derive(Clone)]
+struct DefenseCalc {
+	attributes: (Signal<u8>, Signal<u8>),
+	skill: Signal<u8>,
+	flag: Signal<bool>,
+}
+
+#[derive(Clone, Serialize)]
+pub struct Defense {
+	value: RxAttribute<u8>,
+	#[serde(skip)]
+	sink: Sink<DefenseCalc>,
+}
+
+impl Defense {
+	pub fn new(attributes: &RxAttributes, skills: &RxSkills) -> Self {
+		let sink = Sink::new();
+		let defense = sink
+			.stream()
+			.hold(DefenseCalc {
+				attributes: (
+					attributes.wits.signal().clone(),
+					attributes.dexterity.signal().clone(),
+				),
+				skill: skills.athletics.signal().clone(),
+				flag: Signal::new(false),
+			})
+			.map(|a| {
+				lift!(
+					|a1, a2, skill, flag| if flag {
+						a1.max(a2) + skill
+					} else {
+						a1.min(a2) + skill
+					},
+					&a.attributes.0,
+					&a.attributes.1,
+					&a.skill,
+					&a.flag
+				)
+			})
+			.switch();
+
+		Self {
+			sink,
+			value: RxAttribute::from(defense),
 		}
 	}
+
+	pub fn value(&self) -> u8 {
+		self.value.value()
+	}
+
+	pub fn signal(&self) -> &Signal<u8> {
+		self.value.signal()
+	}
 }
+
+impl Debug for Defense {
+	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+		f.debug_struct("Defense")
+			.field("value", &self.value)
+			.finish()
+	}
+}
+
+// pub fn wound_penalty(
+// 	attributes: &RxAttributes) -> RxAttribute<u8> {
+// 	RxAttribute::from(lift!(
+// 		|mh| {
+// 			match mh - min(self.health.sum(), mh) {
+// 				2 => 1,
+// 				1 => 2,
+// 				0 => 3,
+// 				_ => 0,
+// 			}
+// 		},
+// 		&self.max_health().signal()
+// 	))
+// }
 
 #[derive(Clone, Serialize)]
 pub struct Willpower {
 	max: RxAttribute<u8>,
+	#[serde(skip)]
 	current_sink: Sink<u8>,
+	#[serde(skip)]
 	current: Signal<u8>,
+}
+
+impl Debug for Willpower {
+	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+		f.debug_struct("Willpower")
+			.field("max", &self.max)
+			.field("current", &self.current)
+			.finish()
+	}
 }
 
 impl Willpower {
 	pub fn new(attributes: &RxAttributes) -> Self {
+		let max = &attributes.resolve + &attributes.composure;
+
 		let current_sink = Sink::new();
-		let current = current_sink.stream().hold(0);
+		let current = lift!(
+			|w, max| w.min(max),
+			&current_sink.stream().hold(0),
+			&max.signal()
+		);
 
 		Self {
-			max: &attributes.resolve + &attributes.composure,
+			max,
 			current_sink,
 			current,
 		}
@@ -638,14 +705,20 @@ impl Willpower {
 impl Default for Character {
 	fn default() -> Self {
 		let attributes = RxAttributes::default();
+		let skills = RxSkills::default();
 
-		let max_willpower = &attributes.resolve + &attributes.composure;
+		let willpower = Willpower::new(&attributes);
+
+		let perception = perception(&attributes);
+		let initiative = initiative(&attributes);
+		let speed = speed(&attributes);
+		let defense = Defense::new(&attributes, &skills);
 
 		Self {
 			splat: Default::default(),
 			info: Default::default(),
 			attributes,
-			skills: Default::default(),
+			skills,
 			size: RxAttribute::new(5),
 			abilities: Default::default(),
 			merits: Default::default(),
@@ -656,7 +729,7 @@ impl Default for Character {
 			power: Default::default(),
 			integrity: 7,
 			fuel: Default::default(),
-			willpower: Default::default(),
+			willpower,
 			beats: Default::default(),
 			alternate_beats: Default::default(),
 			base_armor: Default::default(),
@@ -665,6 +738,10 @@ impl Default for Character {
 			conditions: Default::default(),
 			aspirations: Default::default(),
 			weapons: Default::default(),
+			perception,
+			initiative,
+			speed,
+			defense,
 		}
 	}
 }

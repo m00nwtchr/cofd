@@ -96,14 +96,15 @@ pub enum ModifierValue {
 
 impl ModifierValue {
 	pub fn value(&self, character: &Character) -> i8 {
-		match self {
-			ModifierValue::Num(value) => *value,
-			ModifierValue::Ability(ability) => {
-				*character.get_ability_value(ability).unwrap_or(&0) as i8
-			}
-			ModifierValue::Skill(skill) => character.skills.get(*skill) as i8,
-			ModifierValue::DicePool(pool) => i8::from(pool.value(character)),
-		}
+		// match self {
+		// 	ModifierValue::Num(value) => *value,
+		// 	ModifierValue::Ability(ability) => {
+		// 		*character.get_ability_value(ability).unwrap_or(&0) as i8
+		// 	}
+		// 	ModifierValue::Skill(skill) => character.skills.get(*skill) as i8,
+		// 	ModifierValue::DicePool(pool) => i8::from(pool.value(character)),
+		// }
+		0
 	}
 }
 

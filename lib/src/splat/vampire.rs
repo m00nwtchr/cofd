@@ -8,6 +8,7 @@ use crate::{
 	dice_pool::DicePool,
 	prelude::{Attribute, Attributes, Skills, Trait},
 };
+use crate::observer::{RxAttributes, RxSkills};
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(default)]
@@ -358,13 +359,13 @@ impl VampireMerit {
 	pub fn is_available(
 		&self,
 		character: &crate::prelude::Character,
-		attributes: &Attributes,
-		skills: &Skills,
+		attributes: &RxAttributes,
+		skills: &RxSkills,
 	) -> bool {
 		matches!(character.splat, Splat::Vampire(..))
 			&& match self {
 				// VampireMerit::Atrocious => todo!(), // Not Enticing or Cutthroat
-				VampireMerit::Bloodhound => attributes.wits >= 3,
+				VampireMerit::Bloodhound => attributes.wits.value() >= 3,
 				VampireMerit::CallTheBeast => character.integrity < 5,
 				VampireMerit::ClawsOfTheUnholy => {
 					*character
@@ -416,14 +417,14 @@ impl VampireMerit {
 					)
 				}
 				VampireMerit::ReceptiveMind => {
-					character.power >= 6
+					character.power.value() >= 6
 						&& *character
 							.abilities
 							.get(&Discipline::Auspex.into())
 							.unwrap_or(&0) >= 4
 				}
 				VampireMerit::RevenantImpostor => {
-					attributes.manipulation >= 3 && skills.subterfuge >= 2
+					attributes.manipulation.value() >= 3 && skills.subterfuge.value() >= 2
 				}
 				VampireMerit::SwarmForm => {
 					*character
@@ -443,22 +444,22 @@ impl VampireMerit {
 
 				// VampireMerit::CacophonySavvy => todo!(), // City Status
 				VampireMerit::Courtoisie => {
-					attributes.composure >= 3 && skills.socialize >= 2 && skills.weaponry >= 2
+					attributes.composure.value() >= 3 && skills.socialize.value() >= 2 && skills.weaponry.value() >= 2
 				} // Invictus Status
 				VampireMerit::Crusade => {
-					attributes.resolve >= 3 && skills.occult >= 2 && skills.weaponry >= 2
+					attributes.resolve.value() >= 3 && skills.occult.value() >= 2 && skills.weaponry.value() >= 2
 				} // Theban Sorcery 2 or Sorc Eunuch
 				// VampireMerit::DynastyMembership => todo!(), // Clan Status
-				VampireMerit::KindredDueling => attributes.composure >= 3 && skills.weaponry >= 2,
+				VampireMerit::KindredDueling => attributes.composure.value() >= 3 && skills.weaponry.value() >= 2,
 				VampireMerit::MobilizeOutrage => {
-					character.max_willpower() >= 5 && skills.brawl >= 2
+					character.willpower.max() >= 5 && skills.brawl.value() >= 2
 				} // Carthian Status
-				VampireMerit::RidingTheWave => attributes.composure >= 3 && attributes.resolve >= 3,
+				VampireMerit::RidingTheWave => attributes.composure.value() >= 3 && attributes.resolve.value() >= 3,
 				VampireMerit::RitesOfTheImpaled => {
-					attributes.resolve >= 3 && attributes.stamina >= 3 && skills.weaponry >= 2
+					attributes.resolve.value() >= 3 && attributes.stamina.value() >= 3 && skills.weaponry.value() >= 2
 				} // Sworn
 				VampireMerit::TempleGuardian => {
-					skills.athletics >= 2 && skills.brawl >= 2 && skills.weaponry >= 2
+					skills.athletics.value() >= 2 && skills.brawl.value() >= 2 && skills.weaponry.value() >= 2
 				} // Crone Status
 				// VampireMerit::IndependentStudy => todo!(),
 				// VampireMerit::SecretSocietyJunkie => todo!(),
