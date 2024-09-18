@@ -142,7 +142,8 @@ where
 		+ Sync
 		+ Default
 		+ Clone
-		+ Add<<T as Sub<Rhs>>::Output, Output = <T as Sub<Rhs>>::Output> + 'static,
+		+ Add<<T as Sub<Rhs>>::Output, Output = <T as Sub<Rhs>>::Output>
+		+ 'static,
 {
 	type Output = RxAttribute<T::Output>;
 

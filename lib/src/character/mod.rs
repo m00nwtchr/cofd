@@ -113,6 +113,8 @@ impl CharacterBuilder {
 			1
 		});
 
+		let size = RxAttribute::new(5);
+
 		let attributes = RxAttributes::from(self.attributes);
 		let skills = RxSkills::from(self.skills);
 
@@ -121,6 +123,7 @@ impl CharacterBuilder {
 		let speed = speed(&attributes);
 
 		let willpower = Willpower::new(&attributes);
+		let health = Health::new(&attributes, &size);
 
 		let defense = Defense::new(&attributes, &skills);
 
@@ -138,6 +141,7 @@ impl CharacterBuilder {
 			perception,
 			initiative,
 			speed,
+			size,
 			base_armor: Default::default(),
 			beats: 0,
 			alternate_beats: 0,
@@ -145,13 +149,13 @@ impl CharacterBuilder {
 			aspirations: vec![],
 			specialties: self.specialties,
 
-			health: Default::default(),
+			health,
 			willpower,
 
 			touchstones: vec![],
 			modifiers: Default::default(),
 			defense,
-			..Default::default()
+			//..Default::default()
 		};
 
 		if self.flag {
@@ -160,6 +164,7 @@ impl CharacterBuilder {
 
 		// character.fuel = self.fuel.unwrap_or_else(|| character.max_fuel());
 		// character.willpower = character.max_willpower();
+		character.willpower.set_current(character.willpower.max());
 
 		character
 	}
@@ -311,6 +316,40 @@ pub fn is_five(n: &u8) -> bool {
 }
 
 #[derive(Clone, Debug, Serialize)]
+pub struct Health {
+	pub track: Damage,
+	pub max_health: RxAttribute<u8>,
+	pub wound_penalty: RxAttribute<u8>,
+}
+
+impl Health {
+	pub fn new(attributes: &RxAttributes, size: &RxAttribute<u8>) -> Self {
+		let max_health = size + &attributes.stamina;
+
+		let health = Sink::new().stream().hold(Damage::default());
+
+		let wound_penalty = RxAttribute::from(lift!(
+			|mh, health| {
+				match mh - min(health.sum(), mh) {
+					2 => 1,
+					1 => 2,
+					0 => 3,
+					_ => 0,
+				}
+			},
+			&max_health.signal(),
+			&health
+		));
+
+		Self {
+			track: Damage::default(),
+			max_health,
+			wound_penalty,
+		}
+	}
+}
+
+#[derive(Clone, Debug, Serialize)]
 #[serde(default)]
 pub struct Character {
 	pub splat: Splat,
@@ -321,7 +360,7 @@ pub struct Character {
 	skills: RxSkills,
 	pub specialties: HashMap<Skill, Vec<String>>,
 
-	health: Damage,
+	health: Health,
 
 	pub willpower: Willpower,
 	pub power: RxAttribute<u8>,
@@ -424,7 +463,6 @@ impl Character {
 		}
 	}
 
-	#[allow(clippy::too_many_lines)]
 	pub fn calc_mod_map(&self) {
 		self.modifiers.update(self);
 	}
@@ -497,16 +535,8 @@ impl Character {
 		&self.skills
 	}
 
-	pub fn max_health(&self) -> RxAttribute<u8> {
-		self.size() + &self.attributes().stamina
-	}
-
-	pub fn health(&self) -> &Damage {
+	pub fn health(&self) -> &Health {
 		&self.health
-	}
-
-	pub fn health_mut(&mut self) -> &mut Damage {
-		&mut self.health
 	}
 
 	pub fn size(&self) -> &RxAttribute<u8> {
@@ -638,21 +668,6 @@ impl Debug for Defense {
 	}
 }
 
-// pub fn wound_penalty(
-// 	attributes: &RxAttributes) -> RxAttribute<u8> {
-// 	RxAttribute::from(lift!(
-// 		|mh| {
-// 			match mh - min(self.health.sum(), mh) {
-// 				2 => 1,
-// 				1 => 2,
-// 				0 => 3,
-// 				_ => 0,
-// 			}
-// 		},
-// 		&self.max_health().signal()
-// 	))
-// }
-
 #[derive(Clone, Serialize)]
 pub struct Willpower {
 	max: RxAttribute<u8>,
@@ -707,7 +722,10 @@ impl Default for Character {
 		let attributes = RxAttributes::default();
 		let skills = RxSkills::default();
 
+		let size = RxAttribute::new(5);
+
 		let willpower = Willpower::new(&attributes);
+		let health = Health::new(&attributes, &size);
 
 		let perception = perception(&attributes);
 		let initiative = initiative(&attributes);
@@ -719,10 +737,10 @@ impl Default for Character {
 			info: Default::default(),
 			attributes,
 			skills,
-			size: RxAttribute::new(5),
+			size,
 			abilities: Default::default(),
 			merits: Default::default(),
-			health: Default::default(),
+			health,
 
 			modifiers: Default::default(),
 

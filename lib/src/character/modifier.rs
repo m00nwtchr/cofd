@@ -1,5 +1,6 @@
 use std::{
 	collections::HashMap,
+	hash::Hash,
 	sync::{Arc, RwLock},
 };
 
@@ -186,7 +187,7 @@ pub struct Modifiers {
 
 fn push_or_init<K, V>(map: &mut HashMap<K, Vec<V>>, key: K, value: V)
 where
-	K: Eq + std::hash::Hash,
+	K: Eq + Hash,
 {
 	let vec = map.get_mut(&key);
 
@@ -302,13 +303,9 @@ impl Modifiers {
 			_ => {}
 		}
 
-		// let mut defense_skill = Skill::Athletics;
-		// let mut defense_attr = DicePool::min(Attribute::Wits, Attribute::Dexterity);
-
 		for modifier in modifiers {
 			handle_modifier(modifier, &mut modifier_map, &mut conditional_modifier_map);
 		}
-		// character._defense_pool = defense_attr + defense_skill;
 	}
 
 	pub fn get_modifier(&self, character: &Character, target: impl Into<ModifierTarget>) -> i8 {
