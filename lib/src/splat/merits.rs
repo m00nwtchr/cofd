@@ -7,10 +7,9 @@ use super::{
 	werewolf::WerewolfMerit,
 };
 use crate::{
-	character::modifier::{Modifier, ModifierOp, ModifierTarget, ModifierValue},
-	prelude::{Attributes, Skills, Trait},
+	reactive::{RxAttributes, RxSkills},
+	prelude::Trait,
 };
-use crate::observer::{RxAttributes, RxSkills};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, AllVariants, VariantName)]
 pub enum Merit {
@@ -271,30 +270,30 @@ impl Merit {
 		]
 	}
 
-	pub fn get_modifiers(&self, value: u8) -> Vec<Modifier> {
-		match &self {
-			Merit::DefensiveCombat(true, Some(skill)) => {
-				vec![Modifier::new(
-					ModifierTarget::Trait(Trait::DerivedTrait(DerivedTrait::Defense)),
-					ModifierValue::Skill(*skill),
-					ModifierOp::Set,
-				)]
-			}
-			Merit::Giant => {
-				if value == 3 {
-					vec![Modifier::new(
-						ModifierTarget::Trait(Trait::DerivedTrait(DerivedTrait::Size)),
-						ModifierValue::Num(1),
-						ModifierOp::Add,
-					)]
-				} else {
-					vec![]
-				}
-			}
-			Merit::Werewolf(merit) => merit.get_modifiers(value),
-			_ => vec![],
-		}
-	}
+	// pub fn get_modifiers(&self, value: u8) -> Vec<Modifier> {
+	// 	match &self {
+	// 		Merit::DefensiveCombat(true, Some(skill)) => {
+	// 			vec![Modifier::new(
+	// 				ModifierTarget::Trait(Trait::DerivedTrait(DerivedTrait::Defense)),
+	// 				ModifierValue::Skill(*skill),
+	// 				ModifierOp::Set,
+	// 			)]
+	// 		}
+	// 		Merit::Giant => {
+	// 			if value == 3 {
+	// 				vec![Modifier::new(
+	// 					ModifierTarget::Trait(Trait::DerivedTrait(DerivedTrait::Size)),
+	// 					ModifierValue::Num(1),
+	// 					ModifierOp::Add,
+	// 				)]
+	// 			} else {
+	// 				vec![]
+	// 			}
+	// 		}
+	// 		Merit::Werewolf(merit) => merit.get_modifiers(value),
+	// 		_ => vec![],
+	// 	}
+	// }
 
 	pub fn is_available(
 		&self,
@@ -319,10 +318,13 @@ impl Merit {
 				skills.academics.value() > 1 || skills.science.value() > 1
 			}
 			Self::Indomitable => character.attributes().resolve.value() > 2,
-			Self::InterdisciplinarySpecialty(_, Some(skill)) => character.skills().get(*skill).value() > 2,
+			Self::InterdisciplinarySpecialty(_, Some(skill)) => {
+				character.skills().get(*skill).value() > 2
+			}
 			Self::InvestigativeAide(Some(skill)) => character.skills().get(*skill).value() > 2,
 			Self::InvestigativeProdigy => {
-				character.attributes().wits.value() > 2 && character.skills().investigation.value() > 2
+				character.attributes().wits.value() > 2
+					&& character.skills().investigation.value() > 2
 			}
 			// Self::LibraryAdvanced() // Library 3 + <= Safe Place
 			Self::Scarred(_) => character.integrity <= 5,
@@ -341,7 +343,9 @@ impl Merit {
 			}
 			Self::CovertOperative => {
 				let attr = character.attributes();
-				attr.wits.value() > 2 && attr.dexterity.value() > 2 && character.skills().stealth.value() > 1
+				attr.wits.value() > 2
+					&& attr.dexterity.value() > 2
+					&& character.skills().stealth.value() > 1
 			}
 			Self::CrackDriver => character.skills().drive.value() > 2,
 			Self::Demolisher => {
@@ -355,7 +359,9 @@ impl Merit {
 			Self::Hardy => character.attributes().stamina.value() > 2,
 			Self::Greyhound => {
 				let attr = character.attributes();
-				character.skills().athletics.value() > 2 && attr.wits.value() > 2 && attr.stamina.value() > 2
+				character.skills().athletics.value() > 2
+					&& attr.wits.value() > 2
+					&& attr.stamina.value() > 2
 			}
 			// IronSkin
 			Self::IronStamina => {
@@ -365,7 +371,8 @@ impl Merit {
 			Self::QuickDraw(_) => character.attributes().wits.value() > 2,
 			Self::PunchDrunk => character.willpower.max() > 5,
 			Self::Relentless => {
-				character.skills().athletics.value() > 1 && character.attributes().stamina.value() > 2
+				character.skills().athletics.value() > 1
+					&& character.attributes().stamina.value() > 2
 			}
 			// Self::Roadkill // Merit Dep Aggressive Driving 2
 			Self::SeizingTheEdge => {
@@ -389,11 +396,14 @@ impl Merit {
 			Self::HobbyistClique(_, Some(skill)) => character.skills().get(*skill).value() > 1,
 			Self::Inspiring => character.attributes().presence.value() > 2,
 			Self::IronWill => character.attributes().resolve.value() > 3,
-			Self::Peacemaker => character.attributes().wits.value() > 2 && character.skills().empathy.value() > 2,
+			Self::Peacemaker => {
+				character.attributes().wits.value() > 2 && character.skills().empathy.value() > 2
+			}
 			Self::Pusher => character.skills().persuasion.value() > 1,
 			Self::SmallUnitTactics => character.attributes().presence.value() > 2,
 			Self::SpinDoctor => {
-				character.attributes().manipulation.value() > 2 && character.skills().subterfuge.value() > 1
+				character.attributes().manipulation.value() > 2
+					&& character.skills().subterfuge.value() > 1
 			}
 			Self::TableTurner => {
 				let attr = character.attributes();
@@ -402,7 +412,8 @@ impl Merit {
 			// Self::TakesOneToKnowOne if character.template.vice_anchor() != Anchor::Vice => false,
 			Self::Taste(_, _) => character.skills().crafts.value() > 1,
 			Self::Untouchable => {
-				character.attributes().manipulation.value() > 2 && character.skills().subterfuge.value() > 1
+				character.attributes().manipulation.value() > 2
+					&& character.skills().subterfuge.value() > 1
 			}
 
 			Self::Mage(merit) => merit.is_available(character),

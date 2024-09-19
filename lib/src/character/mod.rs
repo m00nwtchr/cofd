@@ -1,5 +1,4 @@
 use std::{
-	cmp::min,
 	collections::HashMap,
 	fmt,
 	fmt::{Debug, Formatter},
@@ -7,27 +6,30 @@ use std::{
 };
 
 use carboxyl::{lift, Signal, Sink};
-use cofd_schema::{
-	dice_pool::DicePool,
-	prelude::{Attribute, Skill},
-};
+use cofd_schema::prelude::Skill;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-	prelude::VariantName,
-	splat::{ability::Ability, Merit, Splat},
-};
-
-pub mod modifier;
-// pub mod traits;
-
-use modifier::*;
-
-use crate::{
 	dice_pool::DicePoolExt,
-	observer::{RxAttribute, RxAttributes, RxSkills},
+	is_zero,
+	prelude::VariantName,
+	reactive::{RxAttributes, RxSkills, RxTrait},
+	splat::{ability::Ability, Merit, Splat},
 	traits::*,
 };
+
+pub mod attributes;
+pub mod health;
+pub mod info;
+pub mod modifier;
+pub mod skills;
+// pub mod traits;
+
+use attributes::Attributes;
+use health::Health;
+use info::CharacterInfo;
+use modifier::*;
+use skills::Skills;
 
 #[derive(Default)]
 pub struct CharacterBuilder {
@@ -105,7 +107,7 @@ impl CharacterBuilder {
 
 	#[must_use]
 	pub fn build(self) -> Character {
-		let power = RxAttribute::new(if matches!(self.splat, Splat::Mortal(..)) {
+		let power = RxTrait::new(if matches!(self.splat, Splat::Mortal(..)) {
 			0
 		} else if self.power > 0 {
 			self.power
@@ -113,7 +115,7 @@ impl CharacterBuilder {
 			1
 		});
 
-		let size = RxAttribute::new(5);
+		let size = RxTrait::new(5);
 
 		let attributes = RxAttributes::from(self.attributes);
 		let skills = RxSkills::from(self.skills);
@@ -162,147 +164,15 @@ impl CharacterBuilder {
 			character.calc_mod_map();
 		}
 
+		if let Splat::Werewolf(werewolf) = &character.splat {
+			werewolf.modifiers(&character);
+		}
+
 		// character.fuel = self.fuel.unwrap_or_else(|| character.max_fuel());
 		// character.willpower = character.max_willpower();
 		character.willpower.set_current(character.willpower.max());
 
 		character
-	}
-}
-
-#[derive(Default, Debug, Clone)]
-pub enum Wound {
-	#[default]
-	None,
-	Bashing,
-	Lethal,
-	Aggravated,
-}
-
-impl Wound {
-	#[must_use]
-	pub fn inc(&self) -> Wound {
-		match self {
-			Wound::None => Wound::Bashing,
-			Wound::Bashing => Wound::Lethal,
-			Wound::Lethal => Wound::Aggravated,
-			Wound::Aggravated => Wound::Aggravated,
-		}
-	}
-
-	#[must_use]
-	pub fn poke(&self) -> Wound {
-		if let Wound::Aggravated = self {
-			Wound::None
-		} else {
-			self.inc()
-		}
-	}
-
-	pub fn poke_mut(&mut self) {
-		*self = self.poke();
-	}
-}
-
-#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(default)]
-pub struct Damage {
-	#[serde(skip_serializing_if = "is_zero")]
-	aggravated: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	lethal: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	bashing: u8,
-}
-
-impl Damage {
-	pub fn new(bashing: u8, lethal: u8, aggravated: u8) -> Self {
-		Self {
-			aggravated,
-			lethal,
-			bashing,
-		}
-	}
-
-	pub fn get(&self, wound: &Wound) -> u8 {
-		match wound {
-			Wound::None => 0,
-			Wound::Bashing => self.bashing,
-			Wound::Lethal => self.lethal,
-			Wound::Aggravated => self.aggravated,
-		}
-	}
-
-	pub fn get_i(&self, i: usize) -> Wound {
-		// println!("{i}");
-		if i < self.aggravated as usize {
-			Wound::Aggravated
-		} else if i >= self.aggravated as usize && i < (self.aggravated + self.lethal) as usize {
-			Wound::Lethal
-		} else if i >= (self.aggravated + self.lethal) as usize
-			&& i < (self.aggravated + self.lethal + self.bashing) as usize
-		{
-			Wound::Bashing
-		} else {
-			Wound::None
-		}
-	}
-
-	pub fn sum(&self) -> u8 {
-		self.bashing + self.lethal + self.aggravated
-	}
-
-	pub fn dec(&mut self, wound: &Wound) {
-		match wound {
-			Wound::None => {}
-			Wound::Bashing => {
-				if self.bashing > 0 {
-					self.bashing -= 1;
-				}
-			}
-			Wound::Lethal => {
-				if self.lethal > 0 {
-					self.lethal -= 1;
-				}
-			}
-			Wound::Aggravated => {
-				if self.aggravated > 0 {
-					self.aggravated -= 1;
-				}
-			}
-		}
-	}
-
-	pub fn inc(&mut self, wound: &Wound) {
-		match wound {
-			Wound::None => {}
-			Wound::Bashing => self.bashing += 1,
-			Wound::Lethal => self.lethal += 1,
-			Wound::Aggravated => self.aggravated += 1,
-		}
-	}
-
-	pub fn poke(&mut self, wound: &Wound) {
-		match wound {
-			Wound::None => self.bashing += 1,
-			Wound::Bashing => {
-				if self.bashing > 0 {
-					self.bashing -= 1;
-				}
-				self.lethal += 1;
-			}
-			Wound::Lethal => {
-				if self.lethal > 0 {
-					self.lethal -= 1;
-				}
-				self.aggravated += 1;
-			}
-			Wound::Aggravated => {
-				if self.aggravated > 0 {
-					self.aggravated -= 1;
-				}
-			}
-		}
 	}
 }
 
@@ -313,40 +183,6 @@ pub fn is_empty_vec(vec: &Vec<String>) -> bool {
 #[allow(clippy::trivially_copy_pass_by_ref)]
 pub fn is_five(n: &u8) -> bool {
 	*n == 5
-}
-
-#[derive(Clone, Debug, Serialize)]
-pub struct Health {
-	pub track: Damage,
-	pub max_health: RxAttribute<u8>,
-	pub wound_penalty: RxAttribute<u8>,
-}
-
-impl Health {
-	pub fn new(attributes: &RxAttributes, size: &RxAttribute<u8>) -> Self {
-		let max_health = size + &attributes.stamina;
-
-		let health = Sink::new().stream().hold(Damage::default());
-
-		let wound_penalty = RxAttribute::from(lift!(
-			|mh, health| {
-				match mh - min(health.sum(), mh) {
-					2 => 1,
-					1 => 2,
-					0 => 3,
-					_ => 0,
-				}
-			},
-			&max_health.signal(),
-			&health
-		));
-
-		Self {
-			track: Damage::default(),
-			max_health,
-			wound_penalty,
-		}
-	}
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -363,7 +199,7 @@ pub struct Character {
 	health: Health,
 
 	pub willpower: Willpower,
-	pub power: RxAttribute<u8>,
+	pub power: RxTrait,
 	pub fuel: u8,
 	pub integrity: u8,
 
@@ -377,12 +213,12 @@ pub struct Character {
 
 	pub weapons: Vec<Weapon>,
 
-	pub size: RxAttribute<u8>,
+	pub size: RxTrait,
 	pub defense: Defense,
-	pub initiative: RxAttribute<u8>,
-	pub speed: RxAttribute<u8>,
+	pub initiative: RxTrait,
+	pub speed: RxTrait,
 	base_armor: ArmorStruct,
-	pub perception: RxAttribute<u8>,
+	pub perception: RxTrait,
 
 	pub beats: u8,
 	#[serde(skip_serializing_if = "is_zero")]
@@ -464,98 +300,56 @@ impl Character {
 	}
 
 	pub fn calc_mod_map(&self) {
-		self.modifiers.update(self);
-	}
-
-	pub fn get_modifier(&self, target: impl Into<ModifierTarget>) -> i8 {
-		self.modifiers.get_modifier(self, target)
-	}
-
-	pub fn get_conditional_modifier(
-		&self,
-		target: impl Into<ModifierTarget>,
-		condition: impl Into<Condition>,
-	) -> Option<i8> {
-		self.modifiers
-			.get_conditional_modifier(self, target, condition)
-	}
-
-	pub fn get_pool(&self, target: impl Into<ModifierTarget>) -> Option<DicePool> {
-		self.modifiers.get_pool(self, target)
-	}
-
-	pub fn get_conditional_pool(
-		&self,
-		target: impl Into<ModifierTarget>,
-		condition: impl Into<Condition>,
-	) -> Option<DicePool> {
-		self.modifiers.get_conditional_pool(target, condition)
+		// self.modifiers.update(self);
 	}
 
 	pub fn attributes(&self) -> &RxAttributes {
 		&self.attributes
 	}
-
-	pub fn _modified(&self, target: impl Into<ModifierTarget>) -> u8 {
-		// let target = &target.into();
-		// let base = match &target {
-		// 	ModifierTarget::BaseAttribute(attr) | ModifierTarget::Attribute(attr) => {
-		// 		*self.attributes.get(attr)
-		// 	}
-		// 	ModifierTarget::BaseSkill(skill) | ModifierTarget::Skill(skill) => {
-		// 		self.skills.get(*skill)
-		// 	}
-		// 	_ => 0,
-		// };
-		//
-		// let modifier = match &target {
-		// 	ModifierTarget::BaseAttribute(_) => 0,
-		// 	ModifierTarget::BaseSkill(_) => 0,
-		// 	_ => self.modifiers.get_modifier(self, target.clone()),
-		// };
-		// let base_modifier = self.modifiers.get_modifier(
-		// 	self,
-		// 	match *target {
-		// 		ModifierTarget::Attribute(attr) => ModifierTarget::BaseAttribute(attr),
-		// 		ModifierTarget::Skill(skill) => ModifierTarget::BaseSkill(skill),
-		// 		_ => target.clone(),
-		// 	},
-		// );
-		//
-		// let res = base.saturating_add_signed(base_modifier);
-		// if res > 5 {
-		// 	res
-		// } else {
-		// 	base.saturating_add_signed(base_modifier + modifier)
-		// }
-		0
-	}
-
 	pub fn skills(&self) -> &RxSkills {
 		&self.skills
 	}
-
 	pub fn health(&self) -> &Health {
 		&self.health
 	}
-
-	pub fn size(&self) -> &RxAttribute<u8> {
+	pub fn size(&self) -> &RxTrait {
 		&self.size
 	}
 
-	#[allow(clippy::cast_sign_loss)]
-	pub fn defense(&self) -> u8 {
-		let res = self
-			.get_pool(Trait::DerivedTrait(DerivedTrait::Defense))
-			.unwrap()
-			.value(self);
+	// pub fn _modified(&self, target: impl Into<ModifierTarget>) -> u8 {
+	// 	let target = &target.into();
+	// 	let base = match &target {
+	// 		ModifierTarget::BaseAttribute(attr) | ModifierTarget::Attribute(attr) => {
+	// 			*self.attributes.get(attr)
+	// 		}
+	// 		ModifierTarget::BaseSkill(skill) | ModifierTarget::Skill(skill) => {
+	// 			self.skills.get(*skill)
+	// 		}
+	// 		_ => 0,
+	// 	};
+	//
+	// 	let modifier = match &target {
+	// 		ModifierTarget::BaseAttribute(_) => 0,
+	// 		ModifierTarget::BaseSkill(_) => 0,
+	// 		_ => self.modifiers.get_modifier(self, target.clone()),
+	// 	};
+	// 	let base_modifier = self.modifiers.get_modifier(
+	// 		self,
+	// 		match *target {
+	// 			ModifierTarget::Attribute(attr) => ModifierTarget::BaseAttribute(attr),
+	// 			ModifierTarget::Skill(skill) => ModifierTarget::BaseSkill(skill),
+	// 			_ => target.clone(),
+	// 		},
+	// 	);
+	//
+	// 	let res = base.saturating_add_signed(base_modifier);
+	// 	if res > 5 {
+	// 		res
+	// 	} else {
+	// 		base.saturating_add_signed(base_modifier + modifier)
+	// 	}
+	// }
 
-		if res > 0 {
-			res as u8
-		} else {
-			0
-		}
-	}
 	pub fn armor(&self) -> ArmorStruct {
 		ArmorStruct {
 			general: self.base_armor.general,
@@ -574,20 +368,20 @@ impl Character {
 	}
 }
 
-fn perception(attributes: &RxAttributes) -> RxAttribute<u8> {
+fn perception(attributes: &RxAttributes) -> RxTrait {
 	&attributes.wits + &attributes.composure
 }
 
-pub fn initiative(attributes: &RxAttributes) -> RxAttribute<u8> {
+pub fn initiative(attributes: &RxAttributes) -> RxTrait {
 	&attributes.dexterity + &attributes.composure
 }
 
-pub fn speed(attributes: &RxAttributes) -> RxAttribute<u8> {
+pub fn speed(attributes: &RxAttributes) -> RxTrait {
 	(&attributes.dexterity + &attributes.strength).map(|a| a + 5)
 }
 
-fn max_fuel(power: &RxAttribute<u8>, attributes: &RxAttributes) -> RxAttribute<u8> {
-	RxAttribute::from(lift!(
+fn max_fuel(power: &RxTrait, attributes: &RxAttributes) -> RxTrait {
+	RxTrait::from(lift!(
 		|power, stamina| {
 			match power {
 				0 => stamina,
@@ -612,7 +406,7 @@ struct DefenseCalc {
 
 #[derive(Clone, Serialize)]
 pub struct Defense {
-	value: RxAttribute<u8>,
+	value: RxTrait,
 	#[serde(skip)]
 	sink: Sink<DefenseCalc>,
 }
@@ -647,7 +441,7 @@ impl Defense {
 
 		Self {
 			sink,
-			value: RxAttribute::from(defense),
+			value: RxTrait::from(defense),
 		}
 	}
 
@@ -670,7 +464,7 @@ impl Debug for Defense {
 
 #[derive(Clone, Serialize)]
 pub struct Willpower {
-	max: RxAttribute<u8>,
+	max: RxTrait,
 	#[serde(skip)]
 	current_sink: Sink<u8>,
 	#[serde(skip)]
@@ -717,12 +511,34 @@ impl Willpower {
 	}
 }
 
+#[derive(Clone, Default, Debug, Serialize, Deserialize)]
+pub struct ArmorStruct {
+	pub general: u8,
+	pub ballistic: u8,
+}
+
+#[derive(Clone, Copy, Hash, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub enum Armor {
+	General,
+	Ballistic,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub struct Weapon {
+	pub name: String,
+	pub dice_pool: String,
+	pub damage: String,
+	pub range: String,
+	pub initative: i8,
+	pub size: u8,
+}
+
 impl Default for Character {
 	fn default() -> Self {
 		let attributes = RxAttributes::default();
 		let skills = RxSkills::default();
 
-		let size = RxAttribute::new(5);
+		let size = RxTrait::new(5);
 
 		let willpower = Willpower::new(&attributes);
 		let health = Health::new(&attributes, &size);
@@ -762,349 +578,4 @@ impl Default for Character {
 			defense,
 		}
 	}
-}
-
-fn is_empty(str: &String) -> bool {
-	str.is_empty()
-}
-
-#[derive(Clone, Default, Serialize, Deserialize, Debug, PartialEq, Eq)]
-#[serde(default)]
-pub struct CharacterInfo {
-	#[serde(skip_serializing_if = "is_empty")]
-	pub name: String,
-	#[serde(skip_serializing_if = "is_empty")]
-	pub player: String,
-
-	#[serde(skip_serializing_if = "is_empty")]
-	pub virtue_anchor: String,
-	#[serde(skip_serializing_if = "is_empty")]
-	pub vice_anchor: String,
-
-	#[serde(skip_serializing_if = "is_empty")]
-	pub faction: String,
-	#[serde(skip_serializing_if = "is_empty")]
-	pub group_name: String,
-
-	#[serde(skip_serializing_if = "is_empty")]
-	pub concept: String,
-	#[serde(skip_serializing_if = "is_empty")]
-	pub chronicle: String,
-
-	#[serde(skip_serializing_if = "is_empty")]
-	pub age: String,
-	#[serde(skip_serializing_if = "is_empty")]
-	pub date_of_birth: String,
-	#[serde(skip_serializing_if = "is_empty")]
-	pub hair: String,
-	#[serde(skip_serializing_if = "is_empty")]
-	pub eyes: String,
-	#[serde(skip_serializing_if = "is_empty")]
-	pub race: String,
-	#[serde(skip_serializing_if = "is_empty")]
-	pub nationality: String,
-	#[serde(skip_serializing_if = "is_empty")]
-	pub height: String,
-	#[serde(skip_serializing_if = "is_empty")]
-	pub weight: String,
-	#[serde(skip_serializing_if = "is_empty")]
-	pub sex: String,
-
-	#[serde(skip_serializing_if = "is_empty")]
-	pub other: String,
-}
-
-#[derive(Debug, Clone, Copy, VariantName)]
-pub enum InfoTrait {
-	Name,
-	Age,
-	Player,
-	VirtueAnchor,
-	ViceAnchor,
-	Concept,
-	Chronicle,
-
-	Faction,
-	GroupName,
-
-	DateOfBirth,
-	Hair,
-	Eyes,
-	Race,
-	Nationality,
-	Height,
-	Weight,
-	Sex,
-}
-
-impl CharacterInfo {
-	pub fn get(&self, info: InfoTrait) -> &String {
-		match info {
-			InfoTrait::Name => &self.name,
-			InfoTrait::Age => &self.age,
-			InfoTrait::Player => &self.player,
-			InfoTrait::Concept => &self.concept,
-			InfoTrait::Chronicle => &self.chronicle,
-			InfoTrait::DateOfBirth => &self.date_of_birth,
-			InfoTrait::Hair => &self.hair,
-			InfoTrait::Eyes => &self.eyes,
-			InfoTrait::Race => &self.race,
-			InfoTrait::Nationality => &self.nationality,
-			InfoTrait::Height => &self.height,
-			InfoTrait::Weight => &self.weight,
-			InfoTrait::Sex => &self.sex,
-			InfoTrait::VirtueAnchor => &self.virtue_anchor,
-			InfoTrait::ViceAnchor => &self.vice_anchor,
-			InfoTrait::Faction => &self.faction,
-			InfoTrait::GroupName => &self.group_name,
-		}
-	}
-
-	pub fn get_mut(&mut self, info: InfoTrait) -> &mut String {
-		match info {
-			InfoTrait::Name => &mut self.name,
-			InfoTrait::Age => &mut self.age,
-			InfoTrait::Player => &mut self.player,
-			InfoTrait::Concept => &mut self.concept,
-			InfoTrait::Chronicle => &mut self.chronicle,
-			InfoTrait::DateOfBirth => &mut self.date_of_birth,
-			InfoTrait::Hair => &mut self.hair,
-			InfoTrait::Eyes => &mut self.eyes,
-			InfoTrait::Race => &mut self.race,
-			InfoTrait::Nationality => &mut self.nationality,
-			InfoTrait::Height => &mut self.height,
-			InfoTrait::Weight => &mut self.weight,
-			InfoTrait::Sex => &mut self.sex,
-			InfoTrait::VirtueAnchor => &mut self.virtue_anchor,
-			InfoTrait::ViceAnchor => &mut self.vice_anchor,
-			InfoTrait::Faction => &mut self.faction,
-			InfoTrait::GroupName => &mut self.group_name,
-		}
-	}
-}
-
-#[allow(clippy::trivially_copy_pass_by_ref)]
-fn is_one(num: &u8) -> bool {
-	num.eq(&1)
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
-#[serde(default)]
-pub struct Attributes {
-	#[serde(skip_serializing_if = "is_one")]
-	pub intelligence: u8,
-	#[serde(skip_serializing_if = "is_one")]
-	pub wits: u8,
-	#[serde(skip_serializing_if = "is_one")]
-	pub resolve: u8,
-
-	#[serde(skip_serializing_if = "is_one")]
-	pub strength: u8,
-	#[serde(skip_serializing_if = "is_one")]
-	pub dexterity: u8,
-	#[serde(skip_serializing_if = "is_one")]
-	pub stamina: u8,
-
-	#[serde(skip_serializing_if = "is_one")]
-	pub presence: u8,
-	#[serde(skip_serializing_if = "is_one")]
-	pub manipulation: u8,
-	#[serde(skip_serializing_if = "is_one")]
-	pub composure: u8,
-}
-
-impl Attributes {
-	pub fn get(&self, attr: &Attribute) -> &u8 {
-		match attr {
-			Attribute::Intelligence => &self.intelligence,
-			Attribute::Wits => &self.wits,
-			Attribute::Resolve => &self.resolve,
-			//
-			Attribute::Strength => &self.strength,
-			Attribute::Dexterity => &self.dexterity,
-			Attribute::Stamina => &self.stamina,
-			//
-			Attribute::Presence => &self.presence,
-			Attribute::Manipulation => &self.manipulation,
-			Attribute::Composure => &self.composure,
-		}
-	}
-
-	pub fn get_mut(&mut self, attr: &Attribute) -> &mut u8 {
-		match attr {
-			Attribute::Intelligence => &mut self.intelligence,
-			Attribute::Wits => &mut self.wits,
-			Attribute::Resolve => &mut self.resolve,
-			//
-			Attribute::Strength => &mut self.strength,
-			Attribute::Dexterity => &mut self.dexterity,
-			Attribute::Stamina => &mut self.stamina,
-			//
-			Attribute::Presence => &mut self.presence,
-			Attribute::Manipulation => &mut self.manipulation,
-			Attribute::Composure => &mut self.composure,
-		}
-	}
-}
-
-impl Default for Attributes {
-	fn default() -> Self {
-		Self {
-			intelligence: 1,
-			wits: 1,
-			resolve: 1,
-			strength: 1,
-			dexterity: 1,
-			stamina: 1,
-			presence: 1,
-			manipulation: 1,
-			composure: 1,
-		}
-	}
-}
-
-#[allow(clippy::trivially_copy_pass_by_ref)]
-fn is_zero(n: &u8) -> bool {
-	*n == 0
-}
-
-#[derive(Clone, Default, Serialize, Deserialize, Debug, PartialEq, Eq)]
-#[serde(default)]
-pub struct Skills {
-	#[serde(skip_serializing_if = "is_zero")]
-	pub academics: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub computer: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub crafts: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub investigation: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub medicine: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub occult: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub politics: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub science: u8,
-
-	#[serde(skip_serializing_if = "is_zero")]
-	pub athletics: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub brawl: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub drive: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub firearms: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub larceny: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub stealth: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub survival: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub weaponry: u8,
-
-	#[serde(skip_serializing_if = "is_zero")]
-	pub animal_ken: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub empathy: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub expression: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub intimidation: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub persuasion: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub socialize: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub streetwise: u8,
-	#[serde(skip_serializing_if = "is_zero")]
-	pub subterfuge: u8,
-}
-
-impl Skills {
-	pub fn get(&self, skill: Skill) -> u8 {
-		match skill {
-			Skill::Academics => self.academics,
-			Skill::Computer => self.computer,
-			Skill::Crafts => self.crafts,
-			Skill::Investigation => self.investigation,
-			Skill::Medicine => self.medicine,
-			Skill::Occult => self.occult,
-			Skill::Politics => self.politics,
-			Skill::Science => self.science,
-			//
-			Skill::Athletics => self.athletics,
-			Skill::Brawl => self.brawl,
-			Skill::Drive => self.drive,
-			Skill::Firearms => self.firearms,
-			Skill::Larceny => self.larceny,
-			Skill::Stealth => self.stealth,
-			Skill::Survival => self.survival,
-			Skill::Weaponry => self.weaponry,
-			//
-			Skill::AnimalKen => self.animal_ken,
-			Skill::Empathy => self.empathy,
-			Skill::Expression => self.expression,
-			Skill::Intimidation => self.intimidation,
-			Skill::Persuasion => self.persuasion,
-			Skill::Socialize => self.socialize,
-			Skill::Streetwise => self.streetwise,
-			Skill::Subterfuge => self.subterfuge,
-		}
-	}
-
-	pub fn get_mut(&mut self, skill: Skill) -> &mut u8 {
-		match skill {
-			Skill::Academics => &mut self.academics,
-			Skill::Computer => &mut self.computer,
-			Skill::Crafts => &mut self.crafts,
-			Skill::Investigation => &mut self.investigation,
-			Skill::Medicine => &mut self.medicine,
-			Skill::Occult => &mut self.occult,
-			Skill::Politics => &mut self.politics,
-			Skill::Science => &mut self.science,
-			//
-			Skill::Athletics => &mut self.athletics,
-			Skill::Brawl => &mut self.brawl,
-			Skill::Drive => &mut self.drive,
-			Skill::Firearms => &mut self.firearms,
-			Skill::Larceny => &mut self.larceny,
-			Skill::Stealth => &mut self.stealth,
-			Skill::Survival => &mut self.survival,
-			Skill::Weaponry => &mut self.weaponry,
-			//
-			Skill::AnimalKen => &mut self.animal_ken,
-			Skill::Empathy => &mut self.empathy,
-			Skill::Expression => &mut self.expression,
-			Skill::Intimidation => &mut self.intimidation,
-			Skill::Persuasion => &mut self.persuasion,
-			Skill::Socialize => &mut self.socialize,
-			Skill::Streetwise => &mut self.streetwise,
-			Skill::Subterfuge => &mut self.subterfuge,
-		}
-	}
-}
-
-#[derive(Clone, Default, Debug, Serialize, Deserialize)]
-pub struct ArmorStruct {
-	pub general: u8,
-	pub ballistic: u8,
-}
-
-#[derive(Clone, Copy, Hash, Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub enum Armor {
-	General,
-	Ballistic,
-}
-
-#[derive(Debug, Default, Clone, Serialize, Deserialize, Eq, PartialEq)]
-pub struct Weapon {
-	pub name: String,
-	pub dice_pool: String,
-	pub damage: String,
-	pub range: String,
-	pub initative: i8,
-	pub size: u8,
 }

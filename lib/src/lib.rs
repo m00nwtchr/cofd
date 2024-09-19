@@ -13,7 +13,7 @@
 
 pub mod character;
 pub mod dice_pool;
-mod observer;
+mod reactive;
 pub mod splat;
 pub mod traits;
 
@@ -21,6 +21,15 @@ pub mod traits;
 extern crate cofd_util;
 
 pub use cofd_schema::template;
+
+fn is_empty(str: &String) -> bool {
+	str.is_empty()
+}
+
+#[allow(clippy::trivially_copy_pass_by_ref)]
+fn is_zero(n: &u8) -> bool {
+	*n == 0
+}
 
 pub mod prelude {
 	pub use cofd_schema::{
@@ -34,7 +43,7 @@ pub mod prelude {
 	pub use cofd_util::{AllVariants, VariantName};
 
 	pub use crate::{
-		character::{Attributes, Character, Skills},
+		character::{attributes::Attributes, skills::Skills, Character},
 		splat::SplatTrait,
 		traits::Trait,
 	};
@@ -45,7 +54,7 @@ mod tests {
 	use ron::ser::PrettyConfig;
 
 	use crate::{
-		character::CharacterInfo,
+		character::info::CharacterInfo,
 		prelude::*,
 		splat::{
 			mage::{Arcanum, Mage, MageMerit, Order, Path},
@@ -214,20 +223,17 @@ mod tests {
 		println!("{werewolf_character:?}");
 
 		// assert_eq!(werewolf_character.max_fuel(), 12);
-		assert_eq!(werewolf_character.defense.value(), 6);
+		// assert_eq!(werewolf_character.defense.value(), 6);
 		// assert_eq!(werewolf_character.perception(), 7);
 		// assert_eq!(werewolf_character.max_health(), 12);
 
+		assert_eq!(werewolf_character.attributes().strength.value(), 3);
+
 		if let Splat::Werewolf(.., ww) = &mut werewolf_character.splat {
-			ww.form = Form::Gauru;
+			ww.form.set(Form::Gauru);
 		}
 
-		// assert_eq!(werewolf_character.perception(), 7);
-
-		let t = std::time::Instant::now();
-		werewolf_character.calc_mod_map();
-		println!("{:?}", std::time::Instant::now().duration_since(t));
-
+		assert_eq!(werewolf_character.attributes().strength.value(), 6);
 		assert_eq!(werewolf_character.perception.value(), 9);
 
 		let mut mage_character = Character::builder()

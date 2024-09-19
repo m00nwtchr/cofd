@@ -2,9 +2,10 @@ use serde::{Deserialize, Serialize};
 
 use super::{Merit, NameKey, Splat, SplatTrait, XSplat, YSplat, ZSplat};
 use crate::{
-	character::{Character, Damage},
+	character::Character,
 	prelude::*,
 };
+use crate::character::health::Damage;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default)]

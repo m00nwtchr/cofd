@@ -1,14 +1,12 @@
-use cofd_schema::traits::DerivedTrait;
 use cofd_util::{AllVariants, VariantName};
 use serde::{Deserialize, Serialize};
 
 use super::{ability::Ability, Merit, Splat, SplatTrait, XSplat, YSplat, ZSplat};
 use crate::{
-	character::modifier::{Modifier, ModifierOp},
 	dice_pool::DicePool,
-	prelude::{Attribute, Attributes, Skills, Trait},
+	reactive::{RxAttributes, RxSkills},
+	prelude::{Attribute, Trait},
 };
-use crate::observer::{RxAttributes, RxSkills};
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(default)]
@@ -80,7 +78,6 @@ impl SplatTrait for Vampire {
 	fn zsplat(&self) -> Option<ZSplat> {
 		self.bloodline.clone().map(Into::into)
 	}
-
 
 	fn xsplats(&self) -> Vec<XSplat> {
 		Clan::all().into_iter().map(Into::into).collect()
@@ -240,23 +237,23 @@ pub enum Discipline {
 }
 
 impl Discipline {
-	#[warn(clippy::cast_possible_wrap)]
-	pub fn get_modifiers(&self, value: u8) -> Vec<crate::character::modifier::Modifier> {
-		match self {
-			Discipline::Celerity => {
-				vec![Modifier::new(
-					Trait::DerivedTrait(DerivedTrait::Defense),
-					value,
-					ModifierOp::Add,
-				)]
-			}
-			Discipline::Resilience => {
-				vec![Modifier::new(Attribute::Stamina, value, ModifierOp::Add)]
-			}
-			Discipline::Vigor => vec![Modifier::new(Attribute::Strength, value, ModifierOp::Add)],
-			_ => vec![],
-		}
-	}
+	// #[warn(clippy::cast_possible_wrap)]
+	// pub fn get_modifiers(&self, value: u8) -> Vec<crate::character::modifier::Modifier> {
+	// 	match self {
+	// 		Discipline::Celerity => {
+	// 			vec![Modifier::new(
+	// 				Trait::DerivedTrait(DerivedTrait::Defense),
+	// 				value,
+	// 				ModifierOp::Add,
+	// 			)]
+	// 		}
+	// 		Discipline::Resilience => {
+	// 			vec![Modifier::new(Attribute::Stamina, value, ModifierOp::Add)]
+	// 		}
+	// 		Discipline::Vigor => vec![Modifier::new(Attribute::Strength, value, ModifierOp::Add)],
+	// 		_ => vec![],
+	// 	}
+	// }
 }
 
 impl From<Discipline> for Ability {
@@ -444,22 +441,34 @@ impl VampireMerit {
 
 				// VampireMerit::CacophonySavvy => todo!(), // City Status
 				VampireMerit::Courtoisie => {
-					attributes.composure.value() >= 3 && skills.socialize.value() >= 2 && skills.weaponry.value() >= 2
+					attributes.composure.value() >= 3
+						&& skills.socialize.value() >= 2
+						&& skills.weaponry.value() >= 2
 				} // Invictus Status
 				VampireMerit::Crusade => {
-					attributes.resolve.value() >= 3 && skills.occult.value() >= 2 && skills.weaponry.value() >= 2
+					attributes.resolve.value() >= 3
+						&& skills.occult.value() >= 2
+						&& skills.weaponry.value() >= 2
 				} // Theban Sorcery 2 or Sorc Eunuch
 				// VampireMerit::DynastyMembership => todo!(), // Clan Status
-				VampireMerit::KindredDueling => attributes.composure.value() >= 3 && skills.weaponry.value() >= 2,
+				VampireMerit::KindredDueling => {
+					attributes.composure.value() >= 3 && skills.weaponry.value() >= 2
+				}
 				VampireMerit::MobilizeOutrage => {
 					character.willpower.max() >= 5 && skills.brawl.value() >= 2
 				} // Carthian Status
-				VampireMerit::RidingTheWave => attributes.composure.value() >= 3 && attributes.resolve.value() >= 3,
+				VampireMerit::RidingTheWave => {
+					attributes.composure.value() >= 3 && attributes.resolve.value() >= 3
+				}
 				VampireMerit::RitesOfTheImpaled => {
-					attributes.resolve.value() >= 3 && attributes.stamina.value() >= 3 && skills.weaponry.value() >= 2
+					attributes.resolve.value() >= 3
+						&& attributes.stamina.value() >= 3
+						&& skills.weaponry.value() >= 2
 				} // Sworn
 				VampireMerit::TempleGuardian => {
-					skills.athletics.value() >= 2 && skills.brawl.value() >= 2 && skills.weaponry.value() >= 2
+					skills.athletics.value() >= 2
+						&& skills.brawl.value() >= 2
+						&& skills.weaponry.value() >= 2
 				} // Crone Status
 				// VampireMerit::IndependentStudy => todo!(),
 				// VampireMerit::SecretSocietyJunkie => todo!(),
@@ -470,9 +479,9 @@ impl VampireMerit {
 			}
 	}
 
-	pub fn get_modifiers(&self, value: u8) -> Vec<Modifier> {
-		Vec::new()
-	}
+	// pub fn get_modifiers(&self, value: u8) -> Vec<Modifier> {
+	// 	Vec::new()
+	// }
 }
 
 impl From<VampireMerit> for Merit {
