@@ -10,7 +10,6 @@ json_schema = ["dep:schemars"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
-serde_with = "3.11"
 thiserror = "1"
 
 cofd-util.workspace = true

@@ -7,7 +7,6 @@ use std::{
 use derive_more::Display;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use serde_with::serde_as;
 
 use crate::{error, DOT_CHAR};
 

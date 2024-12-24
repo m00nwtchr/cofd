@@ -1,7 +1,6 @@
 use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
-use serde_with::serde_as;
 use strum::{Display, EnumString};
 
 use crate::{
@@ -55,12 +54,12 @@ pub enum BookId {
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
-#[serde_as]
 #[serde(rename_all = "camelCase")]
 pub struct BookInfo {
 	pub name: String,
 	pub id: BookId,
-	#[serde_as(as = "Hex")]
+	#[serde(with = "hex")]
+	#[schemars(with = "String")]
 	pub hash: u64,
 	pub publication_date: chrono::NaiveDate,
 }
@@ -164,6 +163,32 @@ impl FromStr for BookReference {
 	}
 }
 
+mod hex {
+	use serde::{Deserialize, Serialize};
+
+	#[allow(clippy::trivially_copy_pass_by_ref)]
+	pub fn serialize<S>(v: &u64, serializer: S) -> std::result::Result<S::Ok, S::Error>
+	where
+		S: serde::Serializer,
+	{
+		if serializer.is_human_readable() {
+			format!("{v:X}").serialize(serializer)
+		} else {
+			v.serialize(serializer)
+		}
+	}
+	pub fn deserialize<'de, D>(deserializer: D) -> std::result::Result<u64, D::Error>
+	where
+		D: serde::Deserializer<'de>,
+	{
+		if deserializer.is_human_readable() {
+			String::deserialize(deserializer).map(|str| u64::from_str_radix(&str, 16).unwrap())
+		} else {
+			u64::deserialize(deserializer)
+		}
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use crate::book::{Book, MeritItem};
@@ -173,7 +198,7 @@ mod tests {
 	fn schema() {
 		use schemars::schema_for;
 
-		let schema = schema_for!(MeritItem);
+		let schema = schema_for!(Book);
 		    println!("{}", serde_json::to_string_pretty(&schema).unwrap());
 	}
 }
