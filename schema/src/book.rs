@@ -59,7 +59,7 @@ pub struct BookInfo {
 	pub name: String,
 	pub id: BookId,
 	#[serde(with = "hex")]
-	#[schemars(with = "String")]
+	#[cfg_attr(feature = "json_schema", schemars(with = "String"))]
 	pub hash: u64,
 	pub publication_date: chrono::NaiveDate,
 }
