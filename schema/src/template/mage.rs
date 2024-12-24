@@ -17,6 +17,7 @@ use crate::traits::skill::Skill;
 	Hash,
 	VariantName,
 )]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 pub enum Arcanum {
 	Death,
 	Fate,
@@ -37,6 +38,7 @@ impl Arcanum {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, EnumString, PartialEq, Eq)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 pub enum Practice {
 	Compelling,
 	Knowing,

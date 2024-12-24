@@ -3,6 +3,7 @@ use strum::EnumString;
 
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, EnumString, PartialEq, Eq)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[strum(ascii_case_insensitive)]
 pub enum Renown {
 	Purity,
@@ -13,6 +14,7 @@ pub enum Renown {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, EnumString, PartialEq, Eq)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 pub enum Auspice {
 	Cahalith,
 	Elodoth,

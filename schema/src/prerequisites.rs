@@ -15,6 +15,7 @@ use crate::{
  * Level-rated prerequisite types
  */
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Display)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum RatedPrerequisiteKey {
 	Trait(Trait),
@@ -35,6 +36,7 @@ impl FromStr for RatedPrerequisiteKey {
  * Prerequisites with level ratings
  */
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Display)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[display("{_0} {}", "num_to_dots(*_1)")]
 pub struct RatedPrerequisite(RatedPrerequisiteKey, u8);
 
@@ -58,6 +60,7 @@ impl FromStr for RatedPrerequisite {
  * All prerequisite types
  */
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Display)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum PrerequisiteKey {
 	Template(Template),
@@ -79,6 +82,7 @@ impl FromStr for PrerequisiteKey {
  * A single prerequisite, or a set of OR prerequisites
  */
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Display)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum Prerequisite {
 	Key(PrerequisiteKey),
@@ -111,6 +115,7 @@ impl FromStr for Prerequisite {
  * A set of prerequisites (AND)
  */
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Display)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(transparent)]
 #[display("{}", "_0.iter().join(\", \")")]
 pub struct Prerequisites(Vec<Prerequisite>);

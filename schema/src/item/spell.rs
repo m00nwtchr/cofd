@@ -9,6 +9,7 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, EnumString, PartialEq, Eq)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 pub enum PrimaryFactor {
 	Duration,
 	Potency,
@@ -42,12 +43,14 @@ impl FromStr for Factor {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 pub struct ReachEffect {
 	cost: u8,
 	description: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 pub enum ArcanumEffectKind {
 	Add,
 	Substitute,
@@ -56,6 +59,7 @@ pub enum ArcanumEffectKind {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 pub struct ArcanumEffect {
 	arcanum: Arcanum,
 	rating: u8,
@@ -64,6 +68,7 @@ pub struct ArcanumEffect {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Spell {
 	arcana: Vec<(Arcanum, u8)>,

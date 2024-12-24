@@ -3,6 +3,7 @@ use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(transparent)]
 pub struct SuggestedModifiers(Vec<(String, i8)>);
 

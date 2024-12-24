@@ -1,4 +1,5 @@
 use std::{
+	borrow::Cow,
 	ops::{RangeFrom, RangeInclusive},
 	str::FromStr,
 };
@@ -6,9 +7,11 @@ use std::{
 use derive_more::Display;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 
 use crate::{error, DOT_CHAR};
 
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[derive(Serialize, Clone, Debug, Deserialize, PartialEq, Eq, Display)]
 #[serde(untagged)]
 pub enum DotRange {
@@ -19,7 +22,16 @@ pub enum DotRange {
 	#[display("{} to {}", "num_to_dots(*_0.start())", "num_to_dots(*_0.end())")]
 	Range(RangeInclusive<u8>),
 	#[display("{}+", "num_to_dots(_0.start)")]
-	RangeFrom(RangeFrom<u8>),
+	RangeFrom(
+		#[cfg_attr(feature = "json_schema", serde(with = "RangeFromDef::<u8>"))] RangeFrom<u8>,
+	),
+}
+
+#[cfg(feature = "json_schema")]
+#[derive(schemars::JsonSchema, Serialize, Deserialize)]
+#[serde(remote = "RangeFrom")]
+pub struct RangeFromDef<Idx> {
+	pub start: Idx,
 }
 
 impl Default for DotRange {

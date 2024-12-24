@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 use strum::{Display, EnumString};
 
 use crate::{
@@ -16,6 +17,7 @@ use crate::{
 #[derive(
 	Default, Debug, Clone, Copy, Serialize, Deserialize, EnumString, Display, PartialEq, Eq,
 )]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[strum(ascii_case_insensitive)]
 pub enum BookId {
 	CofD,
@@ -52,11 +54,13 @@ pub enum BookId {
 }
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[serde_as]
 #[serde(rename_all = "camelCase")]
 pub struct BookInfo {
 	pub name: String,
 	pub id: BookId,
-	#[serde(with = "hex")]
+	#[serde_as(as = "Hex")]
 	pub hash: u64,
 	pub publication_date: chrono::NaiveDate,
 }
@@ -79,6 +83,7 @@ pub type MoonGift = Gift<Moon>;
 pub type OtherGift = Gift<Other>;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 pub struct Book {
 	pub info: BookInfo,
 	#[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -106,6 +111,7 @@ impl From<BookInfo> for Book {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, derive_more::Display)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[display("{_0} pg.{_1}")]
 pub struct BookReference(pub BookId, pub usize);
 
@@ -158,28 +164,16 @@ impl FromStr for BookReference {
 	}
 }
 
-mod hex {
-	use serde::{Deserialize, Serialize};
+#[cfg(test)]
+mod tests {
+	use crate::book::{Book, MeritItem};
 
-	#[allow(clippy::trivially_copy_pass_by_ref)]
-	pub fn serialize<S>(v: &u64, serializer: S) -> std::result::Result<S::Ok, S::Error>
-	where
-		S: serde::Serializer,
-	{
-		if serializer.is_human_readable() {
-			format!("{v:X}").serialize(serializer)
-		} else {
-			v.serialize(serializer)
-		}
-	}
-	pub fn deserialize<'de, D>(deserializer: D) -> std::result::Result<u64, D::Error>
-	where
-		D: serde::Deserializer<'de>,
-	{
-		if deserializer.is_human_readable() {
-			String::deserialize(deserializer).map(|str| u64::from_str_radix(&str, 16).unwrap())
-		} else {
-			u64::deserialize(deserializer)
-		}
+	#[test]
+	#[cfg(feature = "json_schema")]
+	fn schema() {
+		use schemars::schema_for;
+
+		let schema = schema_for!(MeritItem);
+		    println!("{}", serde_json::to_string_pretty(&schema).unwrap());
 	}
 }

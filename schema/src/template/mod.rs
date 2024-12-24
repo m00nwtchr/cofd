@@ -19,6 +19,7 @@ pub mod werewolf;
 	Eq,
 	VariantName,
 )]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[strum(ascii_case_insensitive)]
 pub enum Template {
 	#[strum(to_string = "Mortal", serialize = "Human")]
@@ -126,6 +127,7 @@ pub enum Template {
 	Display,
 	VariantName,
 )]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[strum(ascii_case_insensitive)]
 pub enum SupernaturalTolerance {
 	Gnosis,

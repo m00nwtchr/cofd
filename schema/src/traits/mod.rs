@@ -40,6 +40,7 @@ impl TraitCategory {
 	Eq,
 	VariantName,
 )]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[strum(ascii_case_insensitive)]
 pub enum DerivedTrait {
 	Speed,
@@ -64,6 +65,7 @@ pub enum DerivedTrait {
 	derive_more::Display,
 	derive_more::From,
 )]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum Trait {
 	Attribute(Attribute),

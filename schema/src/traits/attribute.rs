@@ -26,7 +26,7 @@ pub enum AttributeKind {
 	VariantArray,
 	VariantName,
 )]
-#[serde(untagged)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[strum(ascii_case_insensitive)]
 pub enum Attribute {
 	Intelligence,

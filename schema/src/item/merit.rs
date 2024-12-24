@@ -7,6 +7,7 @@ use crate::{prelude::DotRange, prerequisites::Prerequisites};
 #[derive(
 	Debug, Clone, Copy, Serialize, Deserialize, EnumString, AsRefStr, PartialEq, Eq, Display,
 )]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[strum(ascii_case_insensitive)]
 pub enum MeritTag {
 	Style,
@@ -24,6 +25,7 @@ pub enum MeritTag {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct MeritSubItem {
 	pub name: String,
@@ -36,6 +38,7 @@ pub struct MeritSubItem {
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Merit {
 	pub dot_rating: DotRange,

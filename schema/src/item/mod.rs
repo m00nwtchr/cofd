@@ -12,6 +12,7 @@ pub mod merit;
 pub mod spell;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct RollResults {
 	#[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -35,6 +36,7 @@ impl RollResults {
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ActionFields {
 	#[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -59,6 +61,7 @@ pub enum ItemKind {
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 pub struct Item<T> {
 	pub name: String,
 	pub reference: BookReference,

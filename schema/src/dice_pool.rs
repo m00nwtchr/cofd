@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::traits::{attribute::Attribute, skill::Skill, Trait};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, derive_more::Display)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", content = "value")]
 pub enum DicePool {
 	Mod(i8),
