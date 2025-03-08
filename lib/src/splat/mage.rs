@@ -115,11 +115,11 @@ impl SplatTrait for Mage {
 	}
 
 	fn custom_xsplat(&self, name: String) -> Option<XSplat> {
-		Some(Path::_Custom(name, [Arcanum::Death, Arcanum::Fate], Arcanum::Forces).into())
+		Some(Path::Custom(name, [Arcanum::Death, Arcanum::Fate], Arcanum::Forces).into())
 	}
 
 	fn custom_ysplat(&self, name: String) -> Option<YSplat> {
-		Some(Order::_Custom(name, [Skill::Academics, Skill::AnimalKen, Skill::Athletics]).into())
+		Some(Order::Custom(name, [Skill::Academics, Skill::AnimalKen, Skill::Athletics]).into())
 	}
 
 	fn custom_zsplat(&self, name: String) -> Option<ZSplat> {
@@ -169,7 +169,7 @@ pub enum Path {
 	Moros,
 	Obrimos,
 	Thyrsus,
-	_Custom(String, [Arcanum; 2], Arcanum),
+	Custom(String, [Arcanum; 2], Arcanum),
 }
 
 impl Path {
@@ -180,7 +180,7 @@ impl Path {
 			Path::Moros => &[Arcanum::Matter, Arcanum::Death],
 			Path::Obrimos => &[Arcanum::Forces, Arcanum::Prime],
 			Path::Thyrsus => &[Arcanum::Life, Arcanum::Spirit],
-			Path::_Custom(_, ruling, _) => ruling,
+			Path::Custom(_, ruling, _) => ruling,
 		}
 	}
 	fn get_inferior_arcanum(&self) -> &Arcanum {
@@ -190,7 +190,7 @@ impl Path {
 			Path::Moros => &Arcanum::Spirit,
 			Path::Obrimos => &Arcanum::Death,
 			Path::Thyrsus => &Arcanum::Mind,
-			Path::_Custom(_, _, inferior) => inferior,
+			Path::Custom(_, _, inferior) => inferior,
 		}
 	}
 }
@@ -204,7 +204,7 @@ pub enum Order {
 	FreeCouncil,
 	#[expand]
 	SeersOfTheThrone(Option<Ministry>),
-	_Custom(String, [Skill; 3]),
+	Custom(String, [Skill; 3]),
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, AllVariants, VariantName)]
@@ -213,7 +213,7 @@ pub enum Ministry {
 	Panopticon,
 	Paternoster,
 	Praetorian,
-	_Custom(String, [Skill; 3]),
+	Custom(String, [Skill; 3]),
 }
 
 impl Order {
@@ -234,11 +234,11 @@ impl Order {
 					Ministry::Praetorian => {
 						&[Skill::Athletics, Skill::Larceny, Skill::Intimidation]
 					}
-					Ministry::_Custom(_, skills) => skills,
+					Ministry::Custom(_, skills) => skills,
 				},
 				None => &[Skill::Investigation, Skill::Occult, Skill::Persuasion],
 			},
-			Order::_Custom(_, skills) => skills,
+			Order::Custom(_, skills) => skills,
 		}
 	}
 }

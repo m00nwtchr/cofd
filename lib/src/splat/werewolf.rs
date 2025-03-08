@@ -123,11 +123,11 @@ impl SplatTrait for Werewolf {
 
 	fn custom_xsplat(&self, name: String) -> Option<XSplat> {
 		Some(
-			Auspice::_Custom(
+			Auspice::Custom(
 				name,
 				[Skill::Academics, Skill::AnimalKen, Skill::Athletics],
 				Renown::Cunning,
-				MoonGift::_Custom(String::from("Custom")),
+				MoonGift::Custom(String::from("Custom")),
 				Box::new([ShadowGift::Death, ShadowGift::Dominance]),
 				HuntersAspect::Monstrous,
 			)
@@ -137,7 +137,7 @@ impl SplatTrait for Werewolf {
 
 	fn custom_ysplat(&self, name: String) -> Option<YSplat> {
 		Some(
-			Tribe::_Custom(
+			Tribe::Custom(
 				name,
 				Renown::Cunning,
 				Box::new([
@@ -151,7 +151,7 @@ impl SplatTrait for Werewolf {
 	}
 
 	fn custom_zsplat(&self, name: String) -> Option<ZSplat> {
-		Some(Lodge::_Custom(name).into())
+		Some(Lodge::Custom(name).into())
 	}
 
 	fn all_abilities(&self) -> Option<Vec<Ability>> {
@@ -191,12 +191,12 @@ pub enum KuruthTriggers {
 	Pack,
 	Territory,
 	Wound,
-	_Custom(KuruthTriggerSet),
+	Custom(KuruthTriggerSet),
 }
 
 impl Default for KuruthTriggers {
 	fn default() -> Self {
-		Self::_Custom(Default::default())
+		Self::Custom(Default::default())
 	}
 }
 
@@ -209,7 +209,7 @@ impl KuruthTriggers {
 			KuruthTriggers::Pack => Some("pack-trigger"),
 			KuruthTriggers::Territory => Some("territory-trigger"),
 			KuruthTriggers::Wound => Some("wound-trigger"),
-			KuruthTriggers::_Custom(_) => None,
+			KuruthTriggers::Custom(_) => None,
 		}
 	}
 
@@ -250,7 +250,7 @@ impl KuruthTriggers {
 				common: "Interacting with a Wound-born spirit.".to_owned(),
 				specific: "Being attacked by a Wound-born spirit.".to_owned(),
 			},
-			KuruthTriggers::_Custom(set) => set.clone(),
+			KuruthTriggers::Custom(set) => set.clone(),
 		}
 	}
 }
@@ -270,7 +270,7 @@ pub enum HuntersAspect {
 	Implacable,
 	Primal,
 
-	_Custom(String),
+	Custom(String),
 }
 
 impl NameKey for HuntersAspect {
@@ -286,7 +286,7 @@ pub enum Auspice {
 	Irraka,
 	Ithaeur,
 	Rahu,
-	_Custom(
+	Custom(
 		String,
 		[Skill; 3],
 		Renown,
@@ -304,7 +304,7 @@ impl Auspice {
 			Auspice::Irraka => &[Skill::Larceny, Skill::Stealth, Skill::Subterfuge],
 			Auspice::Ithaeur => &[Skill::AnimalKen, Skill::Medicine, Skill::Occult],
 			Auspice::Rahu => &[Skill::Brawl, Skill::Intimidation, Skill::Survival],
-			Auspice::_Custom(_, skills, ..) => skills,
+			Auspice::Custom(_, skills, ..) => skills,
 		}
 	}
 
@@ -315,7 +315,7 @@ impl Auspice {
 			Auspice::Irraka => &Renown::Cunning,
 			Auspice::Ithaeur => &Renown::Wisdom,
 			Auspice::Rahu => &Renown::Purity,
-			Auspice::_Custom(_, _, renown, ..) => renown,
+			Auspice::Custom(_, _, renown, ..) => renown,
 		}
 	}
 
@@ -326,7 +326,7 @@ impl Auspice {
 			Auspice::Irraka => &[ShadowGift::Evasion, ShadowGift::Stealth],
 			Auspice::Ithaeur => &[ShadowGift::Elementals, ShadowGift::Shaping],
 			Auspice::Rahu => &[ShadowGift::Dominance, ShadowGift::Strength],
-			Auspice::_Custom(.., gifts, _) => gifts,
+			Auspice::Custom(.., gifts, _) => gifts,
 		}
 	}
 
@@ -337,7 +337,7 @@ impl Auspice {
 			Auspice::Irraka => &MoonGift::New,
 			Auspice::Ithaeur => &MoonGift::Crescent,
 			Auspice::Rahu => &MoonGift::Full,
-			Auspice::_Custom(.., moon_gift, _, _) => moon_gift,
+			Auspice::Custom(.., moon_gift, _, _) => moon_gift,
 		}
 	}
 
@@ -348,7 +348,7 @@ impl Auspice {
 			Auspice::Irraka => &HuntersAspect::Blissful,
 			Auspice::Ithaeur => &HuntersAspect::Mystic,
 			Auspice::Rahu => &HuntersAspect::Dominant,
-			Auspice::_Custom(.., aspect) => aspect,
+			Auspice::Custom(.., aspect) => aspect,
 		}
 	}
 }
@@ -358,7 +358,7 @@ pub enum PureTribe {
 	FireTouched,
 	IvoryClaws,
 	PredatorKings,
-	_Custom(
+	Custom(
 		String,
 		Renown,
 		[Renown; 2],
@@ -374,7 +374,7 @@ impl PureTribe {
 			Self::FireTouched => &[Renown::Cunning, Renown::Glory],
 			Self::IvoryClaws => &[Renown::Glory, Renown::Honor],
 			Self::PredatorKings => &[Renown::Purity, Renown::Wisdom],
-			Self::_Custom(_, _, renown, ..) => renown,
+			Self::Custom(_, _, renown, ..) => renown,
 		}
 	}
 
@@ -383,7 +383,7 @@ impl PureTribe {
 			Self::FireTouched => &[Skill::Expression, Skill::Occult, Skill::Subterfuge],
 			Self::IvoryClaws => &[Skill::Intimidation, Skill::Persuasion, Skill::Politics],
 			Self::PredatorKings => &[Skill::AnimalKen, Skill::Brawl, Skill::Crafts],
-			Self::_Custom(.., skills, _, _) => skills,
+			Self::Custom(.., skills, _, _) => skills,
 		}
 	}
 
@@ -392,7 +392,7 @@ impl PureTribe {
 			Self::FireTouched => &[HuntersAspect::Fanatical, HuntersAspect::Frenzied],
 			Self::IvoryClaws => &[HuntersAspect::Agnoized, HuntersAspect::Insidious],
 			Self::PredatorKings => &[HuntersAspect::Implacable, HuntersAspect::Primal],
-			Self::_Custom(.., aspects, _) => aspects,
+			Self::Custom(.., aspects, _) => aspects,
 		}
 	}
 }
@@ -412,7 +412,7 @@ pub enum Tribe {
 	StormLords,
 	#[expand]
 	Pure(PureTribe),
-	_Custom(String, Renown, Box<[ShadowGift; 3]>),
+	Custom(String, Renown, Box<[ShadowGift; 3]>),
 }
 
 impl Tribe {
@@ -428,9 +428,9 @@ impl Tribe {
 				PureTribe::FireTouched => &Renown::Wisdom,
 				PureTribe::IvoryClaws => &Renown::Purity,
 				PureTribe::PredatorKings => &Renown::Glory,
-				PureTribe::_Custom(_, renown, ..) => renown,
+				PureTribe::Custom(_, renown, ..) => renown,
 			},
-			Self::_Custom(_, renown, _) => renown,
+			Self::Custom(_, renown, _) => renown,
 		}
 	}
 
@@ -478,17 +478,17 @@ impl Tribe {
 					ShadowGift::Rage,
 					ShadowGift::Strength,
 				],
-				PureTribe::_Custom(.., gifts) => gifts.to_vec(),
+				PureTribe::Custom(.., gifts) => gifts.to_vec(),
 			},
 			// Tribe::GhostWolves => &None,
-			Tribe::_Custom(.., gifts) => gifts.to_vec(),
+			Tribe::Custom(.., gifts) => gifts.to_vec(),
 		}
 	}
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, AllVariants, VariantName)]
 pub enum Lodge {
-	_Custom(String),
+	Custom(String),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, VariantName, AllVariants)]
@@ -739,7 +739,7 @@ impl Form {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, VariantName)]
 pub enum Rite {
 	SacredHunt,
-	_Custom(String),
+	Custom(String),
 }
 
 impl NameKey for Rite {

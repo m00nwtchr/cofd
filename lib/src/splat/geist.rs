@@ -47,11 +47,11 @@ impl SplatTrait for Bound {
 	}
 
 	fn custom_xsplat(&self, name: String) -> Option<XSplat> {
-		Some(Burden::_Custom(name, [Haunt::Boneyard, Haunt::Caul, Haunt::Curse]).into())
+		Some(Burden::Custom(name, [Haunt::Boneyard, Haunt::Caul, Haunt::Curse]).into())
 	}
 
 	fn custom_ysplat(&self, name: String) -> Option<YSplat> {
-		Some(Archetype::_Custom(name).into())
+		Some(Archetype::Custom(name).into())
 	}
 
 	fn all_abilities(&self) -> Option<Vec<Ability>> {
@@ -77,7 +77,7 @@ pub enum Burden {
 	Hungry,
 	Kindly,
 	Vengeful,
-	_Custom(String, [Haunt; 3]),
+	Custom(String, [Haunt; 3]),
 }
 
 impl Burden {
@@ -88,7 +88,7 @@ impl Burden {
 			Self::Hungry => &[Haunt::Boneyard, Haunt::Marionette, Haunt::Caul],
 			Self::Kindly => &[Haunt::Dirge, Haunt::Marionette, Haunt::Shroud],
 			Self::Vengeful => &[Haunt::Curse, Haunt::Memoria, Haunt::Rage],
-			Self::_Custom(_, haunts) => haunts,
+			Self::Custom(_, haunts) => haunts,
 		}
 	}
 }
@@ -103,7 +103,7 @@ pub enum Archetype {
 	Necropolitans,
 	Pilgrims,
 	Undertakers,
-	_Custom(String),
+	Custom(String),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, AllVariants, VariantName)]
@@ -118,7 +118,7 @@ pub enum Haunt {
 	Rage,
 	Shroud,
 	Tomb,
-	_Custom(String),
+	Custom(String),
 }
 
 impl From<Haunt> for Ability {

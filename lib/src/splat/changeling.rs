@@ -90,7 +90,7 @@ impl SplatTrait for Changeling {
 
 	fn custom_xsplat(&self, name: String) -> Option<XSplat> {
 		Some(
-			Seeming::_Custom(
+			Seeming::Custom(
 				name,
 				Regalia::Crown,
 				// AttributeType::Power
@@ -100,11 +100,11 @@ impl SplatTrait for Changeling {
 	}
 
 	fn custom_ysplat(&self, name: String) -> Option<YSplat> {
-		Some(Court::_Custom(name).into())
+		Some(Court::Custom(name).into())
 	}
 
 	fn custom_zsplat(&self, name: String) -> Option<ZSplat> {
-		Some(Kith::_Custom(name).into())
+		Some(Kith::Custom(name).into())
 	}
 
 	fn merits(&self) -> Vec<Merit> {
@@ -146,7 +146,7 @@ pub enum Seeming {
 	Fairest,
 	Ogre,
 	Wizened,
-	_Custom(
+	Custom(
 		String,
 		Regalia,
 		// AttributeType
@@ -162,7 +162,7 @@ impl Seeming {
 			Seeming::Fairest => &Regalia::Crown,
 			Seeming::Ogre => &Regalia::Shield,
 			Seeming::Wizened => &Regalia::Jewels,
-			Seeming::_Custom(_, regalia, ..) => regalia,
+			Seeming::Custom(_, regalia, ..) => regalia,
 		}
 	}
 
@@ -191,7 +191,7 @@ pub enum Court {
 	Summer,
 	Autumn,
 	Winter,
-	_Custom(String),
+	Custom(String),
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, VariantName, AllVariants)]
@@ -208,7 +208,7 @@ pub enum Kith {
 	Notary,
 	Playmate,
 	Snowskin,
-	_Custom(String),
+	Custom(String),
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, VariantName, AllVariants)]
@@ -219,7 +219,7 @@ pub enum Regalia {
 	Shield,
 	Steed,
 	Sword,
-	_Custom(String),
+	Custom(String),
 }
 
 impl NameKey for Regalia {

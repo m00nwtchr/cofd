@@ -106,7 +106,7 @@ pub fn gifts(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 		)]
 		pub enum MoonGift {
 			#moon_gift_variants
-			_Custom(String)
+			Custom(String)
 		}
 
 		#[derive(
@@ -114,7 +114,7 @@ pub fn gifts(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 		)]
 		pub enum ShadowGift {
 			#shadow_gift_variants
-			_Custom(String, [Facet; 5])
+			Custom(String, [Facet; 5])
 		}
 
 		#[derive(
@@ -122,7 +122,7 @@ pub fn gifts(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 		)]
 		pub enum WolfGift {
 			#wolf_gift_variants
-			_Custom(String, [Facet; 5])
+			Custom(String, [Facet; 5])
 		}
 
 		#[derive(
@@ -130,14 +130,14 @@ pub fn gifts(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 		)]
 		pub enum Facet {
 			#facet_variants
-			_Custom(String)
+			Custom(String)
 		}
 
 		impl ShadowGift {
 			pub fn get_facets(&self) -> &[Facet; 5] {
 				match self {
 					#shadow_gift_facets_variants
-					Self::_Custom(.., facets) => facets
+					Self::Custom(.., facets) => facets
 				}
 			}
 		}
@@ -146,7 +146,7 @@ pub fn gifts(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 			pub fn get_facets(&self) -> &[Facet; 5] {
 				match self {
 					#wolf_gift_facets_variants
-					Self::_Custom(.., facets) => facets
+					Self::Custom(.., facets) => facets
 				}
 			}
 		}

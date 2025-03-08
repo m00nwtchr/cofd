@@ -167,7 +167,7 @@ pub enum Merit {
 	#[expand]
 	Changeling(ChangelingMerit),
 
-	_Custom(String),
+	Custom(String),
 }
 
 impl Merit {
@@ -302,7 +302,7 @@ impl Merit {
 		skills: &Skills,
 	) -> bool {
 		match self {
-			Merit::_Custom(_) => true,
+			Merit::Custom(_) => true,
 
 			Self::AreaOfExpertise(_) => character.attributes().resolve > 1,
 			// Self::Anonymity => // No Fame

@@ -192,11 +192,11 @@ pub enum ZSplat {
 impl XSplat {
 	pub fn name_mut(&mut self) -> Option<&mut String> {
 		match self {
-			Self::Clan(Clan::_Custom(name, ..))
-			| Self::Auspice(Auspice::_Custom(name, ..))
-			| Self::Path(Path::_Custom(name, ..))
-			| Self::Seeming(Seeming::_Custom(name, ..))
-			| Self::Burden(Burden::_Custom(name, ..)) => Some(name),
+			Self::Clan(Clan::Custom(name, ..))
+			| Self::Auspice(Auspice::Custom(name, ..))
+			| Self::Path(Path::Custom(name, ..))
+			| Self::Seeming(Seeming::Custom(name, ..))
+			| Self::Burden(Burden::Custom(name, ..)) => Some(name),
 			_ => None,
 		}
 	}
@@ -204,11 +204,11 @@ impl XSplat {
 	pub fn is_custom(&self) -> bool {
 		matches!(
 			self,
-			Self::Clan(Clan::_Custom(..))
-				| Self::Auspice(Auspice::_Custom(..))
-				| Self::Path(Path::_Custom(..))
-				| Self::Seeming(Seeming::_Custom(..))
-				| Self::Burden(Burden::_Custom(..))
+			Self::Clan(Clan::Custom(..))
+				| Self::Auspice(Auspice::Custom(..))
+				| Self::Path(Path::Custom(..))
+				| Self::Seeming(Seeming::Custom(..))
+				| Self::Burden(Burden::Custom(..))
 		)
 	}
 }
@@ -216,14 +216,14 @@ impl XSplat {
 impl YSplat {
 	pub fn name_mut(&mut self) -> Option<&mut String> {
 		match self {
-			Self::Covenant(Covenant::_Custom(name))
-			| Self::Tribe(Tribe::_Custom(name, ..))
+			Self::Covenant(Covenant::Custom(name))
+			| Self::Tribe(Tribe::Custom(name, ..))
 			| Self::Order(
-				Order::_Custom(name, ..)
-				| Order::SeersOfTheThrone(Some(Ministry::_Custom(name, ..))),
+				Order::Custom(name, ..)
+				| Order::SeersOfTheThrone(Some(Ministry::Custom(name, ..))),
 			)
-			| Self::Court(Court::_Custom(name))
-			| Self::Archetype(Archetype::_Custom(name, ..)) => Some(name),
+			| Self::Court(Court::Custom(name))
+			| Self::Archetype(Archetype::Custom(name, ..)) => Some(name),
 			_ => None,
 		}
 	}
@@ -231,12 +231,12 @@ impl YSplat {
 	pub fn is_custom(&self) -> bool {
 		matches!(
 			self,
-			YSplat::Covenant(Covenant::_Custom(..))
-				| YSplat::Tribe(Tribe::_Custom(..))
+			YSplat::Covenant(Covenant::Custom(..))
+				| YSplat::Tribe(Tribe::Custom(..))
 				| YSplat::Order(
-					Order::_Custom(..) | Order::SeersOfTheThrone(Some(Ministry::_Custom(..))),
-				) | YSplat::Court(Court::_Custom(..))
-				| Self::Archetype(Archetype::_Custom(..))
+					Order::Custom(..) | Order::SeersOfTheThrone(Some(Ministry::Custom(..))),
+				) | YSplat::Court(Court::Custom(..))
+				| Self::Archetype(Archetype::Custom(..))
 		)
 	}
 }
@@ -244,10 +244,10 @@ impl YSplat {
 impl ZSplat {
 	pub fn name_mut(&mut self) -> Option<&mut String> {
 		match self {
-			ZSplat::Bloodline(Bloodline::_Custom(name, ..))
-			| ZSplat::Lodge(Lodge::_Custom(name))
+			ZSplat::Bloodline(Bloodline::Custom(name, ..))
+			| ZSplat::Lodge(Lodge::Custom(name))
 			| ZSplat::Legacy(Legacy::_Custom(name, ..))
-			| ZSplat::Kith(Kith::_Custom(name)) => Some(name),
+			| ZSplat::Kith(Kith::Custom(name)) => Some(name),
 			_ => None,
 		}
 	}
@@ -255,10 +255,10 @@ impl ZSplat {
 	pub fn is_custom(&self) -> bool {
 		matches!(
 			self,
-			ZSplat::Bloodline(Bloodline::_Custom(..))
-				| ZSplat::Lodge(Lodge::_Custom(..))
+			ZSplat::Bloodline(Bloodline::Custom(..))
+				| ZSplat::Lodge(Lodge::Custom(..))
 				| ZSplat::Legacy(Legacy::_Custom(..))
-				| ZSplat::Kith(Kith::_Custom(..))
+				| ZSplat::Kith(Kith::Custom(..))
 		)
 	}
 }

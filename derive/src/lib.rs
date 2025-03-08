@@ -192,7 +192,7 @@ pub fn derive_variant_name(input: proc_macro::TokenStream) -> proc_macro::TokenS
 				}
 			}
 
-			if variant_name.eq("_Custom") {
+			if variant_name.eq("Custom") {
 				if let Fields::Unnamed(fields) = &variant.fields {
 					if let Some(field) = fields.unnamed.first() {
 						name_fun_variants.extend(quote_spanned! {field.span()=>
@@ -276,7 +276,7 @@ pub fn derive_all_variants(input: proc_macro::TokenStream) -> proc_macro::TokenS
 		for variant in &data.variants {
 			let variant_name = &variant.ident;
 
-			if variant_name.eq("_Custom") {
+			if variant_name.eq("Custom") {
 				continue;
 			}
 

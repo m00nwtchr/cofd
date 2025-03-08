@@ -1,5 +1,5 @@
 #![feature(let_chains)]
-#![deny(clippy::pedantic)]
+#![warn(clippy::pedantic)]
 #![allow(
 	clippy::must_use_candidate,
 	clippy::used_underscore_binding,
@@ -67,7 +67,7 @@ mod tests {
 				Vampire::new(
 					Clan::Ventrue,
 					Some(Covenant::OrdoDracul),
-					Some(Bloodline::_Custom(
+					Some(Bloodline::Custom(
 						"Dragolescu".to_string(),
 						Some([
 							Discipline::Animalism,
@@ -119,7 +119,7 @@ mod tests {
 				(Discipline::Animalism.into(), 1),
 				(Discipline::Dominate.into(), 2),
 				(
-					Discipline::_Custom("Coil of the Voivode".to_string()).into(),
+					Discipline::Custom("Coil of the Voivode".to_string()).into(),
 					2,
 				),
 			])

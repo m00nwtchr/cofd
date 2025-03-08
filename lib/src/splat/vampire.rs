@@ -95,7 +95,7 @@ impl SplatTrait for Vampire {
 
 	fn custom_xsplat(&self, name: String) -> Option<XSplat> {
 		Some(
-			Clan::_Custom(
+			Clan::Custom(
 				name,
 				Box::new([
 					Discipline::Animalism,
@@ -109,11 +109,11 @@ impl SplatTrait for Vampire {
 	}
 
 	fn custom_ysplat(&self, name: String) -> Option<YSplat> {
-		Some(Covenant::_Custom(name).into())
+		Some(Covenant::Custom(name).into())
 	}
 
 	fn custom_zsplat(&self, name: String) -> Option<ZSplat> {
-		Some(Bloodline::_Custom(name, None).into())
+		Some(Bloodline::Custom(name, None).into())
 	}
 
 	fn all_abilities(&self) -> Option<Vec<Ability>> {
@@ -121,7 +121,7 @@ impl SplatTrait for Vampire {
 	}
 
 	fn custom_ability(&self, name: String) -> Option<Ability> {
-		Some(Discipline::_Custom(name).into())
+		Some(Discipline::Custom(name).into())
 	}
 
 	fn merits(&self) -> Vec<Merit> {
@@ -153,7 +153,7 @@ pub enum Clan {
 	Mekhet,
 	Nosferatu,
 	Ventrue,
-	_Custom(String, Box<[Discipline; 3]>, [Attribute; 2]),
+	Custom(String, Box<[Discipline; 3]>, [Attribute; 2]),
 }
 
 impl Clan {
@@ -180,7 +180,7 @@ impl Clan {
 				Discipline::Dominate,
 				Discipline::Resilience,
 			],
-			Clan::_Custom(_, disciplines, _) => disciplines,
+			Clan::Custom(_, disciplines, _) => disciplines,
 		}
 	}
 	pub fn favored_attributes(&self) -> &[Attribute; 2] {
@@ -190,8 +190,7 @@ impl Clan {
 			Clan::Mekhet => &[Attribute::Intelligence, Attribute::Wits],
 			Clan::Nosferatu => &[Attribute::Composure, Attribute::Strength],
 			Clan::Ventrue => &[Attribute::Presence, Attribute::Resolve],
-			Clan::_Custom(_, _, attributes) => attributes,
-			_ => todo!(),
+			Clan::Custom(_, _, attributes) => attributes,
 		}
 	}
 }
@@ -203,12 +202,12 @@ pub enum Covenant {
 	Invictus,
 	LanceaEtSanctum,
 	OrdoDracul,
-	_Custom(String),
+	Custom(String),
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, AllVariants, VariantName)]
 pub enum Bloodline {
-	_Custom(String, Option<[Discipline; 4]>),
+	Custom(String, Option<[Discipline; 4]>),
 }
 
 #[derive(
@@ -235,12 +234,12 @@ pub enum Discipline {
 	Protean,
 	Resilience,
 	Vigor,
-	_Custom(String),
+	Custom(String),
 }
 
 impl Discipline {
 	#[warn(clippy::cast_possible_wrap)]
-	pub fn get_modifiers(&self, value: u16) -> Vec<crate::character::modifier::Modifier> {
+	pub fn get_modifiers(&self, value: u16) -> Vec<Modifier> {
 		match self {
 			Discipline::Celerity => {
 				vec![Modifier::new(
@@ -292,7 +291,7 @@ pub enum MaskDirge {
 	Spy,
 	Survivor,
 	Visionary,
-	_Custom(String),
+	Custom(String),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, AllVariants, VariantName)]

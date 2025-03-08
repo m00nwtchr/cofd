@@ -29,9 +29,9 @@ pub enum Ability {
 impl Ability {
 	pub fn name_mut(&mut self) -> Option<&mut String> {
 		match self {
-			Ability::Merit(Merit::_Custom(name))
-			| Ability::Discipline(Discipline::_Custom(name))
-			| Ability::MoonGift(MoonGift::_Custom(name)) => Some(name),
+			Ability::Merit(Merit::Custom(name))
+			| Ability::Discipline(Discipline::Custom(name))
+			| Ability::MoonGift(MoonGift::Custom(name)) => Some(name),
 			_ => None,
 		}
 	}
@@ -48,9 +48,9 @@ impl Ability {
 	pub fn is_custom(&self) -> bool {
 		matches!(
 			self,
-			Ability::Merit(Merit::_Custom(_))
-				| Ability::Discipline(Discipline::_Custom(_))
-				| Ability::MoonGift(MoonGift::_Custom(_))
+			Ability::Merit(Merit::Custom(_))
+				| Ability::Discipline(Discipline::Custom(_))
+				| Ability::MoonGift(MoonGift::Custom(_))
 		)
 	}
 }
