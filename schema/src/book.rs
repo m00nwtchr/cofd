@@ -130,7 +130,7 @@ impl FromStr for BookReference {
 
 		let first = split.next();
 		let second = split.next();
-		let last = split.last();
+		let last = split.next_back();
 
 		if let (Some(first), Some(second), Some(last)) = (first, second, last) {
 			let last = last.trim();
@@ -191,7 +191,7 @@ mod hex {
 
 #[cfg(test)]
 mod tests {
-	use crate::book::{Book, MeritItem};
+	
 
 	#[test]
 	#[cfg(feature = "json_schema")]

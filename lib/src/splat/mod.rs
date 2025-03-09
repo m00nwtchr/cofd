@@ -47,7 +47,7 @@ use werewolf::*;
 pub enum Splat {
 	Mortal(Mortal),
 	Vampire(Vampire),
-	Werewolf(Werewolf),
+	Werewolf(Box<Werewolf>),
 	Mage(Mage),
 	// Promethean(Lineage),
 	Changeling(Changeling),
@@ -70,7 +70,7 @@ impl From<SplatKind> for Splat {
 		match value {
 			SplatKind::Mortal => Splat::Mortal(Mortal),
 			SplatKind::Vampire => Splat::Vampire(Vampire::default()),
-			SplatKind::Werewolf => Splat::Werewolf(Werewolf::default()),
+			SplatKind::Werewolf => Splat::Werewolf(Box::default()),
 			SplatKind::Mage => Splat::Mage(Mage::default()),
 			SplatKind::Changeling => Splat::Changeling(Changeling::default()),
 			SplatKind::Bound => Splat::Bound(Bound::default()),
@@ -143,6 +143,72 @@ pub trait SplatTrait {
 	}
 
 	fn merits(&self) -> Vec<Merit>;
+}
+
+impl<T: SplatTrait> SplatTrait for Box<T> {
+	fn set_xsplat(&mut self, splat: Option<XSplat>) {
+		self.as_mut().set_xsplat(splat);
+	}
+
+	fn set_ysplat(&mut self, splat: Option<YSplat>) {
+		self.as_mut().set_ysplat(splat);
+	}
+
+	fn set_zsplat(&mut self, splat: Option<ZSplat>) {
+		self.as_mut().set_zsplat(splat);
+	}
+
+	fn xsplat(&self) -> Option<XSplat> {
+		self.as_ref().xsplat()
+	}
+
+	fn ysplat(&self) -> Option<YSplat> {
+		self.as_ref().ysplat()
+	}
+
+	fn zsplat(&self) -> Option<ZSplat> {
+		self.as_ref().zsplat()
+	}
+
+	fn xsplats(&self) -> Vec<XSplat> {
+		self.as_ref().xsplats()
+	}
+
+	fn ysplats(&self) -> Vec<YSplat> {
+		self.as_ref().ysplats()
+	}
+
+	fn zsplats(&self) -> Vec<ZSplat> {
+		self.as_ref().zsplats()
+	}
+
+	fn custom_xsplat(&self, name: String) -> Option<XSplat> {
+		self.as_ref().custom_xsplat(name)
+	}
+
+	fn custom_ysplat(&self, name: String) -> Option<YSplat> {
+		self.as_ref().custom_ysplat(name)
+	}
+
+	fn custom_zsplat(&self, name: String) -> Option<ZSplat> {
+		self.as_ref().custom_zsplat(name)
+	}
+
+	fn all_abilities(&self) -> Option<Vec<Ability>> {
+		self.as_ref().all_abilities()
+	}
+
+	fn custom_ability(&self, name: String) -> Option<Ability> {
+		self.as_ref().custom_ability(name)
+	}
+
+	fn alternate_beats_optional(&self) -> bool {
+		self.as_ref().alternate_beats_optional()
+	}
+
+	fn merits(&self) -> Vec<Merit> {
+		self.as_ref().merits()
+	}
 }
 
 impl Default for Splat {
@@ -219,8 +285,7 @@ impl YSplat {
 			Self::Covenant(Covenant::Custom(name))
 			| Self::Tribe(Tribe::Custom(name, ..))
 			| Self::Order(
-				Order::Custom(name, ..)
-				| Order::SeersOfTheThrone(Some(Ministry::Custom(name, ..))),
+				Order::Custom(name, ..) | Order::SeersOfTheThrone(Some(Ministry::Custom(name, ..))),
 			)
 			| Self::Court(Court::Custom(name))
 			| Self::Archetype(Archetype::Custom(name, ..)) => Some(name),
@@ -246,7 +311,7 @@ impl ZSplat {
 		match self {
 			ZSplat::Bloodline(Bloodline::Custom(name, ..))
 			| ZSplat::Lodge(Lodge::Custom(name))
-			| ZSplat::Legacy(Legacy::_Custom(name, ..))
+			| ZSplat::Legacy(Legacy::Custom(name, ..))
 			| ZSplat::Kith(Kith::Custom(name)) => Some(name),
 			_ => None,
 		}
@@ -257,7 +322,7 @@ impl ZSplat {
 			self,
 			ZSplat::Bloodline(Bloodline::Custom(..))
 				| ZSplat::Lodge(Lodge::Custom(..))
-				| ZSplat::Legacy(Legacy::_Custom(..))
+				| ZSplat::Legacy(Legacy::Custom(..))
 				| ZSplat::Kith(Kith::Custom(..))
 		)
 	}

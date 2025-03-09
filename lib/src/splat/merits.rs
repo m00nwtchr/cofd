@@ -1,14 +1,10 @@
-use cofd_schema::{prelude::Skill, traits::DerivedTrait};
+use cofd_schema::prelude::Skill;
 use cofd_util::{AllVariants, VariantName};
 use serde::{Deserialize, Serialize};
 
 use super::{
 	ability::Ability, changeling::ChangelingMerit, mage::MageMerit, vampire::VampireMerit,
 	werewolf::WerewolfMerit,
-};
-use crate::{
-	character::modifier::{Modifier, ModifierOp, ModifierTarget, ModifierValue},
-	prelude::{Attributes, Skills, Trait},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, AllVariants, VariantName)]
@@ -270,147 +266,147 @@ impl Merit {
 		]
 	}
 
-	pub fn get_modifiers(&self, value: u16) -> Vec<Modifier> {
-		match &self {
-			Merit::DefensiveCombat(true, Some(skill)) => {
-				vec![Modifier::new(
-					ModifierTarget::Trait(Trait::DerivedTrait(DerivedTrait::Defense)),
-					ModifierValue::Skill(*skill),
-					ModifierOp::Set,
-				)]
-			}
-			Merit::Giant => {
-				if value == 3 {
-					vec![Modifier::new(
-						ModifierTarget::Trait(Trait::DerivedTrait(DerivedTrait::Size)),
-						ModifierValue::Num(1),
-						ModifierOp::Add,
-					)]
-				} else {
-					vec![]
-				}
-			}
-			Merit::Werewolf(merit) => merit.get_modifiers(value),
-			_ => vec![],
-		}
-	}
+	// pub fn get_modifiers(&self, value: u16) -> Vec<Modifier> {
+	// 	match &self {
+	// 		Merit::DefensiveCombat(true, Some(skill)) => {
+	// 			vec![Modifier::new(
+	// 				ModifierTarget::Trait(Trait::DerivedTrait(DerivedTrait::Defense)),
+	// 				ModifierValue::Skill(*skill),
+	// 				ModifierOp::Set,
+	// 			)]
+	// 		}
+	// 		Merit::Giant => {
+	// 			if value == 3 {
+	// 				vec![Modifier::new(
+	// 					ModifierTarget::Trait(Trait::DerivedTrait(DerivedTrait::Size)),
+	// 					ModifierValue::Num(1),
+	// 					ModifierOp::Add,
+	// 				)]
+	// 			} else {
+	// 				vec![]
+	// 			}
+	// 		}
+	// 		Merit::Werewolf(merit) => merit.get_modifiers(value),
+	// 		_ => vec![],
+	// 	}
+	// }
 
-	pub fn is_available(
-		&self,
-		character: &crate::prelude::Character,
-		attributes: &Attributes,
-		skills: &Skills,
-	) -> bool {
-		match self {
-			Merit::Custom(_) => true,
-
-			Self::AreaOfExpertise(_) => character.attributes().resolve > 1,
-			// Self::Anonymity => // No Fame
-			Self::EyeForTheStrange => {
-				character.attributes().resolve > 1 && character.skills().occult > 0
-			}
-			Self::FastReflexes => {
-				let attr = character.attributes();
-				attr.wits > 2 || attr.dexterity > 2
-			}
-			Self::GoodTimeManagement => {
-				let skills = character.skills();
-				skills.academics > 1 || skills.science > 1
-			}
-			Self::Indomitable => character.attributes().resolve > 2,
-			Self::InterdisciplinarySpecialty(_, Some(skill)) => character.skills().get(*skill) > 2,
-			Self::InvestigativeAide(Some(skill)) => character.skills().get(*skill) > 2,
-			Self::InvestigativeProdigy => {
-				character.attributes().wits > 2 && character.skills().investigation > 2
-			}
-			// Self::LibraryAdvanced() // Library 3 + <= Safe Place
-			Self::Scarred(_) => character.integrity <= 5,
-			Self::ToleranceForBiology => character.attributes().resolve > 2,
-			Self::TrainedObserver => {
-				let attrs = character.attributes();
-				attrs.wits > 2 || attrs.composure > 2
-			}
-			// Self::ViceRidden(_) if character.template.vice_anchor() != Anchor::Vice => false,
-			// Self::Virtuous(_) if character.template.virtue_anchor() != Anchor::Virtue => false,
-
-			// Self::Ambidextrous // Character creation only
-			Self::AutomotiveGenius => {
-				let skills = character.skills();
-				skills.crafts > 2 && skills.drive > 0 && skills.science > 0
-			}
-			Self::CovertOperative => {
-				let attr = character.attributes();
-				attr.wits > 2 && attr.dexterity > 2 && character.skills().stealth > 1
-			}
-			Self::CrackDriver => character.skills().drive > 2,
-			Self::Demolisher => {
-				let attr = character.attributes();
-				attr.strength > 2 || attr.intelligence > 2
-			}
-			Self::DoubleJointed => character.attributes().dexterity > 2,
-			Self::FleetOfFoot => character.skills().athletics > 1,
-			Self::Freediving => character.skills().athletics > 1,
-			// Self::Giant // Character Creation OR Strength Performance
-			Self::Hardy => character.attributes().stamina > 2,
-			Self::Greyhound => {
-				let attr = character.attributes();
-				character.skills().athletics > 2 && attr.wits > 2 && attr.stamina > 2
-			}
-			// IronSkin
-			Self::IronStamina => {
-				let attr = character.attributes();
-				attr.stamina > 2 || attr.resolve > 2
-			}
-			Self::QuickDraw(_) => character.attributes().wits > 2,
-			Self::PunchDrunk => character.max_willpower() > 5,
-			Self::Relentless => {
-				character.skills().athletics > 1 && character.attributes().stamina > 2
-			}
-			// Self::Roadkill // Merit Dep Aggressive Driving 2
-			Self::SeizingTheEdge => {
-				let attr = character.attributes();
-				attr.wits > 2 && attr.composure > 2
-			}
-			Self::SleightOfHand => character.skills().larceny > 2,
-			// Self::SmallFramed // Character Creation
-			// Self::Survivalist => character.skills().survival > 2 // Iron Stamina 3 dependency
-			Self::AirOfMenace => character.skills().intimidation > 1,
-			// Self::Anonymity // No Fame Merit
-			Self::Barfly => character.skills().socialize > 1,
-			Self::ClosedBook => {
-				let attr = character.attributes();
-				attr.manipulation > 2 && attr.resolve > 2
-			}
-			Self::CohesiveUnit => character.attributes().presence > 2,
-			Self::Empath => character.skills().empathy > 1,
-			// Self::Fame // No Anonymity Merit
-			// Self::Fixer => character.attributes().wits > 2 // Contacts 2
-			Self::HobbyistClique(_, Some(skill)) => character.skills().get(*skill) > 1,
-			Self::Inspiring => character.attributes().presence > 2,
-			Self::IronWill => character.attributes().resolve > 3,
-			Self::Peacemaker => character.attributes().wits > 2 && character.skills().empathy > 2,
-			Self::Pusher => character.skills().persuasion > 1,
-			Self::SmallUnitTactics => character.attributes().presence > 2,
-			Self::SpinDoctor => {
-				character.attributes().manipulation > 2 && character.skills().subterfuge > 1
-			}
-			Self::TableTurner => {
-				let attr = character.attributes();
-				attr.composure > 2 && attr.manipulation > 2 && attr.wits > 2
-			}
-			// Self::TakesOneToKnowOne if character.template.vice_anchor() != Anchor::Vice => false,
-			Self::Taste(_, _) => character.skills().crafts > 1,
-			Self::Untouchable => {
-				character.attributes().manipulation > 2 && character.skills().subterfuge > 1
-			}
-
-			Self::Mage(merit) => merit.is_available(character),
-			Self::Vampire(merit) => merit.is_available(character, attributes, skills),
-			Self::Werewolf(merit) => merit.is_available(character),
-			Self::Changeling(merit) => merit.is_available(character),
-			_ => true,
-		}
-	}
+	// pub fn is_available(
+	// 	&self,
+	// 	character: &crate::prelude::Character,
+	// 	attributes: &Attributes,
+	// 	skills: &Skills,
+	// ) -> bool {
+	// 	match self {
+	// 		Merit::Custom(_) => true,
+	//
+	// 		Self::AreaOfExpertise(_) => character.attributes().resolve > 1,
+	// 		// Self::Anonymity => // No Fame
+	// 		Self::EyeForTheStrange => {
+	// 			character.attributes().resolve > 1 && character.skills().occult > 0
+	// 		}
+	// 		Self::FastReflexes => {
+	// 			let attr = character.attributes();
+	// 			attr.wits > 2 || attr.dexterity > 2
+	// 		}
+	// 		Self::GoodTimeManagement => {
+	// 			let skills = character.skills();
+	// 			skills.academics > 1 || skills.science > 1
+	// 		}
+	// 		Self::Indomitable => character.attributes().resolve > 2,
+	// 		Self::InterdisciplinarySpecialty(_, Some(skill)) => character.skills().get(*skill) > 2,
+	// 		Self::InvestigativeAide(Some(skill)) => character.skills().get(*skill) > 2,
+	// 		Self::InvestigativeProdigy => {
+	// 			character.attributes().wits > 2 && character.skills().investigation > 2
+	// 		}
+	// 		// Self::LibraryAdvanced() // Library 3 + <= Safe Place
+	// 		Self::Scarred(_) => character.integrity <= 5,
+	// 		Self::ToleranceForBiology => character.attributes().resolve > 2,
+	// 		Self::TrainedObserver => {
+	// 			let attrs = character.attributes();
+	// 			attrs.wits > 2 || attrs.composure > 2
+	// 		}
+	// 		// Self::ViceRidden(_) if character.template.vice_anchor() != Anchor::Vice => false,
+	// 		// Self::Virtuous(_) if character.template.virtue_anchor() != Anchor::Virtue => false,
+	//
+	// 		// Self::Ambidextrous // Character creation only
+	// 		Self::AutomotiveGenius => {
+	// 			let skills = character.skills();
+	// 			skills.crafts > 2 && skills.drive > 0 && skills.science > 0
+	// 		}
+	// 		Self::CovertOperative => {
+	// 			let attr = character.attributes();
+	// 			attr.wits > 2 && attr.dexterity > 2 && character.skills().stealth > 1
+	// 		}
+	// 		Self::CrackDriver => character.skills().drive > 2,
+	// 		Self::Demolisher => {
+	// 			let attr = character.attributes();
+	// 			attr.strength > 2 || attr.intelligence > 2
+	// 		}
+	// 		Self::DoubleJointed => character.attributes().dexterity > 2,
+	// 		Self::FleetOfFoot => character.skills().athletics > 1,
+	// 		Self::Freediving => character.skills().athletics > 1,
+	// 		// Self::Giant // Character Creation OR Strength Performance
+	// 		Self::Hardy => character.attributes().stamina > 2,
+	// 		Self::Greyhound => {
+	// 			let attr = character.attributes();
+	// 			character.skills().athletics > 2 && attr.wits > 2 && attr.stamina > 2
+	// 		}
+	// 		// IronSkin
+	// 		Self::IronStamina => {
+	// 			let attr = character.attributes();
+	// 			attr.stamina > 2 || attr.resolve > 2
+	// 		}
+	// 		Self::QuickDraw(_) => character.attributes().wits > 2,
+	// 		Self::PunchDrunk => character.max_willpower() > 5,
+	// 		Self::Relentless => {
+	// 			character.skills().athletics > 1 && character.attributes().stamina > 2
+	// 		}
+	// 		// Self::Roadkill // Merit Dep Aggressive Driving 2
+	// 		Self::SeizingTheEdge => {
+	// 			let attr = character.attributes();
+	// 			attr.wits > 2 && attr.composure > 2
+	// 		}
+	// 		Self::SleightOfHand => character.skills().larceny > 2,
+	// 		// Self::SmallFramed // Character Creation
+	// 		// Self::Survivalist => character.skills().survival > 2 // Iron Stamina 3 dependency
+	// 		Self::AirOfMenace => character.skills().intimidation > 1,
+	// 		// Self::Anonymity // No Fame Merit
+	// 		Self::Barfly => character.skills().socialize > 1,
+	// 		Self::ClosedBook => {
+	// 			let attr = character.attributes();
+	// 			attr.manipulation > 2 && attr.resolve > 2
+	// 		}
+	// 		Self::CohesiveUnit => character.attributes().presence > 2,
+	// 		Self::Empath => character.skills().empathy > 1,
+	// 		// Self::Fame // No Anonymity Merit
+	// 		// Self::Fixer => character.attributes().wits > 2 // Contacts 2
+	// 		Self::HobbyistClique(_, Some(skill)) => character.skills().get(*skill) > 1,
+	// 		Self::Inspiring => character.attributes().presence > 2,
+	// 		Self::IronWill => character.attributes().resolve > 3,
+	// 		Self::Peacemaker => character.attributes().wits > 2 && character.skills().empathy > 2,
+	// 		Self::Pusher => character.skills().persuasion > 1,
+	// 		Self::SmallUnitTactics => character.attributes().presence > 2,
+	// 		Self::SpinDoctor => {
+	// 			character.attributes().manipulation > 2 && character.skills().subterfuge > 1
+	// 		}
+	// 		Self::TableTurner => {
+	// 			let attr = character.attributes();
+	// 			attr.composure > 2 && attr.manipulation > 2 && attr.wits > 2
+	// 		}
+	// 		// Self::TakesOneToKnowOne if character.template.vice_anchor() != Anchor::Vice => false,
+	// 		Self::Taste(_, _) => character.skills().crafts > 1,
+	// 		Self::Untouchable => {
+	// 			character.attributes().manipulation > 2 && character.skills().subterfuge > 1
+	// 		}
+	//
+	// 		Self::Mage(merit) => merit.is_available(character),
+	// 		Self::Vampire(merit) => merit.is_available(character, attributes, skills),
+	// 		Self::Werewolf(merit) => merit.is_available(character),
+	// 		Self::Changeling(merit) => merit.is_available(character),
+	// 		_ => true,
+	// 	}
+	// }
 }
 
 impl NameKey for Merit {

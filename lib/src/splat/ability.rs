@@ -2,13 +2,12 @@ use cofd_util::VariantName;
 use serde::{Deserialize, Serialize};
 
 use super::{
+	Merit,
 	geist::Haunt,
 	mage::Arcanum,
 	vampire::Discipline,
 	werewolf::{MoonGift, Renown},
-	Merit,
 };
-use crate::character::modifier::Modifier;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, VariantName)]
 pub enum Ability {
@@ -36,14 +35,14 @@ impl Ability {
 		}
 	}
 
-	pub fn get_modifiers(&self, value: u16) -> Vec<Modifier> {
-		match self {
-			Ability::Merit(merit) => merit.get_modifiers(value),
-			Ability::Discipline(discipline) => discipline.get_modifiers(value),
-			Ability::MoonGift(moon_gift) => moon_gift.get_modifiers(value),
-			_ => vec![],
-		}
-	}
+	// pub fn get_modifiers(&self, value: u16) -> Vec<Modifier> {
+	// 	match self {
+	// 		Ability::Merit(merit) => merit.get_modifiers(value),
+	// 		Ability::Discipline(discipline) => discipline.get_modifiers(value),
+	// 		Ability::MoonGift(moon_gift) => moon_gift.get_modifiers(value),
+	// 		_ => vec![],
+	// 	}
+	// }
 
 	pub fn is_custom(&self) -> bool {
 		matches!(

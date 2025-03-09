@@ -20,7 +20,7 @@ macro_rules! derive_error {
 
 fn gift_name_to_id(name: &str) -> &str {
 	if name.contains("of") {
-		name.split(' ').last().unwrap()
+		name.split(' ').next_back().unwrap()
 	} else {
 		let next = name.split(' ').next().unwrap();
 		if next.contains('\'') {

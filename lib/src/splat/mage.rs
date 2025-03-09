@@ -2,7 +2,7 @@ pub use cofd_schema::template::mage::Arcanum;
 use cofd_util::{AllVariants, VariantName};
 use serde::{Deserialize, Serialize};
 
-use super::{ability::Ability, Merit, Splat, SplatTrait, XSplat, YSplat, ZSplat};
+use super::{Merit, Splat, SplatTrait, XSplat, YSplat, ZSplat, ability::Ability};
 use crate::prelude::{Attribute, Character, Skill};
 
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize, Debug)]
@@ -123,17 +123,11 @@ impl SplatTrait for Mage {
 	}
 
 	fn custom_zsplat(&self, name: String) -> Option<ZSplat> {
-		Some(Legacy::_Custom(name, None).into())
+		Some(Legacy::Custom(name, None).into())
 	}
 
 	fn all_abilities(&self) -> Option<Vec<Ability>> {
-		Some(
-			Arcanum::all()
-				.iter()
-				.copied()
-				.map(Into::into)
-				.collect(),
-		)
+		Some(Arcanum::all().iter().copied().map(Into::into).collect())
 	}
 
 	fn alternate_beats_optional(&self) -> bool {
@@ -251,7 +245,7 @@ impl From<Ministry> for Order {
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, AllVariants, VariantName)]
 pub enum Legacy {
-	_Custom(String, Option<Arcanum>),
+	Custom(String, Option<Arcanum>),
 }
 
 impl From<Arcanum> for Ability {

@@ -1,14 +1,12 @@
 use std::{
-	borrow::Cow,
 	ops::{RangeFrom, RangeInclusive},
 	str::FromStr,
 };
 
 use derive_more::Display;
-use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::{error, DOT_CHAR};
+use crate::{DOT_CHAR, error};
 
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[derive(Serialize, Clone, Debug, Deserialize, PartialEq, Eq, Display)]

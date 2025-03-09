@@ -1,12 +1,10 @@
-use cofd_schema::traits::DerivedTrait;
 use cofd_util::{AllVariants, VariantName};
 use serde::{Deserialize, Serialize};
 
-use super::{ability::Ability, Merit, Splat, SplatTrait, XSplat, YSplat, ZSplat};
+use super::{Merit, Splat, SplatTrait, XSplat, YSplat, ZSplat, ability::Ability};
 use crate::{
-	character::modifier::{Modifier, ModifierOp},
 	dice_pool::DicePool,
-	prelude::{Attribute, Attributes, Skills, Trait},
+	prelude::{Attribute, Attributes, Skills},
 };
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
@@ -79,7 +77,6 @@ impl SplatTrait for Vampire {
 	fn zsplat(&self) -> Option<ZSplat> {
 		self.bloodline.clone().map(Into::into)
 	}
-
 
 	fn xsplats(&self) -> Vec<XSplat> {
 		Clan::all().into_iter().map(Into::into).collect()
@@ -238,23 +235,23 @@ pub enum Discipline {
 }
 
 impl Discipline {
-	#[warn(clippy::cast_possible_wrap)]
-	pub fn get_modifiers(&self, value: u16) -> Vec<Modifier> {
-		match self {
-			Discipline::Celerity => {
-				vec![Modifier::new(
-					Trait::DerivedTrait(DerivedTrait::Defense),
-					value,
-					ModifierOp::Add,
-				)]
-			}
-			Discipline::Resilience => {
-				vec![Modifier::new(Attribute::Stamina, value, ModifierOp::Add)]
-			}
-			Discipline::Vigor => vec![Modifier::new(Attribute::Strength, value, ModifierOp::Add)],
-			_ => vec![],
-		}
-	}
+	// #[warn(clippy::cast_possible_wrap)]
+	// pub fn get_modifiers(&self, value: u16) -> Vec<Modifier> {
+	// 	match self {
+	// 		Discipline::Celerity => {
+	// 			vec![Modifier::new(
+	// 				Trait::DerivedTrait(DerivedTrait::Defense),
+	// 				value,
+	// 				ModifierOp::Add,
+	// 			)]
+	// 		}
+	// 		Discipline::Resilience => {
+	// 			vec![Modifier::new(Attribute::Stamina, value, ModifierOp::Add)]
+	// 		}
+	// 		Discipline::Vigor => vec![Modifier::new(Attribute::Strength, value, ModifierOp::Add)],
+	// 		_ => vec![],
+	// 	}
+	// }
 }
 
 impl From<Discipline> for Ability {
@@ -364,13 +361,13 @@ impl VampireMerit {
 			&& match self {
 				// VampireMerit::Atrocious => todo!(), // Not Enticing or Cutthroat
 				VampireMerit::Bloodhound => attributes.wits >= 3,
-				VampireMerit::CallTheBeast => character.integrity < 5,
-				VampireMerit::ClawsOfTheUnholy => {
-					*character
-						.abilities
-						.get(&Discipline::Protean.into())
-						.unwrap_or(&0) >= 4
-				}
+				// VampireMerit::CallTheBeast => character.integrity < 5,
+				// VampireMerit::ClawsOfTheUnholy => {
+				// 	*character
+				// 		.abilities
+				// 		.get(&Discipline::Protean.into())
+				// 		.unwrap_or(&0) >= 4
+				// }
 				// VampireMerit::Cutthroat => todo!(), // Not Enticing or Atrocious
 				VampireMerit::DreamVisions => {
 					matches!(
@@ -414,22 +411,22 @@ impl VampireMerit {
 						})
 					)
 				}
-				VampireMerit::ReceptiveMind => {
-					character.power >= 6
-						&& *character
-							.abilities
-							.get(&Discipline::Auspex.into())
-							.unwrap_or(&0) >= 4
-				}
+				// VampireMerit::ReceptiveMind => {
+				// 	character.power >= 6
+				// 		&& *character
+				// 			.abilities
+				// 			.get(&Discipline::Auspex.into())
+				// 			.unwrap_or(&0) >= 4
+				// }
 				VampireMerit::RevenantImpostor => {
 					attributes.manipulation >= 3 && skills.subterfuge >= 2
 				}
-				VampireMerit::SwarmForm => {
-					*character
-						.abilities
-						.get(&Discipline::Protean.into())
-						.unwrap_or(&0) >= 4
-				}
+				// VampireMerit::SwarmForm => {
+				// 	*character
+				// 		.abilities
+				// 		.get(&Discipline::Protean.into())
+				// 		.unwrap_or(&0) >= 4
+				// }
 				VampireMerit::UnsettlingGaze => {
 					matches!(
 						character.splat,
@@ -449,9 +446,9 @@ impl VampireMerit {
 				} // Theban Sorcery 2 or Sorc Eunuch
 				// VampireMerit::DynastyMembership => todo!(), // Clan Status
 				VampireMerit::KindredDueling => attributes.composure >= 3 && skills.weaponry >= 2,
-				VampireMerit::MobilizeOutrage => {
-					character.max_willpower() >= 5 && skills.brawl >= 2
-				} // Carthian Status
+				// VampireMerit::MobilizeOutrage => {
+				// 	character.max_willpower() >= 5 && skills.brawl >= 2
+				// } // Carthian Status
 				VampireMerit::RidingTheWave => attributes.composure >= 3 && attributes.resolve >= 3,
 				VampireMerit::RitesOfTheImpaled => {
 					attributes.resolve >= 3 && attributes.stamina >= 3 && skills.weaponry >= 2
@@ -468,9 +465,9 @@ impl VampireMerit {
 			}
 	}
 
-	pub fn get_modifiers(&self, value: u16) -> Vec<Modifier> {
-		Vec::new()
-	}
+	// pub fn get_modifiers(&self, value: u16) -> Vec<Modifier> {
+	// 	Vec::new()
+	// }
 }
 
 impl From<VampireMerit> for Merit {

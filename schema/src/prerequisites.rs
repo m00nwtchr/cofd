@@ -1,11 +1,10 @@
 use std::{ops::Deref, str::FromStr};
 
 use derive_more::Display;
-use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-	dot_range::{dots_to_num, num_to_dots},
+	dot_range::dots_to_num,
 	error,
 	template::Template,
 	traits::Trait,

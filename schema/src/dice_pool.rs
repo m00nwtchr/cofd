@@ -3,7 +3,6 @@ use std::{
 	str::FromStr,
 };
 
-use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
 use crate::traits::{attribute::Attribute, skill::Skill, Trait};

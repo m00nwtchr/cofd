@@ -10,13 +10,13 @@ json_schema = ["dep:schemars"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
-thiserror = "1"
+thiserror = "2"
 
 cofd-util.workspace = true
 
 chrono = { version = "0.4", features = ["serde"] }
 strum = { workspace = true, features = ["derive"] }
-derive_more = { version = "1", features = ["display", "from"] }
+derive_more = { workspace = true, features = ["display", "from"] }
 
 itertools = "*"
 

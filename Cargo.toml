@@ -5,7 +5,7 @@ resolver = "2"
 [workspace.package]
 version = "0.1.0"
 authors = ["m00n"]
-edition = "2021"
+edition = "2024"
 license = "MPL"
 
 [workspace.dependencies]
@@ -15,6 +15,11 @@ cofd-util = { path = "util" }
 cofd-derive = { path = "derive" }
 
 serde = { version = "1", features = ["derive"] }
-strum = "0.26"
+strum = "0.27"
+convert_case = "0.8"
+
+derive_more = { version = "2" }
+
+systema = { path = "../../systema" }
 
 ron = "0.9.0-alpha.0"
