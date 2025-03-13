@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{Merit, NameKey, Splat, SplatTrait, XSplat, YSplat, ZSplat};
 use crate::{
-	character::{Character, Damage},
+	character::{Character, damage::Damage},
 	prelude::*,
 };
 
@@ -28,9 +28,9 @@ impl Changeling {
 		}
 	}
 
-	pub fn max_clarity(&self, attributes: &Attributes) -> u16 {
-		attributes.wits + attributes.composure
-	}
+	// pub fn max_clarity(&self, attributes: &Attributes) -> u16 {
+	// 	attributes.wits + attributes.composure
+	// }
 
 	pub fn attr_bonus(&self) -> &Attribute {
 		&self.attr_bonus

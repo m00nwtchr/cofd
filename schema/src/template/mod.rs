@@ -1,6 +1,6 @@
 use cofd_util::{SplatEnum, VariantName};
 use serde::{Deserialize, Serialize};
-use strum::{AsRefStr, Display, EnumString};
+use strum::{AsRefStr, Display, EnumString, VariantArray};
 
 pub mod mage;
 mod vampire;
@@ -17,7 +17,9 @@ pub mod werewolf;
 	Display,
 	PartialEq,
 	Eq,
+	Hash,
 	VariantName,
+	VariantArray,
 )]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[strum(ascii_case_insensitive)]

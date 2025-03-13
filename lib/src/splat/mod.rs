@@ -40,9 +40,17 @@ use werewolf::*;
 // use deviant:*;
 
 #[derive(
-	Clone, PartialEq, Eq, Serialize, Deserialize, Debug, VariantName, AllVariants, EnumDiscriminants,
+	Clone,
+	PartialEq,
+	Eq,
+	Serialize,
+	Deserialize,
+	Debug,
+	strum::AsRefStr,
+	AllVariants,
+	EnumDiscriminants,
 )]
-#[strum_discriminants(name(SplatKind), derive(strum::VariantArray, VariantName))]
+#[strum_discriminants(name(SplatKind), derive(strum::VariantArray, strum::AsRefStr))]
 #[enum_dispatch(SplatTrait)]
 pub enum Splat {
 	Mortal(Mortal),

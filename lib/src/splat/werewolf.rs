@@ -1,10 +1,12 @@
 use std::collections::HashMap;
 
+use cofd_schema::traits::Trait;
 use cofd_util::VariantName;
 use serde::{Deserialize, Serialize};
+use systema::prelude::{Actor, AttributeMap, AttributeModifier, Operation, Value};
 
 use super::{Merit, NameKey, Splat, SplatTrait, XSplat, YSplat, ZSplat, ability::Ability};
-use crate::prelude::*;
+use crate::{CofDSystem, Modifier, prelude::*};
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default)]
@@ -27,6 +29,15 @@ pub struct Werewolf {
 impl Werewolf {
 	pub fn new() -> Self {
 		Werewolf::default()
+	}
+
+	pub fn set_form(&mut self, form: Form, attributes: &mut AttributeMap<CofDSystem>) {
+		attributes.remove_modifiers(&Modifier::Form(self.form));
+		self.form = form;
+
+		for (t, m) in self.form.get_modifiers() {
+			attributes.add_modifier(t, Modifier::Form(self.form.clone()), m);
+		}
 	}
 
 	#[must_use]
@@ -155,6 +166,12 @@ impl SplatTrait for Werewolf {
 
 	fn merits(&self) -> Vec<Merit> {
 		WerewolfMerit::all().map(Into::into).to_vec()
+	}
+}
+
+impl From<Werewolf> for Splat {
+	fn from(werewolf: Werewolf) -> Self {
+		Self::Werewolf(Box::new(werewolf))
 	}
 }
 
@@ -568,6 +585,7 @@ impl NameKey for WolfGift {
 	Eq,
 	PartialOrd,
 	Ord,
+	Copy,
 	Hash,
 	VariantName,
 	AllVariants,
@@ -582,6 +600,76 @@ pub enum Form {
 }
 
 impl Form {
+	pub fn get_modifiers(&self) -> Box<[(Trait, AttributeModifier<Trait, u8>)]> {
+		match self {
+			Form::Hishu => Box::new([]),
+			Form::Dalu => Box::new([
+				(
+					Trait::Attribute(Attribute::Strength),
+					AttributeModifier::new(Value::Value(1), Operation::Add),
+				),
+				(
+					Trait::Attribute(Attribute::Stamina),
+					AttributeModifier::new(Value::Value(1), Operation::Add),
+				),
+				(
+					Trait::Size,
+					AttributeModifier::new(Value::Value(1), Operation::Add),
+				),
+			]),
+			Form::Gauru => Box::new([
+				(
+					Trait::Attribute(Attribute::Strength),
+					AttributeModifier::new(Value::Value(3), Operation::Add),
+				),
+				(
+					Trait::Attribute(Attribute::Dexterity),
+					AttributeModifier::new(Value::Value(1), Operation::Add),
+				),
+				(
+					Trait::Attribute(Attribute::Stamina),
+					AttributeModifier::new(Value::Value(2), Operation::Add),
+				),
+				(
+					Trait::Size,
+					AttributeModifier::new(Value::Value(2), Operation::Add),
+				),
+			]),
+			Form::Urhan => Box::new([
+				(
+					Trait::Attribute(Attribute::Dexterity),
+					AttributeModifier::new(Value::Value(2), Operation::Add),
+				),
+				(
+					Trait::Attribute(Attribute::Stamina),
+					AttributeModifier::new(Value::Value(1), Operation::Add),
+				),
+				(
+					Trait::Size,
+					AttributeModifier::new(Value::Value(1), Operation::Sub),
+				),
+			]),
+			Form::Urshul => Box::new([
+				(
+					Trait::Attribute(Attribute::Strength),
+					AttributeModifier::new(Value::Value(2), Operation::Add),
+				),
+				(
+					Trait::Attribute(Attribute::Dexterity),
+					AttributeModifier::new(Value::Value(2), Operation::Add),
+				),
+				(
+					Trait::Attribute(Attribute::Stamina),
+					AttributeModifier::new(Value::Value(2), Operation::Add),
+				),
+				(
+					Trait::Size,
+					AttributeModifier::new(Value::Value(1), Operation::Add),
+				),
+			]),
+		}
+	}
+
 	// #[allow(clippy::too_many_lines)]
 	// pub fn get_modifiers(&self) -> Vec<Modifier> {
 	// 	match self {

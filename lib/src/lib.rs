@@ -13,17 +13,34 @@
 
 #[macro_use]
 extern crate cofd_util;
-use systema::prelude::System;
+
+use std::{
+	collections::HashMap,
+	sync::{Arc, Mutex},
+};
+
+use serde::{Deserialize, Serialize};
+use systema::prelude::{
+	AttributeInstance, AttributeMap, AttributeModifier, AttributeSupplier,
+	AttributeSupplierBuilder, Operation, System, Value,
+};
 
 pub mod character;
 pub mod dice_pool;
 pub mod splat;
 pub mod traits;
+mod util;
 
-use cofd_schema::prelude::Attribute;
 pub use cofd_schema::template;
+use cofd_schema::{
+	prelude::{Attribute, Skill},
+	template::{SupernaturalTolerance, Template},
+	traits::{DerivedTrait, Trait},
+};
+use once_cell::sync::Lazy;
+use strum::VariantArray;
 
-use crate::prelude::Character;
+use crate::{prelude::Character, splat::werewolf::Form};
 
 pub mod prelude {
 	pub use cofd_schema::{
@@ -36,281 +53,176 @@ pub mod prelude {
 	};
 	pub use cofd_util::{AllVariants, VariantName};
 
-	pub use crate::{
-		character::{Attributes, Character, Skills},
-		splat::SplatTrait,
-		traits::Trait,
-	};
+	pub use crate::{character::Character, splat::SplatTrait};
+}
+
+fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8> {
+	let mut builder = AttributeSupplier::builder();
+
+	for attribute in Attribute::VARIANTS {
+		builder = builder.add(
+			Trait::Attribute(*attribute),
+			AttributeInstance::builder(systema::prelude::Attribute::Value(1)),
+		);
+	}
+
+	for skill in Skill::VARIANTS {
+		builder = builder.add(
+			Trait::Skill(*skill),
+			AttributeInstance::builder(systema::prelude::Attribute::Value(0)),
+		);
+	}
+
+	builder = builder.add(
+		Trait::Size,
+		AttributeInstance::builder(systema::prelude::Attribute::Value(5)),
+	);
+
+	builder
+		.add(
+			Trait::DerivedTrait(DerivedTrait::Speed),
+			AttributeInstance::builder(systema::prelude::Attribute::Derived)
+				.modifier(
+					Modifier::Trait(Trait::Attribute(Attribute::Dexterity)),
+					AttributeModifier::new(
+						Value::Attribute(Trait::Attribute(Attribute::Dexterity)),
+						Operation::Add,
+					)
+					.base(),
+				)
+				.modifier(
+					Modifier::Trait(Trait::Attribute(Attribute::Strength)),
+					AttributeModifier::new(
+						Value::Attribute(Trait::Attribute(Attribute::Strength)),
+						Operation::Add,
+					)
+					.base(),
+				)
+				.modifier(
+					Modifier::Trait(Trait::DerivedTrait(DerivedTrait::Speed)),
+					AttributeModifier::new(Value::Value(5), Operation::Add).base(),
+				),
+		)
+		.add(
+			Trait::DerivedTrait(DerivedTrait::Defense),
+			AttributeInstance::builder(systema::prelude::Attribute::Derived), // Defense
+		)
+		.add(
+			Trait::DerivedTrait(DerivedTrait::Initiative),
+			AttributeInstance::builder(systema::prelude::Attribute::Derived)
+				.modifier(
+					Modifier::Trait(Trait::Attribute(Attribute::Dexterity)),
+					AttributeModifier::new(
+						Value::Attribute(Trait::Attribute(Attribute::Dexterity)),
+						Operation::Add,
+					)
+					.base(),
+				)
+				.modifier(
+					Modifier::Trait(Trait::Attribute(Attribute::Composure)),
+					AttributeModifier::new(
+						Value::Attribute(Trait::Attribute(Attribute::Composure)),
+						Operation::Add,
+					)
+					.base(),
+				),
+		)
+		.add(
+			Trait::DerivedTrait(DerivedTrait::Perception),
+			AttributeInstance::builder(systema::prelude::Attribute::Derived)
+				.modifier(
+					Modifier::Trait(Trait::Attribute(Attribute::Wits)),
+					AttributeModifier::new(
+						Value::Attribute(Trait::Attribute(Attribute::Wits)),
+						Operation::Add,
+					)
+					.base(),
+				)
+				.modifier(
+					Modifier::Trait(Trait::Attribute(Attribute::Composure)),
+					AttributeModifier::new(
+						Value::Attribute(Trait::Attribute(Attribute::Composure)),
+						Operation::Add,
+					)
+					.base(),
+				),
+		)
+		.add(
+			Trait::DerivedTrait(DerivedTrait::Health),
+			AttributeInstance::builder(systema::prelude::Attribute::Derived)
+				.modifier(
+					Modifier::Trait(Trait::Attribute(Attribute::Stamina)),
+					AttributeModifier::new(
+						Value::Attribute(Trait::Attribute(Attribute::Stamina)),
+						Operation::Add,
+					)
+					.base(),
+				)
+				.modifier(
+					Modifier::Trait(Trait::Size),
+					AttributeModifier::new(Value::Attribute(Trait::Size), Operation::Add).base(),
+				),
+		)
+		.add(
+			Trait::DerivedTrait(DerivedTrait::Willpower),
+			AttributeInstance::builder(systema::prelude::Attribute::Derived)
+				.modifier(
+					Modifier::Trait(Trait::Attribute(Attribute::Resolve)),
+					AttributeModifier::new(
+						Value::Attribute(Trait::Attribute(Attribute::Resolve)),
+						Operation::Add,
+					)
+					.base(),
+				)
+				.modifier(
+					Modifier::Trait(Trait::Attribute(Attribute::Composure)),
+					AttributeModifier::new(
+						Value::Attribute(Trait::Attribute(Attribute::Composure)),
+						Operation::Add,
+					)
+					.base(),
+				),
+		)
+}
+
+type SupplierMap = HashMap<Template, Arc<AttributeSupplier<Trait, Modifier, u8>>>;
+
+fn splat_attribute_builder(template: Template) -> AttributeSupplierBuilder<Trait, Modifier, u8> {
+	let mut builder = base_attributes();
+
+	if let Some(st) = template.supernatural_tolerance() {
+		builder = builder.add(
+			Trait::SupernaturalTolerance(st),
+			AttributeInstance::builder(systema::prelude::Attribute::Value(1)),
+		);
+	}
+
+	builder
+}
+
+pub fn splat_attributes(template: Template) -> Arc<AttributeSupplier<Trait, Modifier, u8>> {
+	static ATTRIBUTES: Lazy<Mutex<SupplierMap>> = Lazy::new(|| Mutex::new(HashMap::new()));
+
+	ATTRIBUTES
+		.lock()
+		.unwrap()
+		.entry(template)
+		.or_insert_with(|| Arc::new(splat_attribute_builder(template).build()))
+		.clone()
 }
 
 pub struct CofDSystem;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Modifier {}
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum Modifier {
+	Trait(Trait),
+
+	Form(Form),
+}
 
 impl System for CofDSystem {
-	type AttributeKey = Attribute;
+	type AttributeKey = Trait;
 	type ModifierKey = Modifier;
 	type AttributeValue = u8;
 	type Actor = Character;
-}
-
-#[cfg(test)]
-mod tests {
-	use crate::splat::Splat;
-
-	#[test]
-	fn size() {
-		println!("{}", size_of::<Splat>());
-	}
-	//
-	// #[test]
-	// #[allow(clippy::too_many_lines)]
-	// fn it_works() {
-	// 	let vampire_character = Character::builder()
-	// 		.with_splat(
-	// 			Vampire::new(
-	// 				Clan::Ventrue,
-	// 				Some(Covenant::OrdoDracul),
-	// 				Some(Bloodline::Custom(
-	// 					"Dragolescu".to_string(),
-	// 					Some([
-	// 						Discipline::Animalism,
-	// 						Discipline::Dominate,
-	// 						Discipline::Resilience,
-	// 						Discipline::Auspex,
-	// 					]),
-	// 				)),
-	// 			)
-	// 			.with_attr_bonus(Attribute::Resolve),
-	// 		)
-	// 		.with_info(CharacterInfo {
-	// 			name: String::from("Darren Webb"),
-	// 			player: String::from("m00n"),
-	// 			chronicle: String::from("Night Trains"),
-	// 			virtue_anchor: String::from("Scholar"),
-	// 			vice_anchor: String::from("Authoritarian"),
-	// 			concept: String::from("Occult Journalist/Mastermind"),
-	// 			..Default::default()
-	// 		})
-	// 		.with_attributes(Attributes {
-	// 			intelligence: 3,
-	// 			wits: 3,
-	// 			resolve: 2,
-	// 			strength: 1,
-	// 			dexterity: 3,
-	// 			stamina: 2,
-	// 			presence: 3,
-	// 			manipulation: 2,
-	// 			composure: 3,
-	// 		})
-	// 		.with_skills(Skills {
-	// 			investigation: 2,
-	// 			occult: 3,
-	// 			politics: 2,
-	// 			larceny: 3,
-	// 			stealth: 1,
-	// 			animal_ken: 1,
-	// 			expression: 3,
-	// 			intimidation: 1,
-	// 			streetwise: 2,
-	// 			subterfuge: 4,
-	// 			..Default::default()
-	// 		})
-	// 		.with_specialties(Skill::Larceny, vec![String::from("Sleight of Hand")])
-	// 		.with_specialties(Skill::Streetwise, vec![String::from("Rumours")])
-	// 		.with_specialties(Skill::Subterfuge, vec![String::from("Detecting Lies")])
-	// 		.with_abilities([
-	// 			(Discipline::Animalism.into(), 1),
-	// 			(Discipline::Dominate.into(), 2),
-	// 			(
-	// 				Discipline::Custom("Coil of the Voivode".to_string()).into(),
-	// 				2,
-	// 			),
-	// 		])
-	// 		.with_merits([
-	// 			(Merit::Status("Ordo Dracul".to_string()), 1),
-	// 			(Merit::Status("City".to_string()), 1),
-	// 			(VampireMerit::CacophonySavvy.into(), 3),
-	// 			(Merit::FastTalking, 1),
-	// 			(
-	// 				Merit::ProfessionalTraining {
-	// 					profession: String::new(),
-	// 					skills: [Skill::Expression, Skill::Occult],
-	// 					skill: None,
-	// 				},
-	// 				2,
-	// 			),
-	// 			// AbilityVal(Ability::Merit(Merit::Contacts(String::new())), 2),
-	// 			(Merit::SafePlace(String::new()), 3),
-	// 			(Merit::Resources, 3),
-	// 			(VampireMerit::NestGuardian.into(), 1),
-	// 		])
-	// 		.build();
-	//
-	// 	// vampire_character.splat.vice_anchor();
-	//
-	// 	println!("{vampire_character:?}");
-	// 	// println!("{:?}", vampire_character.attributes());
-	//
-	// 	println!(
-	// 		"{}",
-	// 		ron::ser::to_string_pretty(&vampire_character, PrettyConfig::default()).unwrap()
-	// 	);
-	//
-	// 	// assert_eq!(vampire_character.max_health(), 7);
-	// 	// assert_eq!(vampire_character.attributes().strength, 1);
-	// 	// assert_eq!(vampire_character.max_fuel(), 10);
-	//
-	// 	let mut werewolf_character = Character::builder()
-	// 		.with_splat(
-	// 			Werewolf::new()
-	// 				.with_auspice(Auspice::Rahu)
-	// 				.with_tribe(Tribe::BloodTalons),
-	// 		)
-	// 		.with_info(CharacterInfo {
-	// 			name: String::from("Amos Gray"),
-	// 			player: String::from("m00n"),
-	// 			virtue_anchor: String::from("Destroyer"),
-	// 			vice_anchor: String::from("Lone Wolf"),
-	// 			..Default::default()
-	// 		})
-	// 		.with_attributes(Attributes {
-	// 			intelligence: 1,
-	// 			wits: 3,
-	// 			resolve: 2,
-	// 			strength: 3,
-	// 			dexterity: 2,
-	// 			stamina: 3,
-	// 			presence: 3,
-	// 			manipulation: 1,
-	// 			composure: 3,
-	// 		})
-	// 		.with_skills(Skills {
-	// 			investigation: 2,
-	// 			medicine: 2,
-	// 			athletics: 2,
-	// 			brawl: 4,
-	// 			stealth: 2,
-	// 			survival: 3,
-	// 			expression: 3,
-	// 			intimidation: 4,
-	// 			..Default::default()
-	// 		})
-	// 		.with_specialties(Skill::Brawl, vec![String::from("Claws")])
-	// 		.with_specialties(Skill::Stealth, vec![String::from("Stalking")])
-	// 		.with_specialties(Skill::Intimidation, vec![String::from("Direct Threats")])
-	// 		.with_abilities([(Renown::Glory.into(), 1), (Renown::Purity.into(), 3)])
-	// 		.with_merits([
-	// 			(Merit::Giant, 3),
-	// 			(Merit::TrainedObserver, 1),
-	// 			(Merit::DefensiveCombat(true, Some(Skill::Brawl)), 1),
-	// 			(WerewolfMerit::FavoredForm { form: Form::Gauru }.into(), 2),
-	// 			(WerewolfMerit::EfficientKiller.into(), 2),
-	// 			(Merit::RelentlessAssault, 2),
-	// 			(Merit::Language("First Tongue".to_owned()), 1),
-	// 			(WerewolfMerit::Totem.into(), 1),
-	// 		])
-	// 		.build();
-	//
-	// 	werewolf_character.power = 3;
-	//
-	// 	println!("{werewolf_character:?}");
-	//
-	// 	// assert_eq!(werewolf_character.max_fuel(), 12);
-	// 	// assert_eq!(werewolf_character.defense(), 6);
-	// 	// assert_eq!(werewolf_character.perception(), 7);
-	// 	// assert_eq!(werewolf_character.max_health(), 12);
-	//
-	// 	if let Splat::Werewolf(.., ww) = &mut werewolf_character.splat {
-	// 		ww.form = Form::Gauru;
-	// 	}
-	//
-	// 	// assert_eq!(werewolf_character.perception(), 7);
-	//
-	// 	let t = std::time::Instant::now();
-	// 	// werewolf_character.calc_mod_map();
-	// 	println!("{:?}", std::time::Instant::now().duration_since(t));
-	//
-	// 	// assert_eq!(werewolf_character.perception(), 9);
-	//
-	// 	let mut mage_character = Character::builder()
-	// 		.with_splat(Mage::new(Path::Mastigos).with_order(Order::Mysterium))
-	// 		.with_info(CharacterInfo {
-	// 			name: String::from("Polaris"),
-	// 			player: String::from("m00n"),
-	// 			virtue_anchor: String::from("Curious"),
-	// 			vice_anchor: String::from("Greedy"),
-	// 			concept: String::from("Astronomer"),
-	// 			..Default::default()
-	// 		})
-	// 		.with_attributes(Attributes {
-	// 			intelligence: 3,
-	// 			wits: 3,
-	// 			resolve: 5,
-	// 			strength: 2,
-	// 			dexterity: 3,
-	// 			stamina: 2,
-	// 			presence: 1,
-	// 			manipulation: 2,
-	// 			composure: 3,
-	// 		})
-	// 		.with_skills(Skills {
-	// 			academics: 2,
-	// 			computer: 1,
-	// 			crafts: 1,
-	// 			investigation: 3,
-	// 			occult: 3,
-	// 			science: 2,
-	//
-	// 			larceny: 2,
-	// 			stealth: 2,
-	//
-	// 			animal_ken: 1,
-	// 			empathy: 2,
-	// 			expression: 1,
-	// 			subterfuge: 3,
-	// 			..Default::default()
-	// 		})
-	// 		.with_specialties(Skill::Academics, vec![String::from("Research")])
-	// 		.with_specialties(Skill::AnimalKen, vec![String::from("Felines")])
-	// 		.with_specialties(Skill::Subterfuge, vec![String::from("Detecting Lies")])
-	// 		// TODO: Professional Training specialties
-	// 		.with_specialties(Skill::Investigation, vec![String::from("Riddles")])
-	// 		.with_specialties(Skill::Science, vec![String::from("Astronomy")])
-	// 		.with_abilities([
-	// 			(Arcanum::Mind.into(), 1),
-	// 			(Arcanum::Prime.into(), 2),
-	// 			(Arcanum::Space.into(), 3),
-	// 		])
-	// 		.with_merits([
-	// 			(Merit::Status("Mysterium".to_string()), 1),
-	// 			(MageMerit::HighSpeech.into(), 1),
-	// 			(
-	// 				Merit::ProfessionalTraining {
-	// 					profession: "e".to_owned(),
-	// 					skills: [Skill::Investigation, Skill::Science],
-	// 					skill: None,
-	// 				},
-	// 				3,
-	// 			),
-	// 			(Merit::TrainedObserver, 1),
-	// 			//
-	// 			//
-	// 		])
-	// 		.build();
-	//
-	// 	// mage_character.calc_mod_map();
-	//
-	// 	if let Splat::Mage(.., data) = &mut mage_character.splat {
-	// 		data.set_attr_bonus(Attribute::Resolve);
-	// 	}
-	//
-	// 	// mage_character.calc_mod_map();
-	// 	//
-	// 	// assert_ne!(mage_character.attributes().resolve, 6);
-	// 	//
-	// 	// mage_character.base_attributes_mut().resolve = 4;
-	// 	// assert_eq!(mage_character.attributes().resolve, 5);
-	// }
 }

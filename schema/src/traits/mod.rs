@@ -18,7 +18,8 @@ pub enum TraitCategory {
 }
 
 impl TraitCategory {
-	#[must_use] pub fn unskilled(&self) -> u8 {
+	#[must_use]
+	pub fn unskilled(&self) -> u8 {
 		match self {
 			TraitCategory::Mental => 3,
 			TraitCategory::Physical | TraitCategory::Social => 1,
@@ -49,8 +50,6 @@ pub enum DerivedTrait {
 	Perception,
 	Health,
 	Willpower,
-
-	Size,
 }
 
 #[derive(
@@ -73,6 +72,7 @@ pub enum Trait {
 
 	DerivedTrait(DerivedTrait),
 
+	Size,
 	SupernaturalTolerance(SupernaturalTolerance),
 }
 
@@ -95,6 +95,7 @@ impl AsRef<str> for Trait {
 			Trait::Skill(skill) => skill.as_ref(),
 			Trait::DerivedTrait(dt) => dt.as_ref(),
 			Trait::SupernaturalTolerance(st) => st.as_ref(),
+			Trait::Size => "Size",
 		}
 	}
 }
