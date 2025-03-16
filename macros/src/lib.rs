@@ -1,14 +1,11 @@
 #![feature(let_chains)]
 use std::{env, fs, fs::File, path::Path};
 
-use cofd_schema::{
-	book::Book,
-	item::gift::GiftKind,
-};
+use cofd_schema::{book::Book, item::gift::GiftKind};
 use convert_case::Casing;
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
-use syn::Error;
+use syn::{Error, ItemEnum, parse_macro_input};
 
 macro_rules! derive_error {
 	($string: tt) => {
@@ -171,4 +168,35 @@ pub fn merits(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 	let expanded = quote! {};
 
 	proc_macro::TokenStream::from(expanded)
+}
+
+/// Procedural macro to extend enums
+#[proc_macro_attribute]
+pub fn extend_enum(
+	args: proc_macro::TokenStream,
+	item: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+	// Ensure we get the base enum name from the attribute
+	let base_enum_name = parse_macro_input!(args as Ident);
+
+	// Parse the input enum definition (ExtendedEnum)
+	let item = parse_macro_input!(item as ItemEnum);
+	let extended_enum_name = &item.ident;
+	let extra_variants = item.variants;
+
+	// Derive the necessary traits using derive_more
+	// let derived_traits = quote! {
+	// 	#[derive(Debug, Clone, Copy, PartialEq, Eq, From, Into, Display)]
+	// };
+
+	// Build the final output with extra variants and base enum replication
+	let output = quote! {
+		#[derive(derive_more::Debug, derive_more::From, derive_more::TryInto)]
+		enum #extended_enum_name {
+			Base(#base_enum_name),
+			#extra_variants
+		}
+	};
+
+	output.into()
 }

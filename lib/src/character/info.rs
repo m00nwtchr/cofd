@@ -135,6 +135,6 @@ pub struct Weapon {
 	pub dice_pool: String,
 	pub damage: String,
 	pub range: String,
-	pub initiative: i16,
-	pub size: u16,
+	pub initiative: i8,
+	pub size: u8,
 }

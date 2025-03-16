@@ -32,7 +32,8 @@ pub enum Arcanum {
 }
 
 impl Arcanum {
-	#[must_use] pub fn all() -> &'static [Self] {
+	#[must_use]
+	pub fn all() -> &'static [Self] {
 		Self::VARIANTS
 	}
 }
@@ -67,34 +68,28 @@ pub enum Path {
 	Moros,
 	Obrimos,
 	Thyrsus,
-	_Custom {
-		name: String,
-		ruling_arcana: [Arcanum; 2],
-		inferior_arcanum: Arcanum,
-	},
 }
 
 impl Path {
-	fn get_ruling_arcana(&self) -> &[Arcanum; 2] {
+	#[must_use]
+	pub fn ruling_arcana(&self) -> [Arcanum; 2] {
 		match self {
-			Path::Acanthus => &[Arcanum::Time, Arcanum::Fate],
-			Path::Mastigos => &[Arcanum::Space, Arcanum::Mind],
-			Path::Moros => &[Arcanum::Matter, Arcanum::Death],
-			Path::Obrimos => &[Arcanum::Forces, Arcanum::Prime],
-			Path::Thyrsus => &[Arcanum::Life, Arcanum::Spirit],
-			Path::_Custom { ruling_arcana, .. } => ruling_arcana,
+			Path::Acanthus => [Arcanum::Time, Arcanum::Fate],
+			Path::Mastigos => [Arcanum::Space, Arcanum::Mind],
+			Path::Moros => [Arcanum::Matter, Arcanum::Death],
+			Path::Obrimos => [Arcanum::Forces, Arcanum::Prime],
+			Path::Thyrsus => [Arcanum::Life, Arcanum::Spirit],
 		}
 	}
-	fn get_inferior_arcanum(&self) -> &Arcanum {
+
+	#[must_use]
+	pub fn inferior_arcanum(&self) -> Arcanum {
 		match self {
-			Path::Acanthus => &Arcanum::Forces,
-			Path::Mastigos => &Arcanum::Matter,
-			Path::Moros => &Arcanum::Spirit,
-			Path::Obrimos => &Arcanum::Death,
-			Path::Thyrsus => &Arcanum::Mind,
-			Path::_Custom {
-				inferior_arcanum, ..
-			} => inferior_arcanum,
+			Path::Acanthus => Arcanum::Forces,
+			Path::Mastigos => Arcanum::Matter,
+			Path::Moros => Arcanum::Spirit,
+			Path::Obrimos => Arcanum::Death,
+			Path::Thyrsus => Arcanum::Mind,
 		}
 	}
 }
@@ -108,7 +103,7 @@ pub enum Order {
 	FreeCouncil,
 	// #[expand]
 	SeersOfTheThrone(Option<Ministry>),
-	_Custom {
+	Custom {
 		name: String,
 		rote_skills: [Skill; 3],
 	},
@@ -120,7 +115,7 @@ pub enum Ministry {
 	Panopticon,
 	Paternoster,
 	Praetorian,
-	_Custom {
+	Custom {
 		name: String,
 		rote_skills: [Skill; 3],
 	},
@@ -145,11 +140,11 @@ impl Order {
 					Ministry::Praetorian => {
 						&[Skill::Athletics, Skill::Larceny, Skill::Intimidation]
 					}
-					Ministry::_Custom { rote_skills, .. } => rote_skills,
+					Ministry::Custom { rote_skills, .. } => rote_skills,
 				},
 				None => &[Skill::Investigation, Skill::Occult, Skill::Persuasion],
 			},
-			Order::_Custom { rote_skills, .. } => rote_skills,
+			Order::Custom { rote_skills, .. } => rote_skills,
 		}
 	}
 }
@@ -162,6 +157,15 @@ impl From<Ministry> for Order {
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Legacy {
-	name: String,
-	ruling_arcanum: Arcanum,
+	pub name: String,
+	pub ruling_arcanum: Arcanum,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct Rote {
+	pub arcanum: Arcanum,
+	pub level: u16,
+	pub spell: String,
+	pub creator: String,
+	pub skill: Skill,
 }

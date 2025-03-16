@@ -1,9 +1,17 @@
 pub use cofd_schema::template::mage::Arcanum;
+use cofd_schema::template::{
+	Template,
+	mage::{Legacy, Order, Rote},
+};
 use cofd_util::{AllVariants, VariantName};
+use derive_more::{From, TryInto};
 use serde::{Deserialize, Serialize};
 
-use super::{Merit, Splat, SplatTrait, XSplat, YSplat, ZSplat, ability::Ability};
-use crate::prelude::{Attribute, Character, Skill};
+use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat, ability::Ability};
+use crate::{
+	prelude::{Attribute, Character, Skill},
+	splat::ability::AbilityTrait,
+};
 
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize, Debug)]
 #[serde(default)]
@@ -18,6 +26,7 @@ pub struct Mage {
 }
 
 impl Mage {
+	#[must_use]
 	pub fn new(path: Path) -> Self {
 		Self {
 			path,
@@ -55,8 +64,9 @@ impl Mage {
 		self
 	}
 
-	pub fn attr_bonus(&self) -> &Attribute {
-		&self.free_resistance_dot
+	#[must_use]
+	pub fn attr_bonus(&self) -> Attribute {
+		self.free_resistance_dot
 	}
 
 	pub fn set_attr_bonus(&mut self, attribute: Attribute) {
@@ -70,6 +80,10 @@ impl Mage {
 }
 
 impl SplatTrait for Mage {
+	fn template(&self) -> Template {
+		Template::Mage
+	}
+
 	fn set_xsplat(&mut self, splat: Option<XSplat>) {
 		if let Some(XSplat::Path(path)) = splat {
 			self.path = path;
@@ -103,27 +117,48 @@ impl SplatTrait for Mage {
 	}
 
 	fn xsplats(&self) -> Vec<XSplat> {
-		Path::all().into_iter().map(Into::into).collect()
+		// Path::all().into_iter().map(Into::into).collect()
+		todo!()
 	}
 
 	fn ysplats(&self) -> Vec<YSplat> {
-		Order::all().into_iter().map(Into::into).collect()
+		// Order::all().into_iter().map(Into::into).collect()
+		todo!()
 	}
 
 	fn zsplats(&self) -> Vec<ZSplat> {
-		Legacy::all().into_iter().map(Into::into).collect()
+		Vec::default()
 	}
 
 	fn custom_xsplat(&self, name: String) -> Option<XSplat> {
-		Some(Path::Custom(name, [Arcanum::Death, Arcanum::Fate], Arcanum::Forces).into())
+		Some(
+			Path::Custom {
+				name,
+				ruling_arcana: [Arcanum::Death, Arcanum::Fate],
+				inferior_arcanum: Arcanum::Forces,
+			}
+			.into(),
+		)
 	}
 
 	fn custom_ysplat(&self, name: String) -> Option<YSplat> {
-		Some(Order::Custom(name, [Skill::Academics, Skill::AnimalKen, Skill::Athletics]).into())
+		Some(
+			Order::Custom {
+				name,
+				rote_skills: [Skill::Academics, Skill::AnimalKen, Skill::Athletics],
+			}
+			.into(),
+		)
 	}
 
 	fn custom_zsplat(&self, name: String) -> Option<ZSplat> {
-		Some(Legacy::Custom(name, None).into())
+		Some(
+			Legacy {
+				name,
+				ruling_arcanum: Arcanum::Forces,
+			}
+			.into(),
+		)
 	}
 
 	fn all_abilities(&self) -> Option<Vec<Ability>> {
@@ -142,7 +177,7 @@ impl SplatTrait for Mage {
 impl Default for Mage {
 	fn default() -> Self {
 		Self {
-			path: Path::default(),
+			path: Path::Base(cofd_schema::template::mage::Path::Acanthus),
 			order: None,
 			legacy: None,
 
@@ -153,104 +188,35 @@ impl Default for Mage {
 	}
 }
 
-#[derive(
-	Clone, Serialize, Deserialize, Debug, PartialEq, Eq, VariantName, AllVariants, Default,
-)]
+impl AbilityTrait for Arcanum {}
+
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, From, TryInto)]
 pub enum Path {
-	#[default]
-	Acanthus,
-	Mastigos,
-	Moros,
-	Obrimos,
-	Thyrsus,
-	Custom(String, [Arcanum; 2], Arcanum),
+	Base(cofd_schema::template::mage::Path),
+	Custom {
+		name: String,
+		ruling_arcana: [Arcanum; 2],
+		inferior_arcanum: Arcanum,
+	},
 }
 
 impl Path {
-	fn get_ruling_arcana(&self) -> &[Arcanum; 2] {
+	#[must_use]
+	pub fn ruling_arcana(&self) -> [Arcanum; 2] {
 		match self {
-			Path::Acanthus => &[Arcanum::Time, Arcanum::Fate],
-			Path::Mastigos => &[Arcanum::Space, Arcanum::Mind],
-			Path::Moros => &[Arcanum::Matter, Arcanum::Death],
-			Path::Obrimos => &[Arcanum::Forces, Arcanum::Prime],
-			Path::Thyrsus => &[Arcanum::Life, Arcanum::Spirit],
-			Path::Custom(_, ruling, _) => ruling,
+			Self::Base(p) => p.ruling_arcana(),
+			Self::Custom { ruling_arcana, .. } => *ruling_arcana,
 		}
 	}
-	fn get_inferior_arcanum(&self) -> &Arcanum {
+
+	#[must_use]
+	pub fn inferior_arcanum(&self) -> Arcanum {
 		match self {
-			Path::Acanthus => &Arcanum::Forces,
-			Path::Mastigos => &Arcanum::Matter,
-			Path::Moros => &Arcanum::Spirit,
-			Path::Obrimos => &Arcanum::Death,
-			Path::Thyrsus => &Arcanum::Mind,
-			Path::Custom(_, _, inferior) => inferior,
+			Self::Base(p) => p.inferior_arcanum(),
+			Self::Custom {
+				inferior_arcanum, ..
+			} => *inferior_arcanum,
 		}
-	}
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, AllVariants, VariantName)]
-pub enum Order {
-	AdamantineArrow,
-	GuardiansOfTheVeil,
-	Mysterium,
-	SilverLadder,
-	FreeCouncil,
-	#[expand]
-	SeersOfTheThrone(Option<Ministry>),
-	Custom(String, [Skill; 3]),
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, AllVariants, VariantName)]
-pub enum Ministry {
-	Hegemony,
-	Panopticon,
-	Paternoster,
-	Praetorian,
-	Custom(String, [Skill; 3]),
-}
-
-impl Order {
-	pub fn get_rote_skills(&self) -> &[Skill; 3] {
-		match self {
-			Order::AdamantineArrow => &[Skill::Athletics, Skill::Intimidation, Skill::Medicine],
-			Order::GuardiansOfTheVeil => &[Skill::Investigation, Skill::Stealth, Skill::Subterfuge],
-			Order::Mysterium => &[Skill::Investigation, Skill::Occult, Skill::Survival],
-			Order::SilverLadder => &[Skill::Expression, Skill::Persuasion, Skill::Subterfuge],
-			Order::FreeCouncil => &[Skill::Crafts, Skill::Persuasion, Skill::Science],
-			Order::SeersOfTheThrone(ministry) => match ministry {
-				Some(ministry) => match ministry {
-					Ministry::Hegemony => &[Skill::Politics, Skill::Persuasion, Skill::Empathy],
-					Ministry::Panopticon => {
-						&[Skill::Investigation, Skill::Stealth, Skill::Subterfuge]
-					}
-					Ministry::Paternoster => &[Skill::Academics, Skill::Occult, Skill::Expression],
-					Ministry::Praetorian => {
-						&[Skill::Athletics, Skill::Larceny, Skill::Intimidation]
-					}
-					Ministry::Custom(_, skills) => skills,
-				},
-				None => &[Skill::Investigation, Skill::Occult, Skill::Persuasion],
-			},
-			Order::Custom(_, skills) => skills,
-		}
-	}
-}
-
-impl From<Ministry> for Order {
-	fn from(ministry: Ministry) -> Self {
-		Order::SeersOfTheThrone(Some(ministry))
-	}
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, AllVariants, VariantName)]
-pub enum Legacy {
-	Custom(String, Option<Arcanum>),
-}
-
-impl From<Arcanum> for Ability {
-	fn from(val: Arcanum) -> Self {
-		Ability::Arcanum(val)
 	}
 }
 
@@ -260,22 +226,8 @@ pub enum MageMerit {
 }
 
 impl MageMerit {
-	pub fn is_available(&self, character: &Character) -> bool {
-		matches!(character.splat, Splat::Mage(..))
+	#[must_use]
+	pub fn is_available(&self, character: &Character<Mage>) -> bool {
+		true
 	}
-}
-
-impl From<MageMerit> for Merit {
-	fn from(merit: MageMerit) -> Self {
-		Merit::Mage(merit)
-	}
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct Rote {
-	pub arcanum: Arcanum,
-	pub level: u16,
-	pub spell: String,
-	pub creator: String,
-	pub skill: Skill,
 }

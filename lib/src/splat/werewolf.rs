@@ -1,12 +1,24 @@
 use std::collections::HashMap;
 
-use cofd_schema::traits::Trait;
+use cofd_schema::{
+	template::{
+		SupernaturalTolerance,
+		werewolf::{Form, HuntersAspect::Monstrous, Lodge, Renown},
+	},
+	traits::{DerivedTrait, Trait},
+};
 use cofd_util::VariantName;
+use derive_more::{From, TryInto};
 use serde::{Deserialize, Serialize};
-use systema::prelude::{Actor, AttributeMap, AttributeModifier, Operation, Value};
+use systema::prelude::{Actor, AttributeModifier, Value};
 
-use super::{Merit, NameKey, Splat, SplatTrait, XSplat, YSplat, ZSplat, ability::Ability};
-use crate::{CofDSystem, Modifier, prelude::*};
+use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat, ability::Ability};
+use crate::{
+	COp, CofDSystem, Modifier,
+	prelude::*,
+	splat::ability::{AbilityTrait, CModifier},
+	traits::NameKey,
+};
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default)]
@@ -26,29 +38,47 @@ pub struct Werewolf {
 	pub rites: Vec<Rite>,
 }
 
+pub trait WerewolfExt: Actor<System = CofDSystem> {
+	fn form(&self) -> &Form;
+
+	fn set_form(&mut self, form: Form);
+}
+
+impl WerewolfExt for Character<Werewolf> {
+	fn form(&self) -> &Form {
+		&self.splat.form
+	}
+
+	fn set_form(&mut self, form: Form) {
+		let old_form = self.splat.form;
+
+		self.attributes_mut()
+			.remove_modifiers(&Modifier::Form(old_form));
+
+		self.splat.form = form;
+		let mods: &[(Trait, AttributeModifier<Trait, u8, crate::COp>)] = get_modifiers(form);
+		for (t, m) in mods {
+			self.attributes_mut()
+				.add_modifier(t, Modifier::Form(form), m.clone());
+		}
+	}
+}
+
 impl Werewolf {
+	#[must_use]
 	pub fn new() -> Self {
 		Werewolf::default()
 	}
 
-	pub fn set_form(&mut self, form: Form, attributes: &mut AttributeMap<CofDSystem>) {
-		attributes.remove_modifiers(&Modifier::Form(self.form));
-		self.form = form;
-
-		for (t, m) in self.form.get_modifiers() {
-			attributes.add_modifier(t, Modifier::Form(self.form.clone()), m);
-		}
-	}
-
 	#[must_use]
-	pub fn with_auspice(mut self, auspice: Auspice) -> Self {
-		self.auspice = Some(auspice);
+	pub fn with_auspice<I: Into<Auspice>>(mut self, auspice: I) -> Self {
+		self.auspice = Some(auspice.into());
 		self
 	}
 
 	#[must_use]
-	pub fn with_tribe(mut self, tribe: Tribe) -> Self {
-		self.tribe = Some(tribe);
+	pub fn with_tribe<I: Into<Tribe>>(mut self, tribe: I) -> Self {
+		self.tribe = Some(tribe.into());
 		self
 	}
 
@@ -64,6 +94,7 @@ impl Werewolf {
 		self
 	}
 
+	#[must_use]
 	pub fn skill_bonus(&self) -> Option<&Skill> {
 		if self.auspice.is_some() {
 			self.skill_bonus.as_ref()
@@ -82,6 +113,10 @@ impl Werewolf {
 }
 
 impl SplatTrait for Werewolf {
+	fn template(&self) -> Template {
+		Template::Werewolf
+	}
+
 	fn set_xsplat(&mut self, splat: Option<XSplat>) {
 		match splat {
 			Some(XSplat::Auspice(auspice)) => self.auspice = Some(auspice),
@@ -116,48 +151,51 @@ impl SplatTrait for Werewolf {
 	}
 
 	fn xsplats(&self) -> Vec<XSplat> {
-		Auspice::all().into_iter().map(Into::into).collect()
+		// Auspice::all().into_iter().map(Into::into).collect()
+		todo!()
 	}
 
 	fn ysplats(&self) -> Vec<YSplat> {
-		Tribe::all().into_iter().map(Into::into).collect()
+		// Tribe::all().into_iter().map(Into::into).collect()
+		todo!()
 	}
 
 	fn zsplats(&self) -> Vec<ZSplat> {
-		Lodge::all().into_iter().map(Into::into).collect()
+		// Lodge::all().into_iter().map(Into::into).collect()
+		todo!()
 	}
 
 	fn custom_xsplat(&self, name: String) -> Option<XSplat> {
 		Some(
-			Auspice::Custom(
+			Auspice::Custom(CustomAuspice {
 				name,
-				[Skill::Academics, Skill::AnimalKen, Skill::Athletics],
-				Renown::Cunning,
-				MoonGift::Custom(String::from("Custom")),
-				Box::new([ShadowGift::Death, ShadowGift::Dominance]),
-				HuntersAspect::Monstrous,
-			)
+				skills: [Skill::Academics, Skill::AnimalKen, Skill::Athletics],
+				renown: Renown::Cunning,
+				moon_gift: MoonGift::Custom(String::from("Custom")),
+				affinity_gifts: Box::new([ShadowGift::Death, ShadowGift::Dominance]),
+				hunters_aspect: HuntersAspect::Base(Monstrous),
+			})
 			.into(),
 		)
 	}
 
 	fn custom_ysplat(&self, name: String) -> Option<YSplat> {
 		Some(
-			Tribe::Custom(
+			Tribe::Forsaken(ForsakenTribe::Custom {
 				name,
-				Renown::Cunning,
-				Box::new([
+				renown: Renown::Cunning,
+				affinity_gifts: Box::new([
 					ShadowGift::Death,
 					ShadowGift::Dominance,
 					ShadowGift::Elementals,
 				]),
-			)
+			})
 			.into(),
 		)
 	}
 
 	fn custom_zsplat(&self, name: String) -> Option<ZSplat> {
-		Some(Lodge::Custom(name).into())
+		Some(Lodge { name }.into())
 	}
 
 	fn all_abilities(&self) -> Option<Vec<Ability>> {
@@ -169,30 +207,11 @@ impl SplatTrait for Werewolf {
 	}
 }
 
-impl From<Werewolf> for Splat {
-	fn from(werewolf: Werewolf) -> Self {
-		Self::Werewolf(Box::new(werewolf))
-	}
-}
-
 #[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct KuruthTriggerSet {
 	pub passive: String,
 	pub common: String,
 	pub specific: String,
-}
-
-#[derive(Clone, VariantName)]
-pub enum KuruthTrigger {
-	Passive,
-	Common,
-	Specific,
-}
-
-impl KuruthTrigger {
-	pub fn all(&self) -> [KuruthTrigger; 3] {
-		[Self::Passive, Self::Common, Self::Specific]
-	}
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, AllVariants)]
@@ -208,11 +227,12 @@ pub enum KuruthTriggers {
 
 impl Default for KuruthTriggers {
 	fn default() -> Self {
-		Self::Custom(Default::default())
+		Self::Custom(KuruthTriggerSet::default())
 	}
 }
 
 impl KuruthTriggers {
+	#[must_use]
 	pub fn name(&self) -> Option<&str> {
 		match self {
 			KuruthTriggers::Blood => Some("blood-trigger"),
@@ -225,6 +245,7 @@ impl KuruthTriggers {
 		}
 	}
 
+	#[must_use]
 	pub fn get_triggers(&self) -> KuruthTriggerSet {
 		match self {
 			KuruthTriggers::Blood => KuruthTriggerSet {
@@ -267,254 +288,246 @@ impl KuruthTriggers {
 	}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, VariantName)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, From, TryInto)]
 pub enum HuntersAspect {
-	Monstrous,
-	Isolating,
-	Blissful,
-	Mystic,
-	Dominant,
-
-	Fanatical,
-	Frenzied,
-	Agnoized,
-	Insidious,
-	Implacable,
-	Primal,
-
+	Base(cofd_schema::template::werewolf::HuntersAspect),
 	Custom(String),
 }
 
-impl NameKey for HuntersAspect {
-	fn name_key(&self) -> String {
-		format!("werewolf.{}", self.name())
-	}
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
+pub struct CustomAuspice {
+	pub name: String,
+	pub skills: [Skill; 3],
+	pub renown: Renown,
+	pub moon_gift: MoonGift,
+	pub affinity_gifts: Box<[ShadowGift; 2]>,
+	pub hunters_aspect: HuntersAspect,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, VariantName, AllVariants)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, From, TryInto)]
 pub enum Auspice {
-	Cahalith,
-	Elodoth,
-	Irraka,
-	Ithaeur,
-	Rahu,
-	Custom(
-		String,
-		[Skill; 3],
-		Renown,
-		MoonGift,
-		Box<[ShadowGift; 2]>,
-		HuntersAspect,
-	),
+	Base(cofd_schema::template::werewolf::Auspice),
+	Custom(CustomAuspice),
 }
 
 impl Auspice {
-	pub fn skills(&self) -> &[Skill; 3] {
+	#[must_use]
+	pub fn skills(&self) -> [Skill; 3] {
 		match self {
-			Auspice::Cahalith => &[Skill::Crafts, Skill::Expression, Skill::Persuasion],
-			Auspice::Elodoth => &[Skill::Empathy, Skill::Investigation, Skill::Politics],
-			Auspice::Irraka => &[Skill::Larceny, Skill::Stealth, Skill::Subterfuge],
-			Auspice::Ithaeur => &[Skill::AnimalKen, Skill::Medicine, Skill::Occult],
-			Auspice::Rahu => &[Skill::Brawl, Skill::Intimidation, Skill::Survival],
-			Auspice::Custom(_, skills, ..) => skills,
+			Auspice::Base(b) => b.skills(),
+			Auspice::Custom(CustomAuspice { skills, .. }) => *skills,
 		}
 	}
 
-	pub fn get_renown(&self) -> &Renown {
+	#[must_use]
+	pub fn renown(&self) -> Renown {
 		match self {
-			Auspice::Cahalith => &Renown::Glory,
-			Auspice::Elodoth => &Renown::Honor,
-			Auspice::Irraka => &Renown::Cunning,
-			Auspice::Ithaeur => &Renown::Wisdom,
-			Auspice::Rahu => &Renown::Purity,
-			Auspice::Custom(_, _, renown, ..) => renown,
+			Auspice::Base(b) => b.renown(),
+			Auspice::Custom(CustomAuspice { renown, .. }) => *renown,
 		}
 	}
 
-	pub fn get_gifts(&self) -> &[ShadowGift; 2] {
+	#[must_use]
+	pub fn gifts(&self) -> [ShadowGift; 2] {
 		match self {
-			Auspice::Cahalith => &[ShadowGift::Inspiration, ShadowGift::Knowledge],
-			Auspice::Elodoth => &[ShadowGift::Insight, ShadowGift::Warding],
-			Auspice::Irraka => &[ShadowGift::Evasion, ShadowGift::Stealth],
-			Auspice::Ithaeur => &[ShadowGift::Elementals, ShadowGift::Shaping],
-			Auspice::Rahu => &[ShadowGift::Dominance, ShadowGift::Strength],
-			Auspice::Custom(.., gifts, _) => gifts,
+			Self::Base(b) => match b {
+				cofd_schema::template::werewolf::Auspice::Cahalith => {
+					[ShadowGift::Inspiration, ShadowGift::Knowledge]
+				}
+				cofd_schema::template::werewolf::Auspice::Elodoth => {
+					[ShadowGift::Insight, ShadowGift::Warding]
+				}
+				cofd_schema::template::werewolf::Auspice::Irraka => {
+					[ShadowGift::Evasion, ShadowGift::Stealth]
+				}
+				cofd_schema::template::werewolf::Auspice::Ithaeur => {
+					[ShadowGift::Elementals, ShadowGift::Shaping]
+				}
+				cofd_schema::template::werewolf::Auspice::Rahu => {
+					[ShadowGift::Dominance, ShadowGift::Strength]
+				}
+			},
+			Self::Custom(CustomAuspice { affinity_gifts, .. }) => affinity_gifts.as_ref().clone(),
 		}
 	}
 
-	pub fn get_moon_gift(&self) -> &MoonGift {
+	#[must_use]
+	pub fn moon_gift(&self) -> MoonGift {
 		match self {
-			Auspice::Cahalith => &MoonGift::Gibbous,
-			Auspice::Elodoth => &MoonGift::Half,
-			Auspice::Irraka => &MoonGift::New,
-			Auspice::Ithaeur => &MoonGift::Crescent,
-			Auspice::Rahu => &MoonGift::Full,
-			Auspice::Custom(.., moon_gift, _, _) => moon_gift,
+			Self::Base(b) => match b {
+				cofd_schema::template::werewolf::Auspice::Cahalith => MoonGift::Gibbous,
+				cofd_schema::template::werewolf::Auspice::Elodoth => MoonGift::Half,
+				cofd_schema::template::werewolf::Auspice::Irraka => MoonGift::New,
+				cofd_schema::template::werewolf::Auspice::Ithaeur => MoonGift::Crescent,
+				cofd_schema::template::werewolf::Auspice::Rahu => MoonGift::Full,
+			},
+			Self::Custom(CustomAuspice { moon_gift, .. }) => moon_gift.clone(),
 		}
 	}
 
-	pub fn get_hunters_aspect(&self) -> &HuntersAspect {
+	#[must_use]
+	pub fn hunters_aspect(&self) -> HuntersAspect {
 		match self {
-			Auspice::Cahalith => &HuntersAspect::Monstrous,
-			Auspice::Elodoth => &HuntersAspect::Isolating,
-			Auspice::Irraka => &HuntersAspect::Blissful,
-			Auspice::Ithaeur => &HuntersAspect::Mystic,
-			Auspice::Rahu => &HuntersAspect::Dominant,
-			Auspice::Custom(.., aspect) => aspect,
+			Auspice::Base(b) => HuntersAspect::from(b.hunters_aspect()),
+			Auspice::Custom(CustomAuspice { hunters_aspect, .. }) => hunters_aspect.clone(),
 		}
 	}
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, VariantName, AllVariants)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, From, TryInto)]
+pub enum ForsakenTribe {
+	Base(cofd_schema::template::werewolf::ForsakenTribe),
+	Custom {
+		name: String,
+		renown: Renown,
+		affinity_gifts: Box<[ShadowGift; 3]>,
+	},
+}
+
+impl ForsakenTribe {
+	#[must_use]
+	pub fn gifts(&self) -> [ShadowGift; 3] {
+		match self {
+			Self::Base(t) => match t {
+				cofd_schema::template::werewolf::ForsakenTribe::BloodTalons => [
+					ShadowGift::Inspiration,
+					ShadowGift::Rage,
+					ShadowGift::Strength,
+				],
+				cofd_schema::template::werewolf::ForsakenTribe::BoneShadows => [
+					ShadowGift::Death,
+					ShadowGift::Elementals,
+					ShadowGift::Insight,
+				],
+				cofd_schema::template::werewolf::ForsakenTribe::HuntersInDarkness => {
+					[ShadowGift::Nature, ShadowGift::Stealth, ShadowGift::Warding]
+				}
+				cofd_schema::template::werewolf::ForsakenTribe::IronMasters => [
+					ShadowGift::Knowledge,
+					ShadowGift::Shaping,
+					ShadowGift::Technology,
+				],
+				cofd_schema::template::werewolf::ForsakenTribe::StormLords => [
+					ShadowGift::Evasion,
+					ShadowGift::Dominance,
+					ShadowGift::Weather,
+				],
+			},
+			Self::Custom { affinity_gifts, .. } => affinity_gifts.as_ref().clone(),
+		}
+	}
+
+	#[must_use]
+	pub fn renown(&self) -> Renown {
+		match self {
+			Self::Base(b) => b.renown(),
+			Self::Custom { renown, .. } => *renown,
+		}
+	}
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, From, TryInto)]
 pub enum PureTribe {
-	FireTouched,
-	IvoryClaws,
-	PredatorKings,
-	Custom(
-		String,
-		Renown,
-		[Renown; 2],
-		[Skill; 3],
-		[HuntersAspect; 2],
-		Box<[ShadowGift; 4]>,
-	),
+	Base(cofd_schema::template::werewolf::PureTribe),
+	Custom {
+		name: String,
+		renown: Renown,
+		secondary_renown: [Renown; 2],
+		skills: [Skill; 3],
+		hunters_aspects: [HuntersAspect; 2],
+		affinity_gifts: Box<[ShadowGift; 4]>,
+	},
 }
 
 impl PureTribe {
-	pub fn get_secondary_renown(&self) -> &[Renown; 2] {
+	#[must_use]
+	pub fn renown(&self) -> Renown {
 		match self {
-			Self::FireTouched => &[Renown::Cunning, Renown::Glory],
-			Self::IvoryClaws => &[Renown::Glory, Renown::Honor],
-			Self::PredatorKings => &[Renown::Purity, Renown::Wisdom],
-			Self::Custom(_, _, renown, ..) => renown,
+			Self::Base(b) => b.renown(),
+			Self::Custom { renown, .. } => *renown,
 		}
 	}
 
-	pub fn get_skills(&self) -> &[Skill; 3] {
+	#[must_use]
+	pub fn secondary_renown(&self) -> [Renown; 2] {
 		match self {
-			Self::FireTouched => &[Skill::Expression, Skill::Occult, Skill::Subterfuge],
-			Self::IvoryClaws => &[Skill::Intimidation, Skill::Persuasion, Skill::Politics],
-			Self::PredatorKings => &[Skill::AnimalKen, Skill::Brawl, Skill::Crafts],
-			Self::Custom(.., skills, _, _) => skills,
+			Self::Base(b) => b.secondary_renown(),
+			Self::Custom {
+				secondary_renown, ..
+			} => *secondary_renown,
 		}
 	}
 
-	pub fn get_hunters_aspects(&self) -> &[HuntersAspect; 2] {
+	#[must_use]
+	pub fn skills(&self) -> [Skill; 3] {
 		match self {
-			Self::FireTouched => &[HuntersAspect::Fanatical, HuntersAspect::Frenzied],
-			Self::IvoryClaws => &[HuntersAspect::Agnoized, HuntersAspect::Insidious],
-			Self::PredatorKings => &[HuntersAspect::Implacable, HuntersAspect::Primal],
-			Self::Custom(.., aspects, _) => aspects,
-		}
-	}
-}
-
-impl From<PureTribe> for Tribe {
-	fn from(pure: PureTribe) -> Self {
-		Tribe::Pure(pure)
-	}
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, AllVariants, VariantName)]
-pub enum Tribe {
-	BloodTalons,
-	BoneShadows,
-	HuntersInDarkness,
-	IronMasters,
-	StormLords,
-	#[expand]
-	Pure(PureTribe),
-	Custom(String, Renown, Box<[ShadowGift; 3]>),
-}
-
-impl Tribe {
-	pub fn get_renown(&self) -> &Renown {
-		match self {
-			Self::BloodTalons => &Renown::Glory,
-			Self::BoneShadows => &Renown::Wisdom,
-			Self::HuntersInDarkness => &Renown::Purity,
-			Self::IronMasters => &Renown::Cunning,
-			Self::StormLords => &Renown::Honor,
-			// Tribe::GhostWolves => &None,
-			Self::Pure(tribe) => match tribe {
-				PureTribe::FireTouched => &Renown::Wisdom,
-				PureTribe::IvoryClaws => &Renown::Purity,
-				PureTribe::PredatorKings => &Renown::Glory,
-				PureTribe::Custom(_, renown, ..) => renown,
-			},
-			Self::Custom(_, renown, _) => renown,
+			Self::Base(b) => b.skills(),
+			Self::Custom { skills, .. } => *skills,
 		}
 	}
 
-	pub fn get_gifts(&self) -> Vec<ShadowGift> {
+	pub fn hunters_aspects(&self) -> [HuntersAspect; 2] {
 		match self {
-			Tribe::BloodTalons => vec![
-				ShadowGift::Inspiration,
-				ShadowGift::Rage,
-				ShadowGift::Strength,
-			],
-			Tribe::BoneShadows => vec![
-				ShadowGift::Death,
-				ShadowGift::Elementals,
-				ShadowGift::Insight,
-			],
-			Tribe::HuntersInDarkness => {
-				vec![ShadowGift::Nature, ShadowGift::Stealth, ShadowGift::Warding]
-			}
-			Tribe::IronMasters => vec![
-				ShadowGift::Knowledge,
-				ShadowGift::Shaping,
-				ShadowGift::Technology,
-			],
-			Tribe::StormLords => vec![
-				ShadowGift::Evasion,
-				ShadowGift::Dominance,
-				ShadowGift::Weather,
-			],
-			Tribe::Pure(tribe) => match tribe {
-				PureTribe::FireTouched => vec![
+			Self::Base(b) => b.hunters_aspects().map(HuntersAspect::Base),
+			Self::Custom {
+				hunters_aspects, ..
+			} => hunters_aspects.clone(),
+		}
+	}
+
+	#[must_use]
+	pub fn gifts(&self) -> [ShadowGift; 4] {
+		match self {
+			Self::Base(t) => match t {
+				cofd_schema::template::werewolf::PureTribe::FireTouched => [
 					ShadowGift::Disease,
 					ShadowGift::Fervor,
 					ShadowGift::Insight,
 					ShadowGift::Inspiration,
 				],
-				PureTribe::IvoryClaws => vec![
+				cofd_schema::template::werewolf::PureTribe::IvoryClaws => [
 					ShadowGift::Agony,
 					ShadowGift::Blood,
 					ShadowGift::Dominance,
 					ShadowGift::Warding,
 				],
-				PureTribe::PredatorKings => vec![
+				cofd_schema::template::werewolf::PureTribe::PredatorKings => [
 					ShadowGift::Hunger,
 					ShadowGift::Nature,
 					ShadowGift::Rage,
 					ShadowGift::Strength,
 				],
-				PureTribe::Custom(.., gifts) => gifts.to_vec(),
 			},
-			// Tribe::GhostWolves => &None,
-			Tribe::Custom(.., gifts) => gifts.to_vec(),
+			Self::Custom { affinity_gifts, .. } => affinity_gifts.as_ref().clone(),
 		}
 	}
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, AllVariants, VariantName)]
-pub enum Lodge {
-	Custom(String),
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, From, TryInto)]
+pub enum Tribe {
+	Forsaken(ForsakenTribe),
+	Pure(PureTribe),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, VariantName, AllVariants)]
-pub enum Renown {
-	Purity,
-	Glory,
-	Honor,
-	Wisdom,
-	Cunning,
+impl Tribe {
+	#[must_use]
+	pub fn gifts(&self) -> Box<[ShadowGift]> {
+		match self {
+			Self::Forsaken(f) => Box::from(f.gifts()),
+			Self::Pure(p) => Box::from(p.gifts()),
+		}
+	}
 }
 
-impl From<Renown> for Ability {
-	fn from(val: Renown) -> Self {
-		Ability::Renown(val)
+impl From<cofd_schema::template::werewolf::ForsakenTribe> for Tribe {
+	fn from(value: cofd_schema::template::werewolf::ForsakenTribe) -> Self {
+		Self::from(ForsakenTribe::from(value))
+	}
+}
+
+impl From<cofd_schema::template::werewolf::PureTribe> for Tribe {
+	fn from(value: cofd_schema::template::werewolf::PureTribe) -> Self {
+		Self::from(PureTribe::from(value))
 	}
 }
 
@@ -527,39 +540,55 @@ pub enum Gift {
 	Wolf(WolfGift),
 }
 
-impl MoonGift {
-	// pub fn get_modifiers(&self, value: u16) -> Vec<Modifier> {
-	// 	match self {
-	// 		// MoonGift::Crescent => vec![],
-	// 		MoonGift::Full => {
-	// 			if value > 2 {
-	// 				vec![Modifier::new(
-	// 					Trait::DerivedTrait(DerivedTrait::Health),
-	// 					Ability::Renown(Renown::Purity),
-	// 					ModifierOp::Add,
-	// 				)]
-	// 			} else {
-	// 				vec![]
-	// 			}
-	// 		}
-	// 		// MoonGift::Gibbous => vec![],
-	// 		// MoonGift::Half => vec![],
-	// 		// MoonGift::New => vec![],
-	// 		// MoonGift::_Custom(_) => todo!(),
-	// 		_ => vec![],
-	// 	}
-	// }
+// impl MoonGift {
+// pub fn get_modifiers(&self, value: u16) -> Vec<Modifier> {
+// 	match self {
+// 		// MoonGift::Crescent => vec![],
+// 		MoonGift::Full => {
+// 			if value > 2 {
+// 				vec![Modifier::new(
+// 					Trait::DerivedTrait(DerivedTrait::Health),
+// 					Ability::Renown(Renown::Purity),
+// 					ModifierOp::Add,
+// 				)]
+// 			} else {
+// 				vec![]
+// 			}
+// 		}
+// 		// MoonGift::Gibbous => vec![],
+// 		// MoonGift::Half => vec![],
+// 		// MoonGift::New => vec![],
+// 		// MoonGift::_Custom(_) => todo!(),
+// 		_ => vec![],
+// 	}
+// }
+// }
+
+impl AbilityTrait for MoonGift {
+	fn get_modifiers(&self) -> Box<[CModifier]> {
+		match self {
+			// MoonGift::Crescent => vec![],
+			MoonGift::Full => Box::new([(
+				Trait::DerivedTrait(DerivedTrait::Health),
+				AttributeModifier::new(
+					Value::Attribute(Trait::Size), //
+					COp::GreaterThan(2, Box::new(COp::Add)),
+				),
+			)]),
+			// MoonGift::Gibbous => vec![],
+			// MoonGift::Half => vec![],
+			// MoonGift::New => vec![],
+			// MoonGift::_Custom(_) => todo!(),
+			_ => Box::new([]),
+		}
+	}
 }
+
+impl AbilityTrait for Renown {}
 
 impl NameKey for MoonGift {
 	fn name_key(&self) -> String {
 		format!("moon-gifts.{}", self.name())
-	}
-}
-
-impl From<MoonGift> for Ability {
-	fn from(gift: MoonGift) -> Self {
-		Ability::MoonGift(gift)
 	}
 }
 
@@ -575,248 +604,85 @@ impl NameKey for WolfGift {
 	}
 }
 
-#[derive(
-	Clone,
-	Debug,
-	Serialize,
-	Deserialize,
-	Default,
-	PartialEq,
-	Eq,
-	PartialOrd,
-	Ord,
-	Copy,
-	Hash,
-	VariantName,
-	AllVariants,
-)]
-pub enum Form {
-	#[default]
-	Hishu,
-	Dalu,
-	Gauru,
-	Urshul,
-	Urhan,
-}
+type Modifiers<const N: usize> = [(Trait, AttributeModifier<Trait, u8, COp>); N];
 
-impl Form {
-	pub fn get_modifiers(&self) -> Box<[(Trait, AttributeModifier<Trait, u8>)]> {
-		match self {
-			Form::Hishu => Box::new([]),
-			Form::Dalu => Box::new([
-				(
-					Trait::Attribute(Attribute::Strength),
-					AttributeModifier::new(Value::Value(1), Operation::Add),
-				),
-				(
-					Trait::Attribute(Attribute::Stamina),
-					AttributeModifier::new(Value::Value(1), Operation::Add),
-				),
-				(
-					Trait::Size,
-					AttributeModifier::new(Value::Value(1), Operation::Add),
-				),
-			]),
-			Form::Gauru => Box::new([
-				(
-					Trait::Attribute(Attribute::Strength),
-					AttributeModifier::new(Value::Value(3), Operation::Add),
-				),
-				(
-					Trait::Attribute(Attribute::Dexterity),
-					AttributeModifier::new(Value::Value(1), Operation::Add),
-				),
-				(
-					Trait::Attribute(Attribute::Stamina),
-					AttributeModifier::new(Value::Value(2), Operation::Add),
-				),
-				(
-					Trait::Size,
-					AttributeModifier::new(Value::Value(2), Operation::Add),
-				),
-			]),
-			Form::Urhan => Box::new([
-				(
-					Trait::Attribute(Attribute::Dexterity),
-					AttributeModifier::new(Value::Value(2), Operation::Add),
-				),
-				(
-					Trait::Attribute(Attribute::Stamina),
-					AttributeModifier::new(Value::Value(1), Operation::Add),
-				),
-				(
-					Trait::Size,
-					AttributeModifier::new(Value::Value(1), Operation::Sub),
-				),
-			]),
-			Form::Urshul => Box::new([
-				(
-					Trait::Attribute(Attribute::Strength),
-					AttributeModifier::new(Value::Value(2), Operation::Add),
-				),
-				(
-					Trait::Attribute(Attribute::Dexterity),
-					AttributeModifier::new(Value::Value(2), Operation::Add),
-				),
-				(
-					Trait::Attribute(Attribute::Stamina),
-					AttributeModifier::new(Value::Value(2), Operation::Add),
-				),
-				(
-					Trait::Size,
-					AttributeModifier::new(Value::Value(1), Operation::Add),
-				),
-			]),
-		}
+#[must_use]
+pub fn get_modifiers(form: Form) -> &'static [(Trait, AttributeModifier<Trait, u8, COp>)] {
+	static HISHU: Modifiers<1> = [(
+		Trait::DerivedTrait(DerivedTrait::Perception),
+		AttributeModifier::new_const(Value::Value(1), COp::Add),
+	)];
+	static DALU: Modifiers<3> = [
+		(
+			Trait::Attribute(Attribute::Strength),
+			AttributeModifier::new_const(Value::Value(1), COp::Add),
+		),
+		(
+			Trait::Attribute(Attribute::Stamina),
+			AttributeModifier::new_const(Value::Value(1), COp::Add),
+		),
+		(
+			Trait::Size,
+			AttributeModifier::new_const(Value::Value(1), COp::Add),
+		),
+	];
+	static GAURU: Modifiers<4> = [
+		(
+			Trait::Attribute(Attribute::Strength),
+			AttributeModifier::new_const(Value::Value(3), COp::Add),
+		),
+		(
+			Trait::Attribute(Attribute::Dexterity),
+			AttributeModifier::new_const(Value::Value(1), COp::Add),
+		),
+		(
+			Trait::Attribute(Attribute::Stamina),
+			AttributeModifier::new_const(Value::Value(2), COp::Add),
+		),
+		(
+			Trait::Size,
+			AttributeModifier::new_const(Value::Value(2), COp::Add),
+		),
+	];
+	static URHAN: Modifiers<3> = [
+		(
+			Trait::Attribute(Attribute::Dexterity),
+			AttributeModifier::new_const(Value::Value(2), COp::Add),
+		),
+		(
+			Trait::Attribute(Attribute::Stamina),
+			AttributeModifier::new_const(Value::Value(1), COp::Add),
+		),
+		(
+			Trait::Size,
+			AttributeModifier::new_const(Value::Value(1), COp::Sub),
+		),
+	];
+	static URSHUL: Modifiers<4> = [
+		(
+			Trait::Attribute(Attribute::Strength),
+			AttributeModifier::new_const(Value::Value(2), COp::Add),
+		),
+		(
+			Trait::Attribute(Attribute::Dexterity),
+			AttributeModifier::new_const(Value::Value(2), COp::Add),
+		),
+		(
+			Trait::Attribute(Attribute::Stamina),
+			AttributeModifier::new_const(Value::Value(2), COp::Add),
+		),
+		(
+			Trait::Size,
+			AttributeModifier::new_const(Value::Value(1), COp::Add),
+		),
+	];
+	match form {
+		Form::Hishu => &HISHU,
+		Form::Dalu => &DALU,
+		Form::Gauru => &GAURU,
+		Form::Urhan => &URHAN,
+		Form::Urshul => &URSHUL,
 	}
-
-	// #[allow(clippy::too_many_lines)]
-	// pub fn get_modifiers(&self) -> Vec<Modifier> {
-	// 	match self {
-	// 		Form::Hishu => vec![Modifier::new(
-	// 			Trait::DerivedTrait(DerivedTrait::Perception),
-	// 			1,
-	// 			ModifierOp::Add,
-	// 		)],
-	// 		Form::Dalu => vec![
-	// 			Modifier::new(Attribute::Strength, 1, ModifierOp::Add),
-	// 			Modifier::new(Attribute::Stamina, 1, ModifierOp::Add),
-	// 			Modifier::new(Attribute::Manipulation, -1, ModifierOp::Add),
-	// 			Modifier::new(Trait::DerivedTrait(DerivedTrait::Size), 1, ModifierOp::Add),
-	// 			Modifier::new(
-	// 				Trait::DerivedTrait(DerivedTrait::Perception),
-	// 				2,
-	// 				ModifierOp::Add,
-	// 			),
-	// 		],
-	// 		Form::Gauru => vec![
-	// 			Modifier::new(Attribute::Strength, 3, ModifierOp::Add),
-	// 			Modifier::new(Attribute::Dexterity, 1, ModifierOp::Add),
-	// 			Modifier::new(Attribute::Stamina, 2, ModifierOp::Add),
-	// 			Modifier::new(Trait::DerivedTrait(DerivedTrait::Size), 2, ModifierOp::Add),
-	// 			Modifier::new(
-	// 				Trait::DerivedTrait(DerivedTrait::Perception),
-	// 				3,
-	// 				ModifierOp::Add,
-	// 			),
-	// 		],
-	// 		Form::Urshul => vec![
-	// 			Modifier::new(Attribute::Strength, 2, ModifierOp::Add),
-	// 			Modifier::new(Attribute::Dexterity, 2, ModifierOp::Add),
-	// 			Modifier::new(Attribute::Stamina, 2, ModifierOp::Add),
-	// 			Modifier::new(Attribute::Manipulation, -1, ModifierOp::Add),
-	// 			Modifier::new(Trait::DerivedTrait(DerivedTrait::Size), 1, ModifierOp::Add),
-	// 			Modifier::new(Trait::DerivedTrait(DerivedTrait::Speed), 3, ModifierOp::Add),
-	// 			Modifier::new(
-	// 				Trait::DerivedTrait(DerivedTrait::Perception),
-	// 				3,
-	// 				ModifierOp::Add,
-	// 			),
-	// 		],
-	// 		Form::Urhan => vec![
-	// 			Modifier::new(Attribute::Dexterity, 2, ModifierOp::Add),
-	// 			Modifier::new(Attribute::Stamina, 1, ModifierOp::Add),
-	// 			Modifier::new(Attribute::Manipulation, -1, ModifierOp::Add),
-	// 			Modifier::new(Trait::DerivedTrait(DerivedTrait::Size), -1, ModifierOp::Add),
-	// 			Modifier::new(Trait::DerivedTrait(DerivedTrait::Speed), 3, ModifierOp::Add),
-	// 			Modifier::new(
-	// 				Trait::DerivedTrait(DerivedTrait::Perception),
-	// 				4,
-	// 				ModifierOp::Add,
-	// 			),
-	// 		],
-	// 	}
-	// }
-
-	// pub fn modifiers() -> Vec<Modifier> {
-	// 	// match self {
-	// 	vec![
-	// 		//
-	// 		Modifier::conditional(
-	// 			Trait::DerivedTrait(DerivedTrait::Perception),
-	// 			1,
-	// 			ModifierOp::Add,
-	// 			Form::Hishu,
-	// 		),
-	// 		//
-	// 		Modifier::conditional(Attribute::Strength, 1, ModifierOp::Add, Form::Dalu),
-	// 		Modifier::conditional(Attribute::Stamina, 1, ModifierOp::Add, Form::Dalu),
-	// 		Modifier::conditional(Attribute::Manipulation, -1, ModifierOp::Add, Form::Dalu),
-	// 		Modifier::conditional(
-	// 			Trait::DerivedTrait(DerivedTrait::Size),
-	// 			1,
-	// 			ModifierOp::Add,
-	// 			Form::Dalu,
-	// 		),
-	// 		Modifier::conditional(
-	// 			Trait::DerivedTrait(DerivedTrait::Perception),
-	// 			2,
-	// 			ModifierOp::Add,
-	// 			Form::Dalu,
-	// 		),
-	// 		//
-	// 		Modifier::conditional(Attribute::Strength, 3, ModifierOp::Add, Form::Gauru),
-	// 		Modifier::conditional(Attribute::Dexterity, 1, ModifierOp::Add, Form::Gauru),
-	// 		Modifier::conditional(Attribute::Stamina, 2, ModifierOp::Add, Form::Gauru),
-	// 		Modifier::conditional(
-	// 			Trait::DerivedTrait(DerivedTrait::Size),
-	// 			2,
-	// 			ModifierOp::Add,
-	// 			Form::Gauru,
-	// 		),
-	// 		Modifier::conditional(
-	// 			Trait::DerivedTrait(DerivedTrait::Perception),
-	// 			3,
-	// 			ModifierOp::Add,
-	// 			Form::Gauru,
-	// 		),
-	// 		//
-	// 		Modifier::conditional(Attribute::Strength, 2, ModifierOp::Add, Form::Urshul),
-	// 		Modifier::conditional(Attribute::Dexterity, 2, ModifierOp::Add, Form::Urshul),
-	// 		Modifier::conditional(Attribute::Stamina, 2, ModifierOp::Add, Form::Urshul),
-	// 		Modifier::conditional(Attribute::Manipulation, -1, ModifierOp::Add, Form::Urshul),
-	// 		Modifier::conditional(
-	// 			Trait::DerivedTrait(DerivedTrait::Size),
-	// 			1,
-	// 			ModifierOp::Add,
-	// 			Form::Urshul,
-	// 		),
-	// 		Modifier::conditional(
-	// 			Trait::DerivedTrait(DerivedTrait::Speed),
-	// 			3,
-	// 			ModifierOp::Add,
-	// 			Form::Urshul,
-	// 		),
-	// 		Modifier::conditional(
-	// 			Trait::DerivedTrait(DerivedTrait::Perception),
-	// 			3,
-	// 			ModifierOp::Add,
-	// 			Form::Urshul,
-	// 		),
-	// 		//
-	// 		Modifier::conditional(Attribute::Dexterity, 2, ModifierOp::Add, Form::Urhan),
-	// 		Modifier::conditional(Attribute::Stamina, 1, ModifierOp::Add, Form::Urhan),
-	// 		Modifier::conditional(Attribute::Manipulation, -1, ModifierOp::Add, Form::Urhan),
-	// 		Modifier::conditional(
-	// 			Trait::DerivedTrait(DerivedTrait::Size),
-	// 			-1,
-	// 			ModifierOp::Add,
-	// 			Form::Urhan,
-	// 		),
-	// 		Modifier::conditional(
-	// 			Trait::DerivedTrait(DerivedTrait::Speed),
-	// 			3,
-	// 			ModifierOp::Add,
-	// 			Form::Urhan,
-	// 		),
-	// 		Modifier::conditional(
-	// 			Trait::DerivedTrait(DerivedTrait::Perception),
-	// 			4,
-	// 			ModifierOp::Add,
-	// 			Form::Urhan,
-	// 		),
-	// 	]
-	// }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, VariantName)]
@@ -844,17 +710,22 @@ pub enum WerewolfMerit {
 }
 
 impl WerewolfMerit {
-	pub fn is_available(&self, character: &crate::prelude::Character) -> bool {
-		if matches!(character.splat, Splat::Werewolf(..)) {
-			match self {
-				Self::InstinctiveDefense => {
-					// character.power >= 2 && character.skills().athletics >= 2
-					true
-				}
-				_ => true,
+	#[must_use]
+	pub fn is_available(&self, character: &Character<Werewolf>) -> bool {
+		let attributes = character.attributes();
+
+		match self {
+			Self::InstinctiveDefense => {
+				attributes
+					.value(&Trait::SupernaturalTolerance(
+						SupernaturalTolerance::PrimalUrge,
+					))
+					.is_some_and(|pu| pu >= 2)
+					&& attributes
+						.value(&Trait::Skill(Skill::Athletics))
+						.is_some_and(|s| s >= 2)
 			}
-		} else {
-			false
+			_ => true,
 		}
 	}
 
@@ -883,12 +754,6 @@ impl WerewolfMerit {
 	// 		_ => vec![],
 	// 	}
 	// }
-}
-
-impl From<WerewolfMerit> for Merit {
-	fn from(merit: WerewolfMerit) -> Self {
-		Merit::Werewolf(merit)
-	}
 }
 
 // pub fn get_form_trait(character: &Character, form: &Form, target: &ModifierTarget) -> i16 {

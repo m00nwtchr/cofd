@@ -2,8 +2,9 @@ use cofd_util::{SplatEnum, VariantName};
 use serde::{Deserialize, Serialize};
 use strum::{AsRefStr, Display, EnumString, VariantArray};
 
+pub mod changeling;
 pub mod mage;
-mod vampire;
+pub mod vampire;
 pub mod werewolf;
 
 #[derive(

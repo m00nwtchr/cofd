@@ -1,7 +1,4 @@
-use cofd_schema::prelude::{Attribute, Skill};
 pub use cofd_schema::traits::{DerivedTrait, TraitCategory, attribute, skill};
-use cofd_util::VariantName;
-use serde::{Deserialize, Serialize};
 
 // #[derive(
 // 	Debug,
@@ -34,3 +31,7 @@ use serde::{Deserialize, Serialize};
 // 	Fuel,
 // 	Integrity,
 // }
+
+pub trait NameKey {
+	fn name_key(&self) -> String;
+}

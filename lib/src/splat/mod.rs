@@ -1,11 +1,12 @@
-use std::ops::Deref;
-
-use cofd_util::{AllVariants, NameKey, VariantName};
+#![allow(clippy::wildcard_imports)]
+use cofd_util::AllVariants;
 use enum_dispatch::enum_dispatch;
 use serde::{Deserialize, Serialize};
-use strum::{EnumDiscriminants, VariantArray};
+use strum::EnumDiscriminants;
+use systema::prelude::{Actor, AttributeMap};
 
 use self::ability::Ability;
+use crate::character::CharacterTrait;
 
 pub mod ability;
 pub mod merits;
@@ -27,13 +28,19 @@ mod mortal;
 
 // use promethean::*;
 use changeling::*;
-use cofd_schema::template::Template;
+use cofd_schema::template::{
+	Template,
+	mage::{Legacy, Ministry, Order},
+	werewolf::Lodge,
+};
 // use hunter::*;
 use geist::*;
 use mage::*;
 use mortal::*;
 use vampire::*;
 use werewolf::*;
+
+use crate::{CofDSystem, character::Character};
 // use mummy::*;
 // use demon::*;
 // use beast::*;
@@ -41,68 +48,63 @@ use werewolf::*;
 
 #[derive(
 	Clone,
-	PartialEq,
-	Eq,
+	// PartialEq,
+	// Eq,
 	Serialize,
 	Deserialize,
-	Debug,
+	// Debug,
 	strum::AsRefStr,
 	AllVariants,
 	EnumDiscriminants,
 )]
-#[strum_discriminants(name(SplatKind), derive(strum::VariantArray, strum::AsRefStr))]
-#[enum_dispatch(SplatTrait)]
-pub enum Splat {
-	Mortal(Mortal),
-	Vampire(Vampire),
-	Werewolf(Box<Werewolf>),
-	Mage(Mage),
+// #[strum_discriminants(name(SplatKind), derive(strum::VariantArray, strum::AsRefStr))]
+#[enum_dispatch(CharacterTrait)]
+pub enum SplatCharacter {
+	Mortal(Character<Mortal>),
+	Vampire(Character<Vampire>),
+	Werewolf(Character<Werewolf>),
+	Mage(Character<Mage>),
 	// Promethean(Lineage),
-	Changeling(Changeling),
+	Changeling(Character<Changeling>),
 	// Hunter(Tier),
-	Bound(Bound),
+	Bound(Character<Bound>),
 	// Mummy(Decree, Guild),
 	// Demon(Incarnation, Vec<Agenda>),
 	// Beast(Hunger),
 	// Deviant(Origin, Clade, Vec<Form>),
 }
 
-impl SplatKind {
-	pub fn all() -> &'static [Self] {
-		Self::VARIANTS
-	}
-}
+impl Actor for SplatCharacter {
+	type System = CofDSystem;
+	type Kind = Template;
 
-impl From<SplatKind> for Splat {
-	fn from(value: SplatKind) -> Self {
-		match value {
-			SplatKind::Mortal => Splat::Mortal(Mortal),
-			SplatKind::Vampire => Splat::Vampire(Vampire::default()),
-			SplatKind::Werewolf => Splat::Werewolf(Box::default()),
-			SplatKind::Mage => Splat::Mage(Mage::default()),
-			SplatKind::Changeling => Splat::Changeling(Changeling::default()),
-			SplatKind::Bound => Splat::Bound(Bound::default()),
+	fn new(kind: Self::Kind) -> Self {
+		match kind {
+			Template::Mortal => SplatCharacter::Mortal(Character::default()),
+			Template::Vampire => SplatCharacter::Vampire(Character::default()),
+			Template::Werewolf => SplatCharacter::Werewolf(Character::default()),
+			Template::Mage => SplatCharacter::Mage(Character::default()),
+			Template::Changeling => SplatCharacter::Changeling(Character::default()),
+			Template::Bound => SplatCharacter::Bound(Character::default()),
+			_ => {
+				unimplemented!("Character splat not yet implemented")
+			}
 		}
 	}
-}
 
-impl Deref for Splat {
-	type Target = Template;
+	fn attributes(&self) -> &AttributeMap<Self::System> {
+		CharacterTrait::attributes(self)
+	}
 
-	fn deref(&self) -> &Self::Target {
-		match self {
-			Splat::Mortal(_) => &Template::Mortal,
-			Splat::Vampire(_) => &Template::Vampire,
-			Splat::Werewolf(_) => &Template::Werewolf,
-			Splat::Mage(_) => &Template::Mage,
-			Splat::Changeling(_) => &Template::Changeling,
-			Splat::Bound(_) => &Template::Bound,
-		}
+	fn attributes_mut(&mut self) -> &mut AttributeMap<Self::System> {
+		CharacterTrait::attributes_mut(self)
 	}
 }
 
 #[enum_dispatch]
-pub trait SplatTrait {
+pub trait SplatTrait: Default {
+	fn template(&self) -> Template;
+
 	fn set_xsplat(&mut self, splat: Option<XSplat>);
 
 	fn set_ysplat(&mut self, splat: Option<YSplat>);
@@ -153,136 +155,65 @@ pub trait SplatTrait {
 	fn merits(&self) -> Vec<Merit>;
 }
 
-impl<T: SplatTrait> SplatTrait for Box<T> {
-	fn set_xsplat(&mut self, splat: Option<XSplat>) {
-		self.as_mut().set_xsplat(splat);
-	}
-
-	fn set_ysplat(&mut self, splat: Option<YSplat>) {
-		self.as_mut().set_ysplat(splat);
-	}
-
-	fn set_zsplat(&mut self, splat: Option<ZSplat>) {
-		self.as_mut().set_zsplat(splat);
-	}
-
-	fn xsplat(&self) -> Option<XSplat> {
-		self.as_ref().xsplat()
-	}
-
-	fn ysplat(&self) -> Option<YSplat> {
-		self.as_ref().ysplat()
-	}
-
-	fn zsplat(&self) -> Option<ZSplat> {
-		self.as_ref().zsplat()
-	}
-
-	fn xsplats(&self) -> Vec<XSplat> {
-		self.as_ref().xsplats()
-	}
-
-	fn ysplats(&self) -> Vec<YSplat> {
-		self.as_ref().ysplats()
-	}
-
-	fn zsplats(&self) -> Vec<ZSplat> {
-		self.as_ref().zsplats()
-	}
-
-	fn custom_xsplat(&self, name: String) -> Option<XSplat> {
-		self.as_ref().custom_xsplat(name)
-	}
-
-	fn custom_ysplat(&self, name: String) -> Option<YSplat> {
-		self.as_ref().custom_ysplat(name)
-	}
-
-	fn custom_zsplat(&self, name: String) -> Option<ZSplat> {
-		self.as_ref().custom_zsplat(name)
-	}
-
-	fn all_abilities(&self) -> Option<Vec<Ability>> {
-		self.as_ref().all_abilities()
-	}
-
-	fn custom_ability(&self, name: String) -> Option<Ability> {
-		self.as_ref().custom_ability(name)
-	}
-
-	fn alternate_beats_optional(&self) -> bool {
-		self.as_ref().alternate_beats_optional()
-	}
-
-	fn merits(&self) -> Vec<Merit> {
-		self.as_ref().merits()
-	}
-}
-
-impl Default for Splat {
-	fn default() -> Self {
-		Splat::Mortal(Mortal)
-	}
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, VariantName, derive_more::From, derive_more::TryInto)]
+#[derive(Debug, Clone, PartialEq, Eq, derive_more::From, derive_more::TryInto)]
 pub enum XSplat {
-	#[expand]
+	// #[expand]
 	Clan(Clan),
-	#[expand]
+	// #[expand]
 	Auspice(Auspice),
-	#[expand]
+	// #[expand]
 	Path(Path),
-	#[expand]
+	// #[expand]
 	Seeming(Seeming),
-	#[expand]
+	// #[expand]
 	Burden(Burden),
 }
-#[derive(Debug, Clone, PartialEq, Eq, VariantName, derive_more::From, derive_more::TryInto)]
+#[derive(Debug, Clone, PartialEq, Eq, derive_more::From, derive_more::TryInto)]
 pub enum YSplat {
-	#[expand]
+	// #[expand]
 	Covenant(Covenant),
-	#[expand]
+	// #[expand]
 	Tribe(Tribe),
-	#[expand]
+	// #[expand]
 	Order(Order),
-	#[expand]
+	// #[expand]
 	Court(Court),
-	#[expand]
+	// #[expand]
 	Archetype(Archetype),
 }
-#[derive(Debug, Clone, PartialEq, Eq, VariantName, derive_more::From, derive_more::TryInto)]
+#[derive(Debug, Clone, PartialEq, Eq, derive_more::From, derive_more::TryInto)]
 pub enum ZSplat {
-	#[expand]
+	// #[expand]
 	Bloodline(Bloodline),
-	#[expand]
+	// #[expand]
 	Lodge(Lodge),
-	#[expand]
+	// #[expand]
 	Legacy(Legacy),
-	#[expand]
+	// #[expand]
 	Kith(Kith),
 }
 
 impl XSplat {
 	pub fn name_mut(&mut self) -> Option<&mut String> {
 		match self {
-			Self::Clan(Clan::Custom(name, ..))
-			| Self::Auspice(Auspice::Custom(name, ..))
-			| Self::Path(Path::Custom(name, ..))
-			| Self::Seeming(Seeming::Custom(name, ..))
-			| Self::Burden(Burden::Custom(name, ..)) => Some(name),
+			Self::Clan(Clan::Custom { name, .. })
+			| Self::Auspice(Auspice::Custom(CustomAuspice { name, .. }))
+			| Self::Path(Path::Custom { name, .. })
+			| Self::Seeming(Seeming::Custom { name, .. })
+			| Self::Burden(Burden::Custom { name, .. }) => Some(name),
 			_ => None,
 		}
 	}
 
+	#[must_use]
 	pub fn is_custom(&self) -> bool {
 		matches!(
 			self,
-			Self::Clan(Clan::Custom(..))
-				| Self::Auspice(Auspice::Custom(..))
-				| Self::Path(Path::Custom(..))
-				| Self::Seeming(Seeming::Custom(..))
-				| Self::Burden(Burden::Custom(..))
+			Self::Clan(Clan::Custom { .. })
+				| Self::Auspice(Auspice::Custom { .. })
+				| Self::Path(Path::Custom { .. })
+				| Self::Seeming(Seeming::Custom { .. })
+				| Self::Burden(Burden::Custom { .. })
 		)
 	}
 }
@@ -291,9 +222,13 @@ impl YSplat {
 	pub fn name_mut(&mut self) -> Option<&mut String> {
 		match self {
 			Self::Covenant(Covenant::Custom(name))
-			| Self::Tribe(Tribe::Custom(name, ..))
+			| Self::Tribe(
+				Tribe::Forsaken(ForsakenTribe::Custom { name, .. })
+				| Tribe::Pure(PureTribe::Custom { name, .. }),
+			)
 			| Self::Order(
-				Order::Custom(name, ..) | Order::SeersOfTheThrone(Some(Ministry::Custom(name, ..))),
+				Order::Custom { name, .. }
+				| Order::SeersOfTheThrone(Some(Ministry::Custom { name, .. })),
 			)
 			| Self::Court(Court::Custom(name))
 			| Self::Archetype(Archetype::Custom(name, ..)) => Some(name),
@@ -301,14 +236,17 @@ impl YSplat {
 		}
 	}
 
+	#[must_use]
 	pub fn is_custom(&self) -> bool {
 		matches!(
 			self,
 			YSplat::Covenant(Covenant::Custom(..))
-				| YSplat::Tribe(Tribe::Custom(..))
-				| YSplat::Order(
-					Order::Custom(..) | Order::SeersOfTheThrone(Some(Ministry::Custom(..))),
-				) | YSplat::Court(Court::Custom(..))
+				| YSplat::Tribe(
+					Tribe::Forsaken(ForsakenTribe::Custom { .. })
+						| Tribe::Pure(PureTribe::Custom { .. }),
+				) | YSplat::Order(
+				Order::Custom { .. } | Order::SeersOfTheThrone(Some(Ministry::Custom { .. })),
+			) | YSplat::Court(Court::Custom(..))
 				| Self::Archetype(Archetype::Custom(..))
 		)
 	}
@@ -318,20 +256,49 @@ impl ZSplat {
 	pub fn name_mut(&mut self) -> Option<&mut String> {
 		match self {
 			ZSplat::Bloodline(Bloodline::Custom(name, ..))
-			| ZSplat::Lodge(Lodge::Custom(name))
-			| ZSplat::Legacy(Legacy::Custom(name, ..))
+			| ZSplat::Lodge(Lodge { name })
+			| ZSplat::Legacy(Legacy { name, .. })
 			| ZSplat::Kith(Kith::Custom(name)) => Some(name),
 			_ => None,
 		}
 	}
 
+	#[must_use]
 	pub fn is_custom(&self) -> bool {
 		matches!(
 			self,
 			ZSplat::Bloodline(Bloodline::Custom(..))
-				| ZSplat::Lodge(Lodge::Custom(..))
-				| ZSplat::Legacy(Legacy::Custom(..))
+				| ZSplat::Lodge(_)
+				| ZSplat::Legacy(_)
 				| ZSplat::Kith(Kith::Custom(..))
 		)
 	}
 }
+/*
+   #[must_use]
+   pub fn disciplines(&self) -> [Discipline; 3] {
+	   match self {
+		   Clan::Daeva => [Discipline::Celerity, Discipline::Majesty, Discipline::Vigor],
+		   Clan::Gangrel => [
+			   Discipline::Animalism,
+			   Discipline::Protean,
+			   Discipline::Resilience,
+		   ],
+		   Clan::Mekhet => [
+			   Discipline::Auspex,
+			   Discipline::Celerity,
+			   Discipline::Obfuscate,
+		   ],
+		   Clan::Nosferatu => [
+			   Discipline::Nightmare,
+			   Discipline::Obfuscate,
+			   Discipline::Vigor,
+		   ],
+		   Clan::Ventrue => [
+			   Discipline::Animalism,
+			   Discipline::Dominate,
+			   Discipline::Resilience,
+		   ],
+	   }
+   }
+*/

@@ -3,11 +3,25 @@ use cofd_util::{AllVariants, VariantName};
 use serde::{Deserialize, Serialize};
 
 use super::{
-	ability::Ability, changeling::ChangelingMerit, mage::MageMerit, vampire::VampireMerit,
-	werewolf::WerewolfMerit,
+	changeling::ChangelingMerit, mage::MageMerit, vampire::VampireMerit, werewolf::WerewolfMerit,
+};
+use crate::{
+	splat::ability::{AbilityTrait, CModifier},
+	traits::NameKey,
 };
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, AllVariants, VariantName)]
+#[derive(
+	Clone,
+	Debug,
+	PartialEq,
+	Eq,
+	Serialize,
+	Deserialize,
+	Hash,
+	AllVariants,
+	VariantName,
+	derive_more::From,
+)]
 pub enum Merit {
 	// Mental Merits
 	AreaOfExpertise(String),
@@ -155,116 +169,123 @@ pub enum Merit {
 	// UnarmedDefense,
 	// WeaponAndShield
 	#[expand]
+	#[from]
 	Mage(MageMerit),
 	#[expand]
+	#[from]
 	Vampire(VampireMerit),
 	#[expand]
+	#[from]
 	Werewolf(WerewolfMerit),
 	#[expand]
+	#[from]
 	Changeling(ChangelingMerit),
 
 	Custom(String),
 }
 
 impl Merit {
-	pub fn mental() -> Vec<Merit> {
-		vec![
-			Self::AreaOfExpertise(String::new()),
-			Self::CommonSense,
-			Self::DangerSense,
-			Self::DirectionSense,
-			Self::EideticMemory,
-			Self::EncyclopedicKnowledge(String::new()),
-			Self::EyeForTheStrange,
-			Self::FastReflexes,
-			Self::GoodTimeManagement,
-			Self::HolisticAwareness,
-			// Self::HumanPrey,      // DTR
-			// Self::Hypervigilance, // DTR
-			Self::Indomitable,
-			Self::InterdisciplinarySpecialty(String::new(), None),
-			Self::InvestigativeAide(None),
-			Self::InvestigativeProdigy,
-			Self::Language(String::new()),
-			Self::Library(None),
-			Self::LibraryAdvanced(vec![]),
-			// LucidDreamer, // CTL
-			Self::MeditativeMind,
-			Self::Multilingual(String::new(), String::new()),
-			Self::ObjectFetishism(String::new()),
-			Self::Patient,
-			// RenownedArtisan(String) // MTC
-			Self::Scarred(String::new()),
-			Self::ToleranceForBiology,
-			Self::TrainedObserver,
-			Self::ViceRidden(String::new()),
-			Self::Virtuous(String::new()),
-		]
-	}
-
-	pub fn physical() -> Vec<Merit> {
-		vec![
-			Self::Ambidextrous,
-			Self::AutomotiveGenius,
-			Self::CovertOperative,
-			Self::CrackDriver,
-			Self::Demolisher,
-			Self::DoubleJointed,
-			Self::FleetOfFoot,
-			Self::Freediving,
-			Self::Giant,
-			Self::Hardy,
-			Self::Greyhound,
-			// IronSkin, // BTP
-			Self::IronStamina,
-			Self::QuickDraw(String::new()),
-			Self::PunchDrunk,
-			Self::Relentless,
-			Self::Roadkill,
-			Self::SeizingTheEdge,
-			Self::SleightOfHand,
-			Self::SmallFramed,
-			Self::Survivalist,
-		]
-	}
-
-	pub fn social() -> Vec<Merit> {
-		vec![
-			Self::AirOfMenace,
-			Self::Allies(String::new()),
-			Self::AlternateIdentity(String::new()),
-			Self::Anonymity,
-			Self::Barfly,
-			Self::ClosedBook,
-			Self::CohesiveUnit,
-			Self::Contacts(vec![]),
-			Self::Defender,
-			Self::Empath,
-			Self::Fame,
-			Self::Fixer,
-			Self::HobbyistClique(String::new(), None),
-			Self::Inspiring,
-			Self::IronWill,
-			Self::Mentor(String::new(), None),
-			Self::Peacemaker,
-			Self::Pusher,
-			Self::Resources,
-			Self::Retainer(String::new()),
-			Self::SafePlace(String::new()),
-			Self::SmallUnitTactics,
-			Self::SpinDoctor,
-			Self::Staff,
-			Self::Status(String::new()),
-			Self::StrikingLooks(String::new()),
-			Self::SupportNetwork(String::new(), None),
-			Self::Sympathetic,
-			Self::TableTurner,
-			Self::TakesOneToKnowOne,
-			Self::Taste(String::new(), None),
-			Self::TrueFriend(String::new()),
-			Self::Untouchable,
-		]
-	}
+	// #[must_use]
+	// pub fn mental() -> Vec<Merit> {
+	// 	vec![
+	// 		Self::AreaOfExpertise(String::new()),
+	// 		Self::CommonSense,
+	// 		Self::DangerSense,
+	// 		Self::DirectionSense,
+	// 		Self::EideticMemory,
+	// 		Self::EncyclopedicKnowledge(String::new()),
+	// 		Self::EyeForTheStrange,
+	// 		Self::FastReflexes,
+	// 		Self::GoodTimeManagement,
+	// 		Self::HolisticAwareness,
+	// 		// Self::HumanPrey,      // DTR
+	// 		// Self::Hypervigilance, // DTR
+	// 		Self::Indomitable,
+	// 		Self::InterdisciplinarySpecialty(String::new(), None),
+	// 		Self::InvestigativeAide(None),
+	// 		Self::InvestigativeProdigy,
+	// 		Self::Language(String::new()),
+	// 		Self::Library(None),
+	// 		Self::LibraryAdvanced(vec![]),
+	// 		// LucidDreamer, // CTL
+	// 		Self::MeditativeMind,
+	// 		Self::Multilingual(String::new(), String::new()),
+	// 		Self::ObjectFetishism(String::new()),
+	// 		Self::Patient,
+	// 		// RenownedArtisan(String) // MTC
+	// 		Self::Scarred(String::new()),
+	// 		Self::ToleranceForBiology,
+	// 		Self::TrainedObserver,
+	// 		Self::ViceRidden(String::new()),
+	// 		Self::Virtuous(String::new()),
+	// 	]
+	// }
+	//
+	// #[must_use]
+	// pub fn physical() -> Vec<Merit> {
+	// 	vec![
+	// 		Self::Ambidextrous,
+	// 		Self::AutomotiveGenius,
+	// 		Self::CovertOperative,
+	// 		Self::CrackDriver,
+	// 		Self::Demolisher,
+	// 		Self::DoubleJointed,
+	// 		Self::FleetOfFoot,
+	// 		Self::Freediving,
+	// 		Self::Giant,
+	// 		Self::Hardy,
+	// 		Self::Greyhound,
+	// 		// IronSkin, // BTP
+	// 		Self::IronStamina,
+	// 		Self::QuickDraw(String::new()),
+	// 		Self::PunchDrunk,
+	// 		Self::Relentless,
+	// 		Self::Roadkill,
+	// 		Self::SeizingTheEdge,
+	// 		Self::SleightOfHand,
+	// 		Self::SmallFramed,
+	// 		Self::Survivalist,
+	// 	]
+	// }
+	//
+	// #[must_use]
+	// pub fn social() -> Vec<Merit> {
+	// 	vec![
+	// 		Self::AirOfMenace,
+	// 		Self::Allies(String::new()),
+	// 		Self::AlternateIdentity(String::new()),
+	// 		Self::Anonymity,
+	// 		Self::Barfly,
+	// 		Self::ClosedBook,
+	// 		Self::CohesiveUnit,
+	// 		Self::Contacts(vec![]),
+	// 		Self::Defender,
+	// 		Self::Empath,
+	// 		Self::Fame,
+	// 		Self::Fixer,
+	// 		Self::HobbyistClique(String::new(), None),
+	// 		Self::Inspiring,
+	// 		Self::IronWill,
+	// 		Self::Mentor(String::new(), None),
+	// 		Self::Peacemaker,
+	// 		Self::Pusher,
+	// 		Self::Resources,
+	// 		Self::Retainer(String::new()),
+	// 		Self::SafePlace(String::new()),
+	// 		Self::SmallUnitTactics,
+	// 		Self::SpinDoctor,
+	// 		Self::Staff,
+	// 		Self::Status(String::new()),
+	// 		Self::StrikingLooks(String::new()),
+	// 		Self::SupportNetwork(String::new(), None),
+	// 		Self::Sympathetic,
+	// 		Self::TableTurner,
+	// 		Self::TakesOneToKnowOne,
+	// 		Self::Taste(String::new(), None),
+	// 		Self::TrueFriend(String::new()),
+	// 		Self::Untouchable,
+	// 	]
+	// }
 
 	// pub fn get_modifiers(&self, value: u16) -> Vec<Modifier> {
 	// 	match &self {
@@ -409,18 +430,14 @@ impl Merit {
 	// }
 }
 
+impl AbilityTrait for Merit {
+	fn get_modifiers(&self) -> Box<[CModifier]> {
+		Box::default()
+	}
+}
+
 impl NameKey for Merit {
 	fn name_key(&self) -> String {
 		format!("merits.{}", self.name())
 	}
-}
-
-impl From<Merit> for Ability {
-	fn from(merit: Merit) -> Self {
-		Ability::Merit(merit)
-	}
-}
-
-pub trait NameKey {
-	fn name_key(&self) -> String;
 }

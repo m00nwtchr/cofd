@@ -1,3 +1,4 @@
+use cofd_schema::template::Template;
 use serde::{Deserialize, Serialize};
 
 use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat};
@@ -6,6 +7,10 @@ use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat};
 pub struct Mortal;
 
 impl SplatTrait for Mortal {
+	fn template(&self) -> Template {
+		Template::Mortal
+	}
+
 	fn set_xsplat(&mut self, _splat: Option<XSplat>) {}
 
 	fn set_ysplat(&mut self, _splat: Option<YSplat>) {}

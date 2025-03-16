@@ -1,7 +1,9 @@
+use cofd_schema::template::Template;
 use cofd_util::{AllVariants, VariantName};
 use serde::{Deserialize, Serialize};
 
-use super::{ability::Ability, Merit, NameKey, SplatTrait, XSplat, YSplat, ZSplat};
+use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat, ability::Ability};
+use crate::{splat::ability::AbilityTrait, traits::NameKey};
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Bound {
@@ -12,6 +14,10 @@ pub struct Bound {
 }
 
 impl SplatTrait for Bound {
+	fn template(&self) -> Template {
+		Template::Bound
+	}
+
 	fn set_xsplat(&mut self, splat: Option<XSplat>) {
 		if let Some(XSplat::Burden(burden)) = splat {
 			self.burden = burden;
@@ -35,7 +41,8 @@ impl SplatTrait for Bound {
 	}
 
 	fn xsplats(&self) -> Vec<XSplat> {
-		Burden::all().into_iter().map(Into::into).collect()
+		// Burden::all().into_iter().map(Into::into).collect()
+		todo!()
 	}
 
 	fn ysplats(&self) -> Vec<YSplat> {
@@ -47,7 +54,13 @@ impl SplatTrait for Bound {
 	}
 
 	fn custom_xsplat(&self, name: String) -> Option<XSplat> {
-		Some(Burden::Custom(name, [Haunt::Boneyard, Haunt::Caul, Haunt::Curse]).into())
+		Some(
+			Burden::Custom {
+				name,
+				haunts: [Haunt::Boneyard, Haunt::Caul, Haunt::Curse],
+			}
+			.into(),
+		)
 	}
 
 	fn custom_ysplat(&self, name: String) -> Option<YSplat> {
@@ -67,9 +80,7 @@ impl SplatTrait for Bound {
 	}
 }
 
-#[derive(
-	Debug, Clone, PartialEq, Eq, Serialize, Deserialize, AllVariants, VariantName, Default,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum Burden {
 	#[default]
 	Abiding,
@@ -77,18 +88,22 @@ pub enum Burden {
 	Hungry,
 	Kindly,
 	Vengeful,
-	Custom(String, [Haunt; 3]),
+	Custom {
+		name: String,
+		haunts: [Haunt; 3],
+	},
 }
 
 impl Burden {
-	pub fn get_favoured_haunts(&self) -> &[Haunt; 3] {
+	#[must_use]
+	pub fn favoured_haunts(&self) -> [Haunt; 3] {
 		match self {
-			Self::Abiding => &[Haunt::Caul, Haunt::Memoria, Haunt::Tomb],
-			Self::Bereaved => &[Haunt::Curse, Haunt::Oracle, Haunt::Shroud],
-			Self::Hungry => &[Haunt::Boneyard, Haunt::Marionette, Haunt::Caul],
-			Self::Kindly => &[Haunt::Dirge, Haunt::Marionette, Haunt::Shroud],
-			Self::Vengeful => &[Haunt::Curse, Haunt::Memoria, Haunt::Rage],
-			Self::Custom(_, haunts) => haunts,
+			Self::Abiding => [Haunt::Caul, Haunt::Memoria, Haunt::Tomb],
+			Self::Bereaved => [Haunt::Curse, Haunt::Oracle, Haunt::Shroud],
+			Self::Hungry => [Haunt::Boneyard, Haunt::Marionette, Haunt::Caul],
+			Self::Kindly => [Haunt::Dirge, Haunt::Marionette, Haunt::Shroud],
+			Self::Vengeful => [Haunt::Curse, Haunt::Memoria, Haunt::Rage],
+			Self::Custom { haunts, .. } => haunts.clone(),
 		}
 	}
 }
@@ -121,11 +136,7 @@ pub enum Haunt {
 	Custom(String),
 }
 
-impl From<Haunt> for Ability {
-	fn from(val: Haunt) -> Self {
-		Ability::Haunt(val)
-	}
-}
+impl AbilityTrait for Haunt {}
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, AllVariants, VariantName)]
 pub enum Key {

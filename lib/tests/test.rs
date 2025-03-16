@@ -1,19 +1,20 @@
-use Attribute::*;
-use Skill::*;
 use cofd::{
-	prelude::*,
+	prelude::{Attribute::*, Skill::*, *},
+	schema::{
+		template::{SupernaturalTolerance, werewolf::Form},
+		traits::Trait,
+	},
 	splat::{
-		Merit, Splat,
-		vampire::Vampire,
-		werewolf::{Auspice, Form, Renown, Tribe, Werewolf, WerewolfMerit},
+		Merit, SplatCharacter,
+		werewolf::{Werewolf, WerewolfExt, WerewolfMerit},
 	},
 };
-use cofd_schema::{prelude::Skill, template::SupernaturalTolerance, traits::Trait};
-use systema::prelude::Actor;
+use cofd_schema::template::werewolf::{Auspice, ForsakenTribe, Renown};
+use systema::actor::Actor;
 
 #[test]
 fn size() {
-	println!("{}", size_of::<Splat>());
+	println!("{}", size_of::<SplatCharacter>());
 }
 
 #[test]
@@ -22,7 +23,7 @@ fn it_works() {
 		.with_splat(
 			Werewolf::new()
 				.with_auspice(Auspice::Rahu)
-				.with_tribe(Tribe::BloodTalons),
+				.with_tribe(ForsakenTribe::BloodTalons),
 		)
 		// .with_info(CharacterInfo {
 		// 	name: String::from("Amos Gray"),
@@ -80,14 +81,19 @@ fn it_works() {
 		character.attributes().value(&Trait::Attribute(Stamina))
 	);
 
-	// if let Character {
-	// 	attributes,
-	// 	splat: Splat::Werewolf(werewolf),
-	// 	..
-	// } = &mut character
-	// {
-	// 	werewolf.set_form(Form::Gauru, attributes);
-	// }
+	character.set_form(Form::Gauru);
+
+	assert_eq!(
+		Some(5),
+		character.attributes().value(&Trait::Attribute(Stamina))
+	);
+
+	let character = SplatCharacter::Werewolf(character);
+
+	assert_eq!(
+		Some(5),
+		character.attributes().value(&Trait::Attribute(Stamina))
+	);
 }
 
 //

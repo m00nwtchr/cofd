@@ -1,15 +1,14 @@
+use cofd_schema::{template::werewolf::Renown, traits::Trait};
 use cofd_util::VariantName;
+use enum_dispatch::enum_dispatch;
 use serde::{Deserialize, Serialize};
+use systema::prelude::AttributeModifier;
 
-use super::{
-	Merit,
-	geist::Haunt,
-	mage::Arcanum,
-	vampire::Discipline,
-	werewolf::{MoonGift, Renown},
-};
+use super::{Merit, geist::Haunt, mage::Arcanum, vampire::Discipline, werewolf::MoonGift};
+use crate::COp;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, VariantName)]
+#[enum_dispatch(AbilityTrait)]
 pub enum Ability {
 	#[expand]
 	Merit(Merit),
@@ -44,6 +43,7 @@ impl Ability {
 	// 	}
 	// }
 
+	#[must_use]
 	pub fn is_custom(&self) -> bool {
 		matches!(
 			self,
@@ -54,11 +54,11 @@ impl Ability {
 	}
 }
 
-// #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Serialize, Deserialize)]
-// pub struct AbilityVal(pub Ability, pub u16);
+pub type CModifier = (Trait, AttributeModifier<Trait, u8, COp>);
 
-// impl AbilityVal {
-// 	pub fn get_modifiers(&self) -> Vec<Modifier> {
-// 		self.0.get_modifiers(self.1)
-// 	}
-// }
+#[enum_dispatch]
+pub trait AbilityTrait {
+	fn get_modifiers(&self) -> Box<[CModifier]> {
+		Box::default()
+	}
+}

@@ -1,6 +1,9 @@
+use cofd_schema::template::{changeling, changeling::Regalia::Crown};
+use derive_more::{From, TryInto};
 use serde::{Deserialize, Serialize};
+use strum::VariantArray;
 
-use super::{Merit, NameKey, Splat, SplatTrait, XSplat, YSplat, ZSplat};
+use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat};
 use crate::{
 	character::{Character, damage::Damage},
 	prelude::*,
@@ -20,7 +23,14 @@ pub struct Changeling {
 	pub contracts: Vec<Contract>,
 }
 
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, From, TryInto)]
+pub enum Regalia {
+	Base(changeling::Regalia),
+	Custom(String),
+}
+
 impl Changeling {
+	#[must_use]
 	pub fn new(seeming: Seeming) -> Self {
 		Self {
 			seeming,
@@ -32,8 +42,9 @@ impl Changeling {
 	// 	attributes.wits + attributes.composure
 	// }
 
-	pub fn attr_bonus(&self) -> &Attribute {
-		&self.attr_bonus
+	#[must_use]
+	pub fn attr_bonus(&self) -> Attribute {
+		self.attr_bonus
 	}
 
 	pub fn set_attr_bonus(&mut self, attribute: Attribute) {
@@ -44,6 +55,10 @@ impl Changeling {
 }
 
 impl SplatTrait for Changeling {
+	fn template(&self) -> Template {
+		Template::Changeling
+	}
+
 	fn set_xsplat(&mut self, splat: Option<XSplat>) {
 		if let Some(XSplat::Seeming(seeming)) = splat {
 			self.seeming = seeming;
@@ -77,7 +92,8 @@ impl SplatTrait for Changeling {
 	}
 
 	fn xsplats(&self) -> Vec<XSplat> {
-		Seeming::all().into_iter().map(Into::into).collect()
+		// Seeming::all().into_iter().map(Into::into).collect()
+		todo!()
 	}
 
 	fn ysplats(&self) -> Vec<YSplat> {
@@ -90,11 +106,11 @@ impl SplatTrait for Changeling {
 
 	fn custom_xsplat(&self, name: String) -> Option<XSplat> {
 		Some(
-			Seeming::Custom(
+			Seeming::Custom {
 				name,
-				Regalia::Crown,
+				regalia: Regalia::from(Crown),
 				// AttributeType::Power
-			)
+			}
 			.into(),
 		)
 	}
@@ -114,15 +130,17 @@ impl SplatTrait for Changeling {
 
 impl Default for Changeling {
 	fn default() -> Self {
-		let seeming = Seeming::default();
+		let seeming: changeling::Seeming = changeling::Seeming::default();
 		let attr_bonus = seeming.favored_attributes()[0];
-		let regalia = Regalia::all()
-			.into_iter()
-			.find(|f| !seeming.get_favored_regalia().eq(f))
+		let regalia = changeling::Regalia::VARIANTS
+			.iter()
+			.find(|f| !seeming.favored_regalia().eq(f))
+			.copied()
+			.map(Regalia::Base)
 			.unwrap();
 
 		Self {
-			seeming: Seeming::default(),
+			seeming: Seeming::Base(seeming),
 			court: None,
 			kith: None,
 
@@ -136,52 +154,29 @@ impl Default for Changeling {
 }
 
 #[derive(
-	Clone, Serialize, Deserialize, Debug, PartialEq, Eq, VariantName, AllVariants, Default,
+	Clone, Serialize, Deserialize, Debug, PartialEq, Eq, derive_more::From, derive_more::TryInto,
 )]
 pub enum Seeming {
-	#[default]
-	Beast,
-	Darkling,
-	Elemental,
-	Fairest,
-	Ogre,
-	Wizened,
-	Custom(
-		String,
-		Regalia,
-		// AttributeType
-	),
+	Base(changeling::Seeming),
+	Custom {
+		name: String,
+		regalia: Regalia,
+		// category: AttributeType
+	},
 }
 
 impl Seeming {
-	pub fn get_favored_regalia(&self) -> &Regalia {
+	#[must_use]
+	pub fn favored_regalia(&self) -> Regalia {
 		match self {
-			Seeming::Beast => &Regalia::Steed,
-			Seeming::Darkling => &Regalia::Mirror,
-			Seeming::Elemental => &Regalia::Sword,
-			Seeming::Fairest => &Regalia::Crown,
-			Seeming::Ogre => &Regalia::Shield,
-			Seeming::Wizened => &Regalia::Jewels,
-			Seeming::Custom(_, regalia, ..) => regalia,
+			Self::Base(s) => s.favored_regalia().into(),
+			Self::Custom { regalia, .. } => regalia.clone(),
 		}
 	}
 
+	#[must_use]
 	pub fn favored_attributes(&self) -> [Attribute; 3] {
-		// Attribute::get(AttributeCategory::Type(match self {
-		// 	Seeming::Beast => AttributeType::Resistance,
-		// 	Seeming::Darkling => AttributeType::Finesse,
-		// 	Seeming::Elemental => AttributeType::Resistance,
-		// 	Seeming::Fairest => AttributeType::Power,
-		// 	Seeming::Ogre => AttributeType::Power,
-		// 	Seeming::Wizened => AttributeType::Finesse,
-		// 	Seeming::_Custom(.., _type) => _type.clone(),
-		// }))
-		// TODO
-		[
-			Attribute::Intelligence,
-			Attribute::Intelligence,
-			Attribute::Intelligence,
-		]
+		todo!()
 	}
 }
 
@@ -211,37 +206,15 @@ pub enum Kith {
 	Custom(String),
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, VariantName, AllVariants)]
-pub enum Regalia {
-	Crown,
-	Jewels,
-	Mirror,
-	Shield,
-	Steed,
-	Sword,
-	Custom(String),
-}
-
-impl NameKey for Regalia {
-	fn name_key(&self) -> String {
-		format!("changeling.{}", self.name())
-	}
-}
-
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, AllVariants, VariantName)]
 pub enum ChangelingMerit {
 	Mantle,
 }
 
 impl ChangelingMerit {
-	pub fn is_available(&self, character: &Character) -> bool {
-		matches!(character.splat, Splat::Changeling(..))
-	}
-}
-
-impl From<ChangelingMerit> for Merit {
-	fn from(merit: ChangelingMerit) -> Self {
-		Merit::Changeling(merit)
+	#[must_use]
+	pub fn is_available(&self, character: &Character<Changeling>) -> bool {
+		true
 	}
 }
 

@@ -1,28 +1,22 @@
 #![feature(let_chains)]
 #![warn(clippy::pedantic)]
-#![allow(
-	clippy::must_use_candidate,
-	clippy::used_underscore_binding,
-	clippy::unused_self,
-	clippy::match_wildcard_for_single_variants,
-	clippy::module_name_repetitions,
-	clippy::wildcard_imports,
-	clippy::match_same_arms,
-	clippy::default_trait_access
-)]
 
 #[macro_use]
 extern crate cofd_util;
 
 use std::{
 	collections::HashMap,
-	sync::{Arc, Mutex},
+	sync::{Arc, LazyLock, Mutex},
 };
 
 use serde::{Deserialize, Serialize};
-use systema::prelude::{
-	AttributeInstance, AttributeMap, AttributeModifier, AttributeSupplier,
-	AttributeSupplierBuilder, Operation, System, Value,
+use strum::VariantArray;
+use systema::{
+	attribute::modifier::Op,
+	prelude::{
+		AttributeInstance, AttributeModifier, AttributeSupplier, AttributeSupplierBuilder, System,
+		Value,
+	},
 };
 
 pub mod character;
@@ -31,16 +25,14 @@ pub mod splat;
 pub mod traits;
 mod util;
 
-pub use cofd_schema::template;
+pub use cofd_schema as schema;
 use cofd_schema::{
 	prelude::{Attribute, Skill},
-	template::{SupernaturalTolerance, Template},
+	template::{Template, werewolf::Form},
 	traits::{DerivedTrait, Trait},
 };
-use once_cell::sync::Lazy;
-use strum::VariantArray;
 
-use crate::{prelude::Character, splat::werewolf::Form};
+use crate::splat::SplatCharacter;
 
 pub mod prelude {
 	pub use cofd_schema::{
@@ -56,7 +48,8 @@ pub mod prelude {
 	pub use crate::{character::Character, splat::SplatTrait};
 }
 
-fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8> {
+#[allow(clippy::too_many_lines)]
+fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8, COp> {
 	let mut builder = AttributeSupplier::builder();
 
 	for attribute in Attribute::VARIANTS {
@@ -86,7 +79,7 @@ fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8> {
 					Modifier::Trait(Trait::Attribute(Attribute::Dexterity)),
 					AttributeModifier::new(
 						Value::Attribute(Trait::Attribute(Attribute::Dexterity)),
-						Operation::Add,
+						COp::Add,
 					)
 					.base(),
 				)
@@ -94,13 +87,13 @@ fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8> {
 					Modifier::Trait(Trait::Attribute(Attribute::Strength)),
 					AttributeModifier::new(
 						Value::Attribute(Trait::Attribute(Attribute::Strength)),
-						Operation::Add,
+						COp::Add,
 					)
 					.base(),
 				)
 				.modifier(
 					Modifier::Trait(Trait::DerivedTrait(DerivedTrait::Speed)),
-					AttributeModifier::new(Value::Value(5), Operation::Add).base(),
+					AttributeModifier::new(Value::Value(5), COp::Add).base(),
 				),
 		)
 		.add(
@@ -114,7 +107,7 @@ fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8> {
 					Modifier::Trait(Trait::Attribute(Attribute::Dexterity)),
 					AttributeModifier::new(
 						Value::Attribute(Trait::Attribute(Attribute::Dexterity)),
-						Operation::Add,
+						COp::Add,
 					)
 					.base(),
 				)
@@ -122,7 +115,7 @@ fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8> {
 					Modifier::Trait(Trait::Attribute(Attribute::Composure)),
 					AttributeModifier::new(
 						Value::Attribute(Trait::Attribute(Attribute::Composure)),
-						Operation::Add,
+						COp::Add,
 					)
 					.base(),
 				),
@@ -134,7 +127,7 @@ fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8> {
 					Modifier::Trait(Trait::Attribute(Attribute::Wits)),
 					AttributeModifier::new(
 						Value::Attribute(Trait::Attribute(Attribute::Wits)),
-						Operation::Add,
+						COp::Add,
 					)
 					.base(),
 				)
@@ -142,7 +135,7 @@ fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8> {
 					Modifier::Trait(Trait::Attribute(Attribute::Composure)),
 					AttributeModifier::new(
 						Value::Attribute(Trait::Attribute(Attribute::Composure)),
-						Operation::Add,
+						COp::Add,
 					)
 					.base(),
 				),
@@ -154,13 +147,13 @@ fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8> {
 					Modifier::Trait(Trait::Attribute(Attribute::Stamina)),
 					AttributeModifier::new(
 						Value::Attribute(Trait::Attribute(Attribute::Stamina)),
-						Operation::Add,
+						COp::Add,
 					)
 					.base(),
 				)
 				.modifier(
 					Modifier::Trait(Trait::Size),
-					AttributeModifier::new(Value::Attribute(Trait::Size), Operation::Add).base(),
+					AttributeModifier::new(Value::Attribute(Trait::Size), COp::Add).base(),
 				),
 		)
 		.add(
@@ -170,7 +163,7 @@ fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8> {
 					Modifier::Trait(Trait::Attribute(Attribute::Resolve)),
 					AttributeModifier::new(
 						Value::Attribute(Trait::Attribute(Attribute::Resolve)),
-						Operation::Add,
+						COp::Add,
 					)
 					.base(),
 				)
@@ -178,16 +171,18 @@ fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8> {
 					Modifier::Trait(Trait::Attribute(Attribute::Composure)),
 					AttributeModifier::new(
 						Value::Attribute(Trait::Attribute(Attribute::Composure)),
-						Operation::Add,
+						COp::Add,
 					)
 					.base(),
 				),
 		)
 }
 
-type SupplierMap = HashMap<Template, Arc<AttributeSupplier<Trait, Modifier, u8>>>;
+type SupplierMap = HashMap<Template, Arc<AttributeSupplier<Trait, Modifier, u8, COp>>>;
 
-fn splat_attribute_builder(template: Template) -> AttributeSupplierBuilder<Trait, Modifier, u8> {
+fn splat_attribute_builder(
+	template: Template,
+) -> AttributeSupplierBuilder<Trait, Modifier, u8, COp> {
 	let mut builder = base_attributes();
 
 	if let Some(st) = template.supernatural_tolerance() {
@@ -197,11 +192,18 @@ fn splat_attribute_builder(template: Template) -> AttributeSupplierBuilder<Trait
 		);
 	}
 
+	match template {
+		Template::Werewolf => {
+			// builder = builder.add(Trait::);
+		}
+		_ => todo!(),
+	}
+
 	builder
 }
 
-pub fn splat_attributes(template: Template) -> Arc<AttributeSupplier<Trait, Modifier, u8>> {
-	static ATTRIBUTES: Lazy<Mutex<SupplierMap>> = Lazy::new(|| Mutex::new(HashMap::new()));
+fn splat_attributes(template: Template) -> Arc<AttributeSupplier<Trait, Modifier, u8, COp>> {
+	static ATTRIBUTES: LazyLock<Mutex<SupplierMap>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 	ATTRIBUTES
 		.lock()
@@ -220,9 +222,33 @@ pub enum Modifier {
 	Form(Form),
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum COp {
+	Add,
+	Sub,
+	GreaterThan(u8, Box<COp>),
+}
+
+impl Op<u8> for COp {
+	fn apply(&self, a: u8, b: u8) -> u8 {
+		match self {
+			COp::Add => a + b,
+			COp::Sub => a - b,
+			COp::GreaterThan(v, op) => {
+				if a.gt(v) {
+					op.apply(a, b)
+				} else {
+					a
+				}
+			}
+		}
+	}
+}
+
 impl System for CofDSystem {
 	type AttributeKey = Trait;
 	type ModifierKey = Modifier;
 	type AttributeValue = u8;
-	type Actor = Character;
+	type Operation = COp;
+	type Actor = SplatCharacter;
 }

@@ -20,6 +20,6 @@ convert_case = "0.8"
 
 derive_more = { version = "2" }
 
-systema = { path = "../../systema", features = ["serde"] }
+systema = { git = "https://github.com/m00nwtchr/systema.git", features = ["serde"] }
 
 ron = "0.9.0-alpha.0"

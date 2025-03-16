@@ -17,7 +17,7 @@ systema.workspace = true
 cofd-schema.workspace = true
 cofd-util.workspace = true
 cofd-macros.workspace = true
-once_cell = "1.20.3"
+#once_cell = "1.20.3"
 
 [dev-dependencies]
 ron.workspace = true

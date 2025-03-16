@@ -1,8 +1,14 @@
+use cofd_schema::template::Template;
 use cofd_util::{AllVariants, VariantName};
+use derive_more::{From, TryInto};
 use serde::{Deserialize, Serialize};
 
 use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat, ability::Ability};
-use crate::{dice_pool::DicePool, prelude::Attribute};
+use crate::{
+	dice_pool::DicePool,
+	prelude::Attribute,
+	splat::ability::{AbilityTrait, CModifier},
+};
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(default)]
@@ -16,17 +22,17 @@ pub struct Vampire {
 }
 
 impl Vampire {
-	pub fn new(clan: Clan, covenant: Option<Covenant>, bloodline: Option<Bloodline>) -> Self {
+	#[must_use]
+	pub fn new(clan: Clan) -> Self {
 		Vampire {
 			clan,
-			covenant,
-			bloodline,
 			..Default::default()
 		}
 	}
 
-	pub fn attr_bonus(&self) -> &Attribute {
-		&self.attr_bonus
+	#[must_use]
+	pub fn attr_bonus(&self) -> Attribute {
+		self.attr_bonus
 	}
 
 	pub fn set_attr_bonus(&mut self, attribute: Attribute) {
@@ -43,6 +49,10 @@ impl Vampire {
 }
 
 impl SplatTrait for Vampire {
+	fn template(&self) -> Template {
+		Template::Hunter
+	}
+
 	fn set_xsplat(&mut self, splat: Option<XSplat>) {
 		if let Some(XSplat::Clan(clan)) = splat {
 			self.clan = clan;
@@ -76,7 +86,8 @@ impl SplatTrait for Vampire {
 	}
 
 	fn xsplats(&self) -> Vec<XSplat> {
-		Clan::all().into_iter().map(Into::into).collect()
+		// Clan::all().into_iter().map(Into::into).collect()
+		todo!()
 	}
 
 	fn ysplats(&self) -> Vec<YSplat> {
@@ -89,15 +100,15 @@ impl SplatTrait for Vampire {
 
 	fn custom_xsplat(&self, name: String) -> Option<XSplat> {
 		Some(
-			Clan::Custom(
+			Clan::Custom {
 				name,
-				Box::new([
+				disciplines: Box::new([
 					Discipline::Animalism,
 					Discipline::Auspex,
 					Discipline::Celerity,
 				]),
-				[Attribute::Composure, Attribute::Dexterity],
-			)
+				favored_attributes: [Attribute::Composure, Attribute::Dexterity],
+			}
 			.into(),
 		)
 	}
@@ -125,7 +136,7 @@ impl SplatTrait for Vampire {
 
 impl Default for Vampire {
 	fn default() -> Self {
-		let clan = Clan::default();
+		let clan = Clan::Base(cofd_schema::template::vampire::Clan::default());
 		let attr_bonus = clan.favored_attributes()[0];
 		Vampire {
 			clan,
@@ -137,54 +148,56 @@ impl Default for Vampire {
 	}
 }
 
-#[derive(
-	Clone, Serialize, Deserialize, Debug, PartialEq, Eq, VariantName, AllVariants, Default,
-)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, From, TryInto)]
 pub enum Clan {
-	#[default]
-	Daeva,
-	Gangrel,
-	Mekhet,
-	Nosferatu,
-	Ventrue,
-	Custom(String, Box<[Discipline; 3]>, [Attribute; 2]),
+	Base(cofd_schema::template::vampire::Clan),
+	Custom {
+		name: String,
+		disciplines: Box<[Discipline; 3]>,
+		favored_attributes: [Attribute; 2],
+	},
 }
 
 impl Clan {
-	pub fn get_disciplines(&self) -> &[Discipline; 3] {
+	#[must_use]
+	pub fn disciplines(&self) -> [Discipline; 3] {
 		match self {
-			Clan::Daeva => &[Discipline::Celerity, Discipline::Majesty, Discipline::Vigor],
-			Clan::Gangrel => &[
-				Discipline::Animalism,
-				Discipline::Protean,
-				Discipline::Resilience,
-			],
-			Clan::Mekhet => &[
-				Discipline::Auspex,
-				Discipline::Celerity,
-				Discipline::Obfuscate,
-			],
-			Clan::Nosferatu => &[
-				Discipline::Nightmare,
-				Discipline::Obfuscate,
-				Discipline::Vigor,
-			],
-			Clan::Ventrue => &[
-				Discipline::Animalism,
-				Discipline::Dominate,
-				Discipline::Resilience,
-			],
-			Clan::Custom(_, disciplines, _) => disciplines,
+			Self::Base(b) => match b {
+				cofd_schema::template::vampire::Clan::Daeva => {
+					[Discipline::Celerity, Discipline::Majesty, Discipline::Vigor]
+				}
+				cofd_schema::template::vampire::Clan::Gangrel => [
+					Discipline::Animalism,
+					Discipline::Protean,
+					Discipline::Resilience,
+				],
+				cofd_schema::template::vampire::Clan::Mekhet => [
+					Discipline::Auspex,
+					Discipline::Celerity,
+					Discipline::Obfuscate,
+				],
+				cofd_schema::template::vampire::Clan::Nosferatu => [
+					Discipline::Nightmare,
+					Discipline::Obfuscate,
+					Discipline::Vigor,
+				],
+				cofd_schema::template::vampire::Clan::Ventrue => [
+					Discipline::Animalism,
+					Discipline::Dominate,
+					Discipline::Resilience,
+				],
+			},
+			Self::Custom { disciplines, .. } => disciplines.as_ref().clone(),
 		}
 	}
-	pub fn favored_attributes(&self) -> &[Attribute; 2] {
+
+	#[must_use]
+	pub fn favored_attributes(&self) -> [Attribute; 2] {
 		match self {
-			Clan::Daeva => &[Attribute::Dexterity, Attribute::Manipulation],
-			Clan::Gangrel => &[Attribute::Composure, Attribute::Stamina],
-			Clan::Mekhet => &[Attribute::Intelligence, Attribute::Wits],
-			Clan::Nosferatu => &[Attribute::Composure, Attribute::Strength],
-			Clan::Ventrue => &[Attribute::Presence, Attribute::Resolve],
-			Clan::Custom(_, _, attributes) => attributes,
+			Self::Base(b) => b.favored_attributes(),
+			Self::Custom {
+				favored_attributes, ..
+			} => *favored_attributes,
 		}
 	}
 }
@@ -214,8 +227,8 @@ pub enum Bloodline {
 	Serialize,
 	Deserialize,
 	Hash,
-	VariantName,
 	AllVariants,
+	VariantName,
 )]
 pub enum Discipline {
 	Animalism,
@@ -251,9 +264,9 @@ impl Discipline {
 	// }
 }
 
-impl From<Discipline> for Ability {
-	fn from(val: Discipline) -> Self {
-		Ability::Discipline(val)
+impl AbilityTrait for Discipline {
+	fn get_modifiers(&self) -> Box<[CModifier]> {
+		Box::default()
 	}
 }
 
@@ -465,12 +478,6 @@ impl VampireMerit {
 	// pub fn get_modifiers(&self, value: u16) -> Vec<Modifier> {
 	// 	Vec::new()
 	// }
-}
-
-impl From<VampireMerit> for Merit {
-	fn from(merit: VampireMerit) -> Self {
-		Merit::Vampire(merit)
-	}
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
