@@ -230,6 +230,7 @@ pub enum Bloodline {
 	Hash,
 	AllVariants,
 	VariantName,
+	derive_more::Display,
 )]
 pub enum Discipline {
 	Animalism,
@@ -302,7 +303,18 @@ pub enum MaskDirge {
 	Custom(String),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, AllVariants, VariantName)]
+#[derive(
+	Clone,
+	Debug,
+	PartialEq,
+	Eq,
+	Serialize,
+	Deserialize,
+	Hash,
+	AllVariants,
+	VariantName,
+	derive_more::Display,
+)]
 pub enum VampireMerit {
 	AcuteSenses,
 	Atrocious,

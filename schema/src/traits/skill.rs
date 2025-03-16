@@ -15,15 +15,17 @@ use crate::traits::TraitCategory;
 	Ord,
 	Serialize,
 	Deserialize,
-	Display,
 	EnumString,
 	AsRefStr,
 	VariantArray,
 	VariantName,
+	derive_more::Display,
+	Default,
 )]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[strum(ascii_case_insensitive)]
 pub enum Skill {
+	#[default]
 	Academics,
 	Computer,
 	Crafts,

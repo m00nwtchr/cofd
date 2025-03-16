@@ -124,7 +124,18 @@ pub enum Archetype {
 	Custom(String),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, AllVariants, VariantName)]
+#[derive(
+	Debug,
+	Clone,
+	PartialEq,
+	Eq,
+	Hash,
+	Serialize,
+	Deserialize,
+	AllVariants,
+	VariantName,
+	derive_more::Display,
+)]
 pub enum Haunt {
 	Boneyard,
 	Caul,

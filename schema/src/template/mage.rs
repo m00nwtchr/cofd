@@ -16,6 +16,7 @@ use crate::traits::skill::Skill;
 	VariantArray,
 	Hash,
 	VariantName,
+	derive_more::Display,
 )]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 pub enum Arcanum {

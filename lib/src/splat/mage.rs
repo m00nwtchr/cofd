@@ -217,7 +217,18 @@ impl Path {
 	}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, AllVariants, VariantName)]
+#[derive(
+	Clone,
+	Debug,
+	Serialize,
+	Deserialize,
+	PartialEq,
+	Eq,
+	Hash,
+	AllVariants,
+	VariantName,
+	derive_more::Display,
+)]
 pub enum MageMerit {
 	HighSpeech,
 }

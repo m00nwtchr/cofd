@@ -22,6 +22,7 @@ use crate::{
 	AllVariants,
 	VariantName,
 	derive_more::From,
+	derive_more::Display,
 )]
 pub enum Merit {
 	// Mental Merits
@@ -38,14 +39,18 @@ pub enum Merit {
 	// HumanPrey,      // DTR
 	// Hypervigilance, // DTR
 	Indomitable,
-	InterdisciplinarySpecialty(String, Option<Skill>),
-	InvestigativeAide(Option<Skill>),
+	#[display("Interdisciplinary Specialty ({_0})")]
+	InterdisciplinarySpecialty(String, Skill),
+	InvestigativeAide(Skill),
 	InvestigativeProdigy,
 	Language(String),
-	Library(Option<Skill>),
+	#[display("Library")]
+	Library(Skill),
+	#[display("Library, Advanced")]
 	LibraryAdvanced(Vec<String>),
 	// LucidDreamer, // CTL
 	MeditativeMind,
+	#[display("Multilingual ({_0}, {_1})")]
 	Multilingual(String, String),
 	ObjectFetishism(String),
 	Patient,
@@ -87,15 +92,18 @@ pub enum Merit {
 	Barfly,
 	ClosedBook,
 	CohesiveUnit,
+	#[display("Contacts")]
 	Contacts(Vec<String>),
 	Defender,
 	Empath,
 	Fame,
 	Fixer,
-	HobbyistClique(String, Option<Skill>),
+	#[display("Hobbyist Clique ({_0}, {_1})")]
+	HobbyistClique(String, Skill),
 	Inspiring,
 	IronWill,
-	Mentor(String, Option<[Skill; 3]>), // TODO: Add Resources to list
+	#[display("Mentor ({_0})")]
+	Mentor(String, [Skill; 3]), // TODO: Add Resources to list
 	Peacemaker,
 	Pusher,
 	Resources,
@@ -106,16 +114,19 @@ pub enum Merit {
 	Staff,
 	Status(String),
 	StrikingLooks(String),
+	#[display("Support Network ({_0})")]
 	SupportNetwork(String, Option<Box<Merit>>), // TODO: Restrict to social merits
 	Sympathetic,
 	TableTurner,
 	TakesOneToKnowOne,
-	Taste(String, Option<Skill>), // TODO: Restrict to Crafts/Expression
+	#[display("Taste ({_0}, {_1})")]
+	Taste(String, Skill), // TODO: Restrict to Crafts/Expression
 	TrueFriend(String),
 	Untouchable,
 
 	// Style Merits
 	// Mental Styles
+	#[display("Professional Training ({profession})")]
 	ProfessionalTraining {
 		profession: String,
 		skills: [Skill; 2],
@@ -135,7 +146,8 @@ pub enum Merit {
 	// ScorpionCultInitation, // MTC
 
 	// Fighting Merits
-	DefensiveCombat(bool, Option<Skill>), // Brawl / Weaponry
+	#[display("Defensive Combat ({_1})")]
+	DefensiveCombat(bool, Skill), // Brawl / Weaponry
 
 	// Fighting Styles
 	// ArmedDefense,

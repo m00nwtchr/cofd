@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use cofd_schema::{
 	dice_pool::DicePool,
 	prelude::{Attribute, Skill},
-	traits::{DerivedTrait, Trait},
+	traits::DerivedTrait,
 };
 use damage::Damage;
 use enum_dispatch::enum_dispatch;
@@ -13,7 +13,7 @@ use systema::prelude::{Actor, AttributeMap};
 
 use crate::{
 	CofDSystem, ability::Ability, merits::Merit, prelude::SplatTrait, splat_attributes,
-	util::is_empty_vec,
+	traits::Trait, util::is_empty_vec,
 };
 
 pub(crate) mod damage;
@@ -238,8 +238,6 @@ pub struct CharacterBuilder<S: SplatTrait> {
 	abilities: HashMap<Ability, u8>,
 	power: u8,
 	fuel: Option<u8>,
-
-	flag: bool,
 }
 
 impl<S: SplatTrait> CharacterBuilder<S> {
@@ -271,15 +269,12 @@ impl<S: SplatTrait> CharacterBuilder<S> {
 	// TODO
 	pub fn with_abilities<const N: usize>(mut self, abilities: [(Ability, u8); N]) -> Self {
 		self.abilities = HashMap::from(abilities);
-
-		self.flag = true;
 		self
 	}
 
 	// TODO
 	pub fn with_merits<const N: usize>(mut self, merits: [(Merit, u8); N]) -> Self {
 		self.merits = Vec::from(merits);
-		self.flag = true;
 		self
 	}
 

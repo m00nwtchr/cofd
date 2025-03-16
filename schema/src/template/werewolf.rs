@@ -16,6 +16,7 @@ use crate::prelude::Skill;
 	EnumString,
 	PartialEq,
 	Eq,
+	derive_more::Display,
 )]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[strum(ascii_case_insensitive)]
@@ -102,6 +103,7 @@ impl Auspice {
 	Hash,
 	VariantName,
 	AllVariants,
+	derive_more::Display,
 )]
 pub enum Form {
 	#[default]

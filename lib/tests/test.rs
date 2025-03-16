@@ -1,14 +1,8 @@
 use cofd::{
 	merits::Merit,
-	prelude::{Attribute::*, Skill::*, *},
-	schema::{template::SupernaturalTolerance, traits::Trait},
-	splat::{
-		SplatCharacter,
-		werewolf::{
-			Werewolf, WerewolfExt, WerewolfMerit,
-			schema::{Auspice, Form, ForsakenTribe, Renown},
-		},
-	},
+	prelude::{Attribute::*, Skill::*, werewolf::*, *},
+	schema::template::SupernaturalTolerance,
+	splat::SplatCharacter,
 };
 
 #[test]
@@ -59,7 +53,7 @@ fn it_works() {
 		.with_merits([
 			(Merit::Giant, 3),
 			(Merit::TrainedObserver, 1),
-			(Merit::DefensiveCombat(true, Some(Brawl)), 1),
+			(Merit::DefensiveCombat(true, Brawl), 1),
 			(WerewolfMerit::FavoredForm { form: Form::Gauru }.into(), 2),
 			(WerewolfMerit::EfficientKiller.into(), 2),
 			(Merit::RelentlessAssault, 2),

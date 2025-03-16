@@ -1,5 +1,11 @@
 pub use cofd_schema::traits::{DerivedTrait, TraitCategory, attribute, skill};
+use cofd_schema::{
+	prelude::{Attribute, Skill},
+	template::SupernaturalTolerance,
+};
+use serde::{Deserialize, Serialize};
 
+use crate::ability::Ability;
 // #[derive(
 // 	Debug,
 // 	Clone,
@@ -31,6 +37,29 @@ pub use cofd_schema::traits::{DerivedTrait, TraitCategory, attribute, skill};
 // 	Fuel,
 // 	Integrity,
 // }
+
+#[derive(
+	Debug,
+	Clone,
+	Hash,
+	Serialize,
+	Deserialize,
+	PartialEq,
+	Eq,
+	derive_more::Display,
+	derive_more::From,
+)]
+#[serde(untagged)]
+pub enum Trait {
+	Ability(Ability),
+	Attribute(Attribute),
+	Skill(Skill),
+
+	DerivedTrait(DerivedTrait),
+
+	Size,
+	SupernaturalTolerance(SupernaturalTolerance),
+}
 
 pub trait NameKey {
 	fn name_key(&self) -> String;

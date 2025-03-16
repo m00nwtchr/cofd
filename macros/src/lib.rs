@@ -99,7 +99,7 @@ pub fn gifts(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
 	let expanded = quote! {
 		#[derive(
-			Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Serialize, Deserialize, VariantName, AllVariants, Hash
+			Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Serialize, Deserialize, VariantName, AllVariants, Hash, derive_more::Display,
 		)]
 		pub enum MoonGift {
 			#moon_gift_variants

@@ -1,4 +1,4 @@
-use cofd_schema::{template::werewolf::Renown, traits::Trait};
+use cofd_schema::template::werewolf::Renown;
 use cofd_util::VariantName;
 use enum_dispatch::enum_dispatch;
 use serde::{Deserialize, Serialize};
@@ -8,9 +8,12 @@ use crate::{
 	COp,
 	merits::Merit,
 	splat::{geist::Haunt, mage::schema::Arcanum, vampire::Discipline, werewolf::MoonGift},
+	traits::Trait,
 };
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, VariantName)]
+#[derive(
+	Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, derive_more::Display, VariantName,
+)]
 #[enum_dispatch(AbilityTrait)]
 pub enum Ability {
 	#[expand]

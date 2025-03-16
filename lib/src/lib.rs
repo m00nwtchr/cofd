@@ -31,8 +31,9 @@ pub use cofd_schema as schema;
 use cofd_schema::{
 	prelude::{Attribute, Skill},
 	template::{Template, werewolf::Form},
-	traits::{DerivedTrait, Trait},
+	traits::DerivedTrait,
 };
+use traits::Trait;
 
 use crate::splat::SplatCharacter;
 
@@ -48,7 +49,14 @@ pub mod prelude {
 	pub use cofd_util::{AllVariants, VariantName};
 	pub use systema::prelude::Actor;
 
-	pub use crate::{character::Character, splat::SplatTrait};
+	pub use crate::{character::Character, splat::SplatTrait, traits::Trait};
+
+	pub mod werewolf {
+		pub use crate::splat::werewolf::{
+			Werewolf, WerewolfExt, WerewolfMerit,
+			schema::{Auspice, Form, ForsakenTribe, Lodge, Renown},
+		};
+	}
 }
 
 #[allow(clippy::too_many_lines)]
@@ -218,7 +226,7 @@ fn splat_attributes(template: Template) -> Arc<AttributeSupplier<Trait, Modifier
 
 pub struct CofDSystem;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Modifier {
 	Trait(Trait),
 

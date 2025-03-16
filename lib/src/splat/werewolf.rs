@@ -1,10 +1,7 @@
 use std::collections::HashMap;
 
 pub use cofd_schema::template::werewolf as schema;
-use cofd_schema::{
-	template::SupernaturalTolerance,
-	traits::{DerivedTrait, Trait},
-};
+use cofd_schema::{template::SupernaturalTolerance, traits::DerivedTrait};
 use cofd_util::VariantName;
 use derive_more::{From, TryInto};
 use schema::{Form, HuntersAspect::Monstrous, Lodge, Renown};
@@ -16,7 +13,7 @@ use crate::{
 	COp, CofDSystem, Modifier,
 	ability::{Ability, AbilityTrait, CModifier},
 	prelude::*,
-	traits::NameKey,
+	traits::{NameKey, Trait},
 };
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -55,7 +52,7 @@ impl WerewolfExt for Character<Werewolf> {
 			.remove_modifiers(&Modifier::Form(old_form));
 
 		self.splat.form = form;
-		let mods: &[(Trait, AttributeModifier<Trait, u8, crate::COp>)] = get_modifiers(form);
+		let mods: &[(Trait, AttributeModifier<Trait, u8, COp>)] = get_modifiers(form);
 		for (t, m) in mods {
 			self.attributes_mut()
 				.add_modifier(t, Modifier::Form(form), m.clone());
@@ -686,8 +683,20 @@ impl NameKey for Rite {
 	}
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, AllVariants, VariantName)]
+#[derive(
+	Clone,
+	Debug,
+	PartialEq,
+	Eq,
+	Serialize,
+	Deserialize,
+	Hash,
+	AllVariants,
+	VariantName,
+	derive_more::Display,
+)]
 pub enum WerewolfMerit {
+	#[display("Favored Form ({form})")]
 	FavoredForm {
 		form: Form,
 		//
