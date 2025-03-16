@@ -101,6 +101,11 @@ impl Actor for SplatCharacter {
 pub trait SplatTrait: Default {
 	fn template(&self) -> Template;
 
+	#[allow(unused_mut)]
+	fn init(mut character: Character<Self>) -> Character<Self> {
+		character
+	}
+
 	fn set_xsplat(&mut self, splat: Option<XSplat>);
 
 	fn set_ysplat(&mut self, splat: Option<YSplat>);
@@ -151,7 +156,9 @@ pub trait SplatTrait: Default {
 	fn merits(&self) -> Vec<Merit>;
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, derive_more::From, derive_more::TryInto)]
+#[derive(
+	Debug, Clone, PartialEq, Eq, Serialize, Deserialize, derive_more::From, derive_more::TryInto,
+)]
 pub enum XSplat {
 	// #[expand]
 	Clan(Clan),

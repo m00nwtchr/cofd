@@ -508,7 +508,7 @@ dependencies = [
 [[package]]
 name = "systema"
 version = "0.1.0"
-source = "git+https://github.com/m00nwtchr/systema.git#7f27ec043f375827be871bd6055c803a231c59fa"
+source = "git+https://github.com/m00nwtchr/systema.git#9be1e1cd1e9e7ca71a94838b769bd5935d88a7b4"
 dependencies = [
  "derive_more",
  "once_cell",

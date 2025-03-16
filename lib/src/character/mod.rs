@@ -197,11 +197,11 @@ impl<S: SplatTrait> Actor for Character<S> {
 	fn new(splat: Self::Kind) -> Self {
 		let attributes = AttributeMap::<CofDSystem>::new(splat_attributes(splat.template()));
 
-		Self {
+		S::init(Self {
 			splat,
 			attributes,
 			..Character::default()
-		}
+		})
 	}
 
 	fn attributes(&self) -> &AttributeMap<Self::System> {
@@ -214,7 +214,7 @@ impl<S: SplatTrait> Actor for Character<S> {
 }
 
 #[enum_dispatch]
-pub trait CharacterTrait: Actor<System = CofDSystem> {
+pub(super) trait CharacterTrait: Actor<System = CofDSystem> {
 	fn attributes(&self) -> &AttributeMap<Self::System> {
 		Actor::attributes(self)
 	}
@@ -307,6 +307,12 @@ impl<S: SplatTrait> CharacterBuilder<S> {
 			character
 				.attributes
 				.set_raw_value(&Trait::Skill(skill), value);
+		}
+
+		for (a, value) in self.abilities {
+			character
+				.attributes
+				.set_raw_value(&Trait::Ability(a), value);
 		}
 
 		if let Some(st) = template.supernatural_tolerance() {

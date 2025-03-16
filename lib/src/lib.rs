@@ -30,12 +30,19 @@ mod util;
 pub use cofd_schema as schema;
 use cofd_schema::{
 	prelude::{Attribute, Skill},
-	template::{Template, werewolf::Form},
+	template::{
+		Template,
+		werewolf::{Form, Renown},
+	},
 	traits::DerivedTrait,
 };
+use cofd_util::AllVariants;
 use traits::Trait;
 
-use crate::splat::SplatCharacter;
+use crate::{
+	ability::Ability,
+	splat::{SplatCharacter, XSplat, werewolf::MoonGift},
+};
 
 pub mod prelude {
 	pub use cofd_schema::{
@@ -206,6 +213,20 @@ fn splat_attribute_builder(
 	match template {
 		Template::Werewolf => {
 			// builder = builder.add(Trait::);
+
+			for renown in Renown::VARIANTS {
+				builder = builder.add(
+					Trait::Ability(Ability::Renown(*renown)),
+					AttributeInstance::builder(systema::prelude::Attribute::Value(0)),
+				);
+			}
+
+			for g in MoonGift::all() {
+				builder = builder.add(
+					Trait::Ability(Ability::MoonGift(g)),
+					AttributeInstance::builder(systema::prelude::Attribute::Derived),
+				);
+			}
 		}
 		_ => todo!(),
 	}
@@ -226,10 +247,11 @@ fn splat_attributes(template: Template) -> Arc<AttributeSupplier<Trait, Modifier
 
 pub struct CofDSystem;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Modifier {
 	Trait(Trait),
 
+	XSplat(XSplat),
 	Form(Form),
 }
 
@@ -246,7 +268,7 @@ impl Op<u8> for COp {
 			COp::Add => a + b,
 			COp::Sub => a - b,
 			COp::GreaterThan(v, op) => {
-				if a.gt(v) {
+				if b.gt(v) {
 					op.apply(a, b)
 				} else {
 					a

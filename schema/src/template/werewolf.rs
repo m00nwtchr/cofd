@@ -10,13 +10,13 @@ use crate::prelude::Skill;
 	Hash,
 	Copy,
 	VariantName,
-	AllVariants,
 	Serialize,
 	Deserialize,
 	EnumString,
 	PartialEq,
 	Eq,
 	derive_more::Display,
+	VariantArray,
 )]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[strum(ascii_case_insensitive)]

@@ -1,9 +1,11 @@
 use cofd::{
+	ability::Ability,
 	merits::Merit,
 	prelude::{Attribute::*, Skill::*, werewolf::*, *},
 	schema::template::SupernaturalTolerance,
-	splat::SplatCharacter,
+	splat::{SplatCharacter, werewolf::MoonGift},
 };
+use cofd_schema::traits::DerivedTrait::Health;
 
 #[test]
 fn size() {
@@ -68,10 +70,29 @@ fn it_works() {
 			SupernaturalTolerance::PrimalUrge,
 		))
 	);
+	assert_eq!(
+		Some(3),
+		character
+			.attributes()
+			.value(&Trait::Ability(Ability::MoonGift(MoonGift::Full)))
+	);
 
 	assert_eq!(
 		Some(3),
 		character.attributes().value(&Trait::Attribute(Stamina))
+	);
+	assert_eq!(
+		Some(11),
+		character.attributes().value(&Trait::DerivedTrait(Health))
+	);
+
+	character
+		.attributes_mut()
+		.set_raw_value(&Trait::Ability(Ability::Renown(Renown::Purity)), 1);
+
+	assert_eq!(
+		Some(8),
+		character.attributes().value(&Trait::DerivedTrait(Health))
 	);
 
 	character.set_form(Form::Gauru);
@@ -79,6 +100,19 @@ fn it_works() {
 	assert_eq!(
 		Some(5),
 		character.attributes().value(&Trait::Attribute(Stamina))
+	);
+	assert_eq!(
+		Some(12),
+		character.attributes().value(&Trait::DerivedTrait(Health))
+	);
+
+	character
+		.attributes_mut()
+		.set_raw_value(&Trait::Ability(Ability::Renown(Renown::Purity)), 3);
+
+	assert_eq!(
+		Some(15),
+		character.attributes().value(&Trait::DerivedTrait(Health))
 	);
 
 	let character = SplatCharacter::Werewolf(character);

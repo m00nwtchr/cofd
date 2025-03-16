@@ -6,6 +6,7 @@ use cofd_util::VariantName;
 use derive_more::{From, TryInto};
 use schema::{Form, HuntersAspect::Monstrous, Lodge, Renown};
 use serde::{Deserialize, Serialize};
+use strum::VariantArray;
 use systema::prelude::{Actor, AttributeModifier, Value};
 
 use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat};
@@ -113,6 +114,34 @@ impl SplatTrait for Werewolf {
 		Template::Werewolf
 	}
 
+	fn init(mut character: Character<Self>) -> Character<Self> {
+		if let Some(auspice) = character.splat.auspice.clone() {
+			let renown = auspice.renown();
+
+			character.attributes_mut().add_modifier(
+				&Trait::Ability(Ability::MoonGift(auspice.moon_gift())),
+				Modifier::XSplat(XSplat::Auspice(auspice)),
+				AttributeModifier::new(
+					Value::Attribute(Trait::Ability(Ability::Renown(renown))),
+					COp::Add,
+				)
+				.base(),
+			);
+		}
+
+		character.attributes_mut().add_modifier(
+			&Trait::DerivedTrait(DerivedTrait::Health),
+			Modifier::Trait(Trait::Ability(Ability::MoonGift(MoonGift::Full))),
+			AttributeModifier::new(
+				Value::Attribute(Trait::Ability(Ability::Renown(Renown::Purity))),
+				COp::GreaterThan(1, Box::new(COp::Add)),
+			)
+			.base(),
+		);
+
+		character
+	}
+
 	fn set_xsplat(&mut self, splat: Option<XSplat>) {
 		match splat {
 			Some(XSplat::Auspice(auspice)) => self.auspice = Some(auspice),
@@ -195,7 +224,7 @@ impl SplatTrait for Werewolf {
 	}
 
 	fn all_abilities(&self) -> Option<Vec<Ability>> {
-		Some(Renown::all().into_iter().map(Into::into).collect())
+		Some(Renown::VARIANTS.iter().copied().map(Into::into).collect())
 	}
 
 	fn merits(&self) -> Vec<Merit> {
