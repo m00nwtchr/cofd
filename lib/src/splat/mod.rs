@@ -1,17 +1,17 @@
 #![allow(clippy::wildcard_imports)]
+use cofd_schema::template::Template;
 use cofd_util::AllVariants;
 use enum_dispatch::enum_dispatch;
 use serde::{Deserialize, Serialize};
 use strum::EnumDiscriminants;
 use systema::prelude::{Actor, AttributeMap};
 
-use self::ability::Ability;
-use crate::character::CharacterTrait;
-
-pub mod ability;
-pub mod merits;
-
-pub use merits::*;
+use crate::{
+	CofDSystem,
+	ability::Ability,
+	character::{Character, CharacterTrait},
+	merits::*,
+};
 
 pub mod mage;
 pub mod vampire;
@@ -20,7 +20,7 @@ pub mod werewolf;
 pub mod changeling;
 // pub mod hunter;
 pub mod geist;
-mod mortal;
+pub mod mortal;
 // pub mod mummy;
 // pub mod demon;
 // pub mod beast;
@@ -28,23 +28,19 @@ mod mortal;
 
 // use promethean::*;
 use changeling::*;
-use cofd_schema::template::{
-	Template,
-	mage::{Legacy, Ministry, Order},
-	werewolf::Lodge,
-};
 // use hunter::*;
 use geist::*;
-use mage::*;
-use mortal::*;
-use vampire::*;
-use werewolf::*;
-
-use crate::{CofDSystem, character::Character};
 // use mummy::*;
 // use demon::*;
 // use beast::*;
 // use deviant:*;
+use mage::{
+	schema::{Legacy, Ministry, Order},
+	*,
+};
+use mortal::*;
+use vampire::*;
+use werewolf::{schema::Lodge, *};
 
 #[derive(
 	Clone,
@@ -274,31 +270,3 @@ impl ZSplat {
 		)
 	}
 }
-/*
-   #[must_use]
-   pub fn disciplines(&self) -> [Discipline; 3] {
-	   match self {
-		   Clan::Daeva => [Discipline::Celerity, Discipline::Majesty, Discipline::Vigor],
-		   Clan::Gangrel => [
-			   Discipline::Animalism,
-			   Discipline::Protean,
-			   Discipline::Resilience,
-		   ],
-		   Clan::Mekhet => [
-			   Discipline::Auspex,
-			   Discipline::Celerity,
-			   Discipline::Obfuscate,
-		   ],
-		   Clan::Nosferatu => [
-			   Discipline::Nightmare,
-			   Discipline::Obfuscate,
-			   Discipline::Vigor,
-		   ],
-		   Clan::Ventrue => [
-			   Discipline::Animalism,
-			   Discipline::Dominate,
-			   Discipline::Resilience,
-		   ],
-	   }
-   }
-*/

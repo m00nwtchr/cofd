@@ -4,8 +4,11 @@ use enum_dispatch::enum_dispatch;
 use serde::{Deserialize, Serialize};
 use systema::prelude::AttributeModifier;
 
-use super::{Merit, geist::Haunt, mage::Arcanum, vampire::Discipline, werewolf::MoonGift};
-use crate::COp;
+use crate::{
+	COp,
+	merits::Merit,
+	splat::{geist::Haunt, mage::schema::Arcanum, vampire::Discipline, werewolf::MoonGift},
+};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, VariantName)]
 #[enum_dispatch(AbilityTrait)]

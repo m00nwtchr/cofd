@@ -1,13 +1,14 @@
 use cofd_schema::template::Template;
+pub use cofd_schema::template::vampire as schema;
 use cofd_util::{AllVariants, VariantName};
 use derive_more::{From, TryInto};
 use serde::{Deserialize, Serialize};
 
-use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat, ability::Ability};
+use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat};
 use crate::{
+	ability::{Ability, AbilityTrait, CModifier},
 	dice_pool::DicePool,
 	prelude::Attribute,
-	splat::ability::{AbilityTrait, CModifier},
 };
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
@@ -136,7 +137,7 @@ impl SplatTrait for Vampire {
 
 impl Default for Vampire {
 	fn default() -> Self {
-		let clan = Clan::Base(cofd_schema::template::vampire::Clan::default());
+		let clan = Clan::Base(schema::Clan::default());
 		let attr_bonus = clan.favored_attributes()[0];
 		Vampire {
 			clan,
@@ -150,7 +151,7 @@ impl Default for Vampire {
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, From, TryInto)]
 pub enum Clan {
-	Base(cofd_schema::template::vampire::Clan),
+	Base(schema::Clan),
 	Custom {
 		name: String,
 		disciplines: Box<[Discipline; 3]>,
@@ -163,25 +164,25 @@ impl Clan {
 	pub fn disciplines(&self) -> [Discipline; 3] {
 		match self {
 			Self::Base(b) => match b {
-				cofd_schema::template::vampire::Clan::Daeva => {
+				schema::Clan::Daeva => {
 					[Discipline::Celerity, Discipline::Majesty, Discipline::Vigor]
 				}
-				cofd_schema::template::vampire::Clan::Gangrel => [
+				schema::Clan::Gangrel => [
 					Discipline::Animalism,
 					Discipline::Protean,
 					Discipline::Resilience,
 				],
-				cofd_schema::template::vampire::Clan::Mekhet => [
+				schema::Clan::Mekhet => [
 					Discipline::Auspex,
 					Discipline::Celerity,
 					Discipline::Obfuscate,
 				],
-				cofd_schema::template::vampire::Clan::Nosferatu => [
+				schema::Clan::Nosferatu => [
 					Discipline::Nightmare,
 					Discipline::Obfuscate,
 					Discipline::Vigor,
 				],
-				cofd_schema::template::vampire::Clan::Ventrue => [
+				schema::Clan::Ventrue => [
 					Discipline::Animalism,
 					Discipline::Dominate,
 					Discipline::Resilience,

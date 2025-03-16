@@ -1,16 +1,15 @@
 use cofd::{
+	merits::Merit,
 	prelude::{Attribute::*, Skill::*, *},
-	schema::{
-		template::{SupernaturalTolerance, werewolf::Form},
-		traits::Trait,
-	},
+	schema::{template::SupernaturalTolerance, traits::Trait},
 	splat::{
-		Merit, SplatCharacter,
-		werewolf::{Werewolf, WerewolfExt, WerewolfMerit},
+		SplatCharacter,
+		werewolf::{
+			Werewolf, WerewolfExt, WerewolfMerit,
+			schema::{Auspice, Form, ForsakenTribe, Renown},
+		},
 	},
 };
-use cofd_schema::template::werewolf::{Auspice, ForsakenTribe, Renown};
-use systema::actor::Actor;
 
 #[test]
 fn size() {

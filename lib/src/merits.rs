@@ -2,11 +2,12 @@ use cofd_schema::prelude::Skill;
 use cofd_util::{AllVariants, VariantName};
 use serde::{Deserialize, Serialize};
 
-use super::{
-	changeling::ChangelingMerit, mage::MageMerit, vampire::VampireMerit, werewolf::WerewolfMerit,
-};
 use crate::{
-	splat::ability::{AbilityTrait, CModifier},
+	ability::{AbilityTrait, CModifier},
+	splat::{
+		changeling::ChangelingMerit, mage::MageMerit, vampire::VampireMerit,
+		werewolf::WerewolfMerit,
+	},
 	traits::NameKey,
 };
 

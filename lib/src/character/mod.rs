@@ -12,10 +12,7 @@ use serde::{Deserialize, Serialize};
 use systema::prelude::{Actor, AttributeMap};
 
 use crate::{
-	CofDSystem,
-	prelude::SplatTrait,
-	splat::{Merit, ability::Ability},
-	splat_attributes,
+	CofDSystem, ability::Ability, merits::Merit, prelude::SplatTrait, splat_attributes,
 	util::is_empty_vec,
 };
 

@@ -1,4 +1,4 @@
-use cofd_schema::template::{changeling, changeling::Regalia::Crown};
+pub use cofd_schema::template::changeling as schema;
 use derive_more::{From, TryInto};
 use serde::{Deserialize, Serialize};
 use strum::VariantArray;
@@ -25,7 +25,7 @@ pub struct Changeling {
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, From, TryInto)]
 pub enum Regalia {
-	Base(changeling::Regalia),
+	Base(schema::Regalia),
 	Custom(String),
 }
 
@@ -108,7 +108,7 @@ impl SplatTrait for Changeling {
 		Some(
 			Seeming::Custom {
 				name,
-				regalia: Regalia::from(Crown),
+				regalia: Regalia::from(schema::Regalia::Crown),
 				// AttributeType::Power
 			}
 			.into(),
@@ -130,9 +130,9 @@ impl SplatTrait for Changeling {
 
 impl Default for Changeling {
 	fn default() -> Self {
-		let seeming: changeling::Seeming = changeling::Seeming::default();
+		let seeming: schema::Seeming = schema::Seeming::default();
 		let attr_bonus = seeming.favored_attributes()[0];
-		let regalia = changeling::Regalia::VARIANTS
+		let regalia = schema::Regalia::VARIANTS
 			.iter()
 			.find(|f| !seeming.favored_regalia().eq(f))
 			.copied()
@@ -157,7 +157,7 @@ impl Default for Changeling {
 	Clone, Serialize, Deserialize, Debug, PartialEq, Eq, derive_more::From, derive_more::TryInto,
 )]
 pub enum Seeming {
-	Base(changeling::Seeming),
+	Base(schema::Seeming),
 	Custom {
 		name: String,
 		regalia: Regalia,

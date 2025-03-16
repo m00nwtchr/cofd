@@ -19,8 +19,10 @@ use systema::{
 	},
 };
 
+pub mod ability;
 pub mod character;
 pub mod dice_pool;
+pub mod merits;
 pub mod splat;
 pub mod traits;
 mod util;
@@ -44,6 +46,7 @@ pub mod prelude {
 		},
 	};
 	pub use cofd_util::{AllVariants, VariantName};
+	pub use systema::prelude::Actor;
 
 	pub use crate::{character::Character, splat::SplatTrait};
 }

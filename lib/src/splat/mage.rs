@@ -1,18 +1,15 @@
-pub use cofd_schema::template::mage::Arcanum;
-use cofd_schema::template::{
-	Template,
-	mage::{Legacy, Order, Rote},
-};
+use cofd_schema::template::Template;
+pub use cofd_schema::template::mage as schema;
 use cofd_util::{AllVariants, VariantName};
 use derive_more::{From, TryInto};
+use schema::{Arcanum, Legacy, Order, Rote};
 use serde::{Deserialize, Serialize};
 
-use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat, ability::Ability};
+use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat};
 use crate::{
+	ability::{Ability, AbilityTrait},
 	prelude::{Attribute, Character, Skill},
-	splat::ability::AbilityTrait,
 };
-
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize, Debug)]
 #[serde(default)]
 pub struct Mage {

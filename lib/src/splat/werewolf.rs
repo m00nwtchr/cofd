@@ -1,22 +1,21 @@
 use std::collections::HashMap;
 
+pub use cofd_schema::template::werewolf as schema;
 use cofd_schema::{
-	template::{
-		SupernaturalTolerance,
-		werewolf::{Form, HuntersAspect::Monstrous, Lodge, Renown},
-	},
+	template::SupernaturalTolerance,
 	traits::{DerivedTrait, Trait},
 };
 use cofd_util::VariantName;
 use derive_more::{From, TryInto};
+use schema::{Form, HuntersAspect::Monstrous, Lodge, Renown};
 use serde::{Deserialize, Serialize};
 use systema::prelude::{Actor, AttributeModifier, Value};
 
-use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat, ability::Ability};
+use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat};
 use crate::{
 	COp, CofDSystem, Modifier,
+	ability::{Ability, AbilityTrait, CModifier},
 	prelude::*,
-	splat::ability::{AbilityTrait, CModifier},
 	traits::NameKey,
 };
 
@@ -290,7 +289,7 @@ impl KuruthTriggers {
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, From, TryInto)]
 pub enum HuntersAspect {
-	Base(cofd_schema::template::werewolf::HuntersAspect),
+	Base(schema::HuntersAspect),
 	Custom(String),
 }
 
@@ -306,7 +305,7 @@ pub struct CustomAuspice {
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, From, TryInto)]
 pub enum Auspice {
-	Base(cofd_schema::template::werewolf::Auspice),
+	Base(schema::Auspice),
 	Custom(CustomAuspice),
 }
 
@@ -331,21 +330,11 @@ impl Auspice {
 	pub fn gifts(&self) -> [ShadowGift; 2] {
 		match self {
 			Self::Base(b) => match b {
-				cofd_schema::template::werewolf::Auspice::Cahalith => {
-					[ShadowGift::Inspiration, ShadowGift::Knowledge]
-				}
-				cofd_schema::template::werewolf::Auspice::Elodoth => {
-					[ShadowGift::Insight, ShadowGift::Warding]
-				}
-				cofd_schema::template::werewolf::Auspice::Irraka => {
-					[ShadowGift::Evasion, ShadowGift::Stealth]
-				}
-				cofd_schema::template::werewolf::Auspice::Ithaeur => {
-					[ShadowGift::Elementals, ShadowGift::Shaping]
-				}
-				cofd_schema::template::werewolf::Auspice::Rahu => {
-					[ShadowGift::Dominance, ShadowGift::Strength]
-				}
+				schema::Auspice::Cahalith => [ShadowGift::Inspiration, ShadowGift::Knowledge],
+				schema::Auspice::Elodoth => [ShadowGift::Insight, ShadowGift::Warding],
+				schema::Auspice::Irraka => [ShadowGift::Evasion, ShadowGift::Stealth],
+				schema::Auspice::Ithaeur => [ShadowGift::Elementals, ShadowGift::Shaping],
+				schema::Auspice::Rahu => [ShadowGift::Dominance, ShadowGift::Strength],
 			},
 			Self::Custom(CustomAuspice { affinity_gifts, .. }) => affinity_gifts.as_ref().clone(),
 		}
@@ -355,11 +344,11 @@ impl Auspice {
 	pub fn moon_gift(&self) -> MoonGift {
 		match self {
 			Self::Base(b) => match b {
-				cofd_schema::template::werewolf::Auspice::Cahalith => MoonGift::Gibbous,
-				cofd_schema::template::werewolf::Auspice::Elodoth => MoonGift::Half,
-				cofd_schema::template::werewolf::Auspice::Irraka => MoonGift::New,
-				cofd_schema::template::werewolf::Auspice::Ithaeur => MoonGift::Crescent,
-				cofd_schema::template::werewolf::Auspice::Rahu => MoonGift::Full,
+				schema::Auspice::Cahalith => MoonGift::Gibbous,
+				schema::Auspice::Elodoth => MoonGift::Half,
+				schema::Auspice::Irraka => MoonGift::New,
+				schema::Auspice::Ithaeur => MoonGift::Crescent,
+				schema::Auspice::Rahu => MoonGift::Full,
 			},
 			Self::Custom(CustomAuspice { moon_gift, .. }) => moon_gift.clone(),
 		}
@@ -376,7 +365,7 @@ impl Auspice {
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, From, TryInto)]
 pub enum ForsakenTribe {
-	Base(cofd_schema::template::werewolf::ForsakenTribe),
+	Base(schema::ForsakenTribe),
 	Custom {
 		name: String,
 		renown: Renown,
@@ -389,25 +378,25 @@ impl ForsakenTribe {
 	pub fn gifts(&self) -> [ShadowGift; 3] {
 		match self {
 			Self::Base(t) => match t {
-				cofd_schema::template::werewolf::ForsakenTribe::BloodTalons => [
+				schema::ForsakenTribe::BloodTalons => [
 					ShadowGift::Inspiration,
 					ShadowGift::Rage,
 					ShadowGift::Strength,
 				],
-				cofd_schema::template::werewolf::ForsakenTribe::BoneShadows => [
+				schema::ForsakenTribe::BoneShadows => [
 					ShadowGift::Death,
 					ShadowGift::Elementals,
 					ShadowGift::Insight,
 				],
-				cofd_schema::template::werewolf::ForsakenTribe::HuntersInDarkness => {
+				schema::ForsakenTribe::HuntersInDarkness => {
 					[ShadowGift::Nature, ShadowGift::Stealth, ShadowGift::Warding]
 				}
-				cofd_schema::template::werewolf::ForsakenTribe::IronMasters => [
+				schema::ForsakenTribe::IronMasters => [
 					ShadowGift::Knowledge,
 					ShadowGift::Shaping,
 					ShadowGift::Technology,
 				],
-				cofd_schema::template::werewolf::ForsakenTribe::StormLords => [
+				schema::ForsakenTribe::StormLords => [
 					ShadowGift::Evasion,
 					ShadowGift::Dominance,
 					ShadowGift::Weather,
@@ -428,7 +417,7 @@ impl ForsakenTribe {
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, From, TryInto)]
 pub enum PureTribe {
-	Base(cofd_schema::template::werewolf::PureTribe),
+	Base(schema::PureTribe),
 	Custom {
 		name: String,
 		renown: Renown,
@@ -479,19 +468,19 @@ impl PureTribe {
 	pub fn gifts(&self) -> [ShadowGift; 4] {
 		match self {
 			Self::Base(t) => match t {
-				cofd_schema::template::werewolf::PureTribe::FireTouched => [
+				schema::PureTribe::FireTouched => [
 					ShadowGift::Disease,
 					ShadowGift::Fervor,
 					ShadowGift::Insight,
 					ShadowGift::Inspiration,
 				],
-				cofd_schema::template::werewolf::PureTribe::IvoryClaws => [
+				schema::PureTribe::IvoryClaws => [
 					ShadowGift::Agony,
 					ShadowGift::Blood,
 					ShadowGift::Dominance,
 					ShadowGift::Warding,
 				],
-				cofd_schema::template::werewolf::PureTribe::PredatorKings => [
+				schema::PureTribe::PredatorKings => [
 					ShadowGift::Hunger,
 					ShadowGift::Nature,
 					ShadowGift::Rage,
@@ -519,14 +508,14 @@ impl Tribe {
 	}
 }
 
-impl From<cofd_schema::template::werewolf::ForsakenTribe> for Tribe {
-	fn from(value: cofd_schema::template::werewolf::ForsakenTribe) -> Self {
+impl From<schema::ForsakenTribe> for Tribe {
+	fn from(value: schema::ForsakenTribe) -> Self {
 		Self::from(ForsakenTribe::from(value))
 	}
 }
 
-impl From<cofd_schema::template::werewolf::PureTribe> for Tribe {
-	fn from(value: cofd_schema::template::werewolf::PureTribe) -> Self {
+impl From<schema::PureTribe> for Tribe {
+	fn from(value: schema::PureTribe) -> Self {
 		Self::from(PureTribe::from(value))
 	}
 }

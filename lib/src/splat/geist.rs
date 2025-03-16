@@ -2,8 +2,11 @@ use cofd_schema::template::Template;
 use cofd_util::{AllVariants, VariantName};
 use serde::{Deserialize, Serialize};
 
-use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat, ability::Ability};
-use crate::{splat::ability::AbilityTrait, traits::NameKey};
+use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat};
+use crate::{
+	ability::{Ability, AbilityTrait},
+	traits::NameKey,
+};
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Bound {
