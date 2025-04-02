@@ -3,12 +3,7 @@ use std::{ops::Deref, str::FromStr};
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-	dot_range::dots_to_num,
-	error,
-	template::Template,
-	traits::Trait,
-};
+use crate::{dot_range::dots_to_num, error, template::Template, traits::Trait};
 
 /**
  * Level-rated prerequisite types

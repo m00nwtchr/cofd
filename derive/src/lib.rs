@@ -5,8 +5,8 @@ use convert_case::Casing;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned};
 use syn::{
-	parse_macro_input, spanned::Spanned, Data, DeriveInput, Error, Fields, GenericArgument,
-	PathArguments, Type, Variant,
+	Data, DeriveInput, Error, Fields, GenericArgument, PathArguments, Type, Variant,
+	parse_macro_input, spanned::Spanned,
 };
 
 macro_rules! derive_error {

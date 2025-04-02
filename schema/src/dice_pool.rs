@@ -5,7 +5,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::traits::{attribute::Attribute, skill::Skill, Trait};
+use crate::traits::{Trait, attribute::Attribute, skill::Skill};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, derive_more::Display)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
