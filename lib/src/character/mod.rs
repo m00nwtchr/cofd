@@ -216,11 +216,15 @@ impl<S: SplatTrait> Actor for Character<S> {
 #[enum_dispatch]
 pub trait CharacterTrait: Actor<System = CofDSystem> {
 	fn info(&self) -> &CharacterInfo;
+	fn info_mut(&mut self) -> &mut CharacterInfo;
 }
 
 impl<S: SplatTrait> CharacterTrait for Character<S> {
 	fn info(&self) -> &CharacterInfo {
 		&self.info
+	}
+	fn info_mut(&mut self) -> &mut CharacterInfo {
+		&mut self.info
 	}
 }
 
