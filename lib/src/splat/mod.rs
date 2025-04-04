@@ -9,7 +9,7 @@ use systema::prelude::{Actor, AttributeMap};
 use crate::{
 	CofDSystem,
 	ability::Ability,
-	character::{Character, CharacterTrait},
+	character::{Character, CharacterTrait, info::CharacterInfo},
 	merits::*,
 };
 

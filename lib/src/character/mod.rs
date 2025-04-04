@@ -17,7 +17,7 @@ use crate::{
 };
 
 pub(crate) mod damage;
-mod info;
+pub mod info;
 pub mod modifier;
 // pub mod traits;
 
