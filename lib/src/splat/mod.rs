@@ -89,11 +89,25 @@ impl Actor for SplatCharacter {
 	}
 
 	fn attributes(&self) -> &AttributeMap<Self::System> {
-		CharacterTrait::attributes(self)
+		match self {
+			Self::Mortal(c) => Actor::attributes(c),
+			Self::Vampire(c) => Actor::attributes(c),
+			Self::Werewolf(c) => Actor::attributes(c),
+			Self::Mage(c) => Actor::attributes(c),
+			Self::Changeling(c) => Actor::attributes(c),
+			Self::Bound(c) => Actor::attributes(c),
+		}
 	}
 
 	fn attributes_mut(&mut self) -> &mut AttributeMap<Self::System> {
-		CharacterTrait::attributes_mut(self)
+		match self {
+			Self::Mortal(c) => Actor::attributes_mut(c),
+			Self::Vampire(c) => Actor::attributes_mut(c),
+			Self::Werewolf(c) => Actor::attributes_mut(c),
+			Self::Mage(c) => Actor::attributes_mut(c),
+			Self::Changeling(c) => Actor::attributes_mut(c),
+			Self::Bound(c) => Actor::attributes_mut(c),
+		}
 	}
 }
 
