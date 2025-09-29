@@ -1,4 +1,3 @@
-#![feature(let_chains)]
 use std::{env, fs, fs::File, path::Path};
 
 use cofd_schema::{book::Book, item::gift::GiftKind};

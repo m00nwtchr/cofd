@@ -1,4 +1,3 @@
-#![feature(let_chains)]
 #![warn(clippy::pedantic)]
 
 #[macro_use]
@@ -100,7 +99,7 @@ fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8, COp> {
 						Value::Attribute(Trait::Attribute(Attribute::Dexterity)),
 						COp::Add,
 					)
-					.base(),
+						.base(),
 				)
 				.modifier(
 					Modifier::Trait(Trait::Attribute(Attribute::Strength)),
@@ -108,7 +107,7 @@ fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8, COp> {
 						Value::Attribute(Trait::Attribute(Attribute::Strength)),
 						COp::Add,
 					)
-					.base(),
+						.base(),
 				)
 				.modifier(
 					Modifier::Trait(Trait::DerivedTrait(DerivedTrait::Speed)),
@@ -128,7 +127,7 @@ fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8, COp> {
 						Value::Attribute(Trait::Attribute(Attribute::Dexterity)),
 						COp::Add,
 					)
-					.base(),
+						.base(),
 				)
 				.modifier(
 					Modifier::Trait(Trait::Attribute(Attribute::Composure)),
@@ -136,7 +135,7 @@ fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8, COp> {
 						Value::Attribute(Trait::Attribute(Attribute::Composure)),
 						COp::Add,
 					)
-					.base(),
+						.base(),
 				),
 		)
 		.add(
@@ -148,7 +147,7 @@ fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8, COp> {
 						Value::Attribute(Trait::Attribute(Attribute::Wits)),
 						COp::Add,
 					)
-					.base(),
+						.base(),
 				)
 				.modifier(
 					Modifier::Trait(Trait::Attribute(Attribute::Composure)),
@@ -156,7 +155,7 @@ fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8, COp> {
 						Value::Attribute(Trait::Attribute(Attribute::Composure)),
 						COp::Add,
 					)
-					.base(),
+						.base(),
 				),
 		)
 		.add(
@@ -168,7 +167,7 @@ fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8, COp> {
 						Value::Attribute(Trait::Attribute(Attribute::Stamina)),
 						COp::Add,
 					)
-					.base(),
+						.base(),
 				)
 				.modifier(
 					Modifier::Trait(Trait::Size),
@@ -184,7 +183,7 @@ fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8, COp> {
 						Value::Attribute(Trait::Attribute(Attribute::Resolve)),
 						COp::Add,
 					)
-					.base(),
+						.base(),
 				)
 				.modifier(
 					Modifier::Trait(Trait::Attribute(Attribute::Composure)),
@@ -192,7 +191,7 @@ fn base_attributes() -> AttributeSupplierBuilder<Trait, Modifier, u8, COp> {
 						Value::Attribute(Trait::Attribute(Attribute::Composure)),
 						COp::Add,
 					)
-					.base(),
+						.base(),
 				),
 		)
 }
@@ -224,7 +223,7 @@ fn splat_attribute_builder(
 
 			for g in MoonGift::all() {
 				builder = builder.add(
-					Trait::Ability(Ability::MoonGift(g)),
+					Trait::Ability(Ability::MoonGift(g.clone())),
 					AttributeInstance::builder(systema::prelude::Attribute::Derived),
 				);
 			}

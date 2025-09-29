@@ -167,7 +167,7 @@ pub trait SplatTrait: Default {
 		true
 	}
 
-	fn merits(&self) -> Vec<Merit>;
+	fn merits(&self) -> Vec<&Merit>;
 }
 
 #[derive(

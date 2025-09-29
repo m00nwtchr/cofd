@@ -35,7 +35,7 @@ pub struct Werewolf {
 	pub rites: Vec<Rite>,
 }
 
-pub trait WerewolfExt: Actor<System = CofDSystem> {
+pub trait WerewolfExt: Actor<System=CofDSystem> {
 	fn form(&self) -> &Form;
 
 	fn set_form(&mut self, form: Form);
@@ -125,7 +125,7 @@ impl SplatTrait for Werewolf {
 					Value::Attribute(Trait::Ability(Ability::Renown(renown))),
 					COp::Add,
 				)
-				.base(),
+					.base(),
 			);
 		}
 
@@ -136,7 +136,7 @@ impl SplatTrait for Werewolf {
 				Value::Attribute(Trait::Ability(Ability::Renown(Renown::Purity))),
 				COp::GreaterThan(1, Box::new(COp::Add)),
 			)
-			.base(),
+				.base(),
 		);
 
 		character
@@ -200,7 +200,7 @@ impl SplatTrait for Werewolf {
 				affinity_gifts: Box::new([ShadowGift::Death, ShadowGift::Dominance]),
 				hunters_aspect: HuntersAspect::Base(Monstrous),
 			})
-			.into(),
+				.into(),
 		)
 	}
 
@@ -215,7 +215,7 @@ impl SplatTrait for Werewolf {
 					ShadowGift::Elementals,
 				]),
 			})
-			.into(),
+				.into(),
 		)
 	}
 
@@ -227,7 +227,7 @@ impl SplatTrait for Werewolf {
 		Some(Renown::VARIANTS.iter().copied().map(Into::into).collect())
 	}
 
-	fn merits(&self) -> Vec<Merit> {
+	fn merits(&self) -> Vec<&Merit> {
 		WerewolfMerit::all().map(Into::into).to_vec()
 	}
 }
@@ -300,8 +300,8 @@ impl KuruthTriggers {
 					.to_owned(),
 				common: "You see a werewolf you don't know in your territory.".to_owned(),
 				specific:
-					"A werewolf you don't know challenges your pack's ability to do its duty."
-						.to_owned(),
+				"A werewolf you don't know challenges your pack's ability to do its duty."
+					.to_owned(),
 			},
 			KuruthTriggers::Wound => KuruthTriggerSet {
 				passive: "Being in the area of a Wound.".to_owned(),
@@ -749,8 +749,8 @@ impl WerewolfMerit {
 					))
 					.is_some_and(|pu| pu >= 2)
 					&& attributes
-						.value(&Trait::Skill(Skill::Athletics))
-						.is_some_and(|s| s >= 2)
+					.value(&Trait::Skill(Skill::Athletics))
+					.is_some_and(|s| s >= 2)
 			}
 			_ => true,
 		}

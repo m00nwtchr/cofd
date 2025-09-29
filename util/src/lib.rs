@@ -1,4 +1,3 @@
-#![feature(generic_const_exprs)]
 extern crate cofd_derive;
 
 pub use cofd_derive::*;
@@ -16,10 +15,16 @@ where
 	}
 }
 
-pub trait AllVariants
+pub trait AllVariants: strum::VariantArray
 where
-	Self: Sized,
+	Self: Clone,
 {
-	const N: usize;
-	fn all() -> [Self; Self::N];
+	fn all() -> Vec<Self> {
+		Self::VARIANTS.to_vec()
+	}
 }
+
+impl<T> AllVariants for T
+where
+	T: strum::VariantArray + Clone,
+{}

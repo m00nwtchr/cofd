@@ -1,4 +1,3 @@
-#![feature(let_chains)]
 use std::collections::HashMap;
 
 use convert_case::Casing;
@@ -349,7 +348,7 @@ pub fn derive_all_variants(input: proc_macro::TokenStream) -> proc_macro::TokenS
 
 	if flag {
 		all_vec.extend(quote! {
-			impl #impl_generics #name #ty_generics #where_clause {
+			impl #impl_generics cofd_util::AllVariants for #name #ty_generics #where_clause {
 				pub fn all() -> Vec<#name> {
 					let mut vec = std::vec::Vec::from(<#name as cofd_util::AllVariants>::all());
 					#sub_enums
@@ -361,9 +360,8 @@ pub fn derive_all_variants(input: proc_macro::TokenStream) -> proc_macro::TokenS
 
 	let expanded = quote! {
 		impl #impl_generics cofd_util::AllVariants for #name #ty_generics #where_clause {
-			const N: usize = #num;
-			fn all() -> [Self; Self::N] {
-				[
+			fn all() -> Vec<Self> {
+				&[
 					#all_variants
 				]
 			}
