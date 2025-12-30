@@ -1,4 +1,3 @@
-#![feature(let_chains)]
 use std::collections::HashMap;
 
 use convert_case::Casing;

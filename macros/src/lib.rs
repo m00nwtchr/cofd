@@ -42,7 +42,7 @@ pub fn gifts(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 		.join("data")
 		.join("Gifts.ron");
 
-	let book: Book = ron::de::from_reader(File::open(path).expect("")).expect("Parsing error");
+	let book: Book = ron::de::from_reader(File::open(path).expect("")).expect("metadata parse error");
 
 	let mut moon_gift_variants = TokenStream::new();
 	let mut shadow_gift_variants = TokenStream::new();
