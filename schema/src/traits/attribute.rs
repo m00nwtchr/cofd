@@ -46,11 +46,12 @@ impl Attribute {
 	/// # Examples
 	///
 	/// ```
-	/// # use cofd_schema::traits::{Attribute, TraitCategory};
+	/// # use cofd_schema::traits::{attribute::Attribute, TraitCategory};
 	/// let attr = Attribute::Dexterity;
 	/// assert_eq!(attr.category(), TraitCategory::Physical);
 	/// ```
-	#[must_use] pub fn category(&self) -> TraitCategory {
+	#[must_use]
+	pub fn category(&self) -> TraitCategory {
 		match self {
 			Attribute::Intelligence | Attribute::Wits | Attribute::Resolve => TraitCategory::Mental,
 			Attribute::Strength | Attribute::Dexterity | Attribute::Stamina => {
@@ -71,7 +72,8 @@ impl Attribute {
 	/// let attr = Attribute::Wits;
 	/// assert_eq!(attr.kind(), AttributeKind::Finesse);
 	/// ```
-	#[must_use] pub fn kind(&self) -> AttributeKind {
+	#[must_use]
+	pub fn kind(&self) -> AttributeKind {
 		match self {
 			Attribute::Intelligence | Attribute::Strength | Attribute::Presence => {
 				AttributeKind::Power
@@ -94,11 +96,12 @@ impl Attribute {
 	/// # Examples
 	///
 	/// ```
-	/// # use cofd_schema::traits::{Attribute, TraitCategory};
+	/// # use cofd_schema::traits::{attribute::Attribute, TraitCategory};
 	/// let physical_attributes = Attribute::get_by_category(TraitCategory::Physical);
 	/// assert!(physical_attributes.contains(&Attribute::Strength));
 	/// ```
-	#[must_use] pub fn get_by_category(category: TraitCategory) -> [Attribute; 3] {
+	#[must_use]
+	pub fn get_by_category(category: TraitCategory) -> [Attribute; 3] {
 		match category {
 			TraitCategory::Mental => [Attribute::Intelligence, Attribute::Wits, Attribute::Resolve],
 			TraitCategory::Physical => [
@@ -127,7 +130,8 @@ impl Attribute {
 	/// let finesse_attributes = Attribute::get_by_kind(AttributeKind::Finesse);
 	/// assert!(finesse_attributes.contains(&Attribute::Dexterity));
 	/// ```
-	#[must_use] pub fn get_by_kind(kind: AttributeKind) -> [Attribute; 3] {
+	#[must_use]
+	pub fn get_by_kind(kind: AttributeKind) -> [Attribute; 3] {
 		match kind {
 			AttributeKind::Power => [
 				Attribute::Intelligence,

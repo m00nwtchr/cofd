@@ -4,11 +4,13 @@ use cofd_util::VariantName;
 use serde::{Deserialize, Serialize};
 use strum::{AsRefStr, Display, EnumString, ParseError};
 
-use self::skill::Skill;
-use crate::{prelude::Attribute, template::SupernaturalTolerance};
+use crate::template::SupernaturalTolerance;
 
 pub mod attribute;
 pub mod skill;
+
+use attribute::Attribute;
+use skill::Skill;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, VariantName)]
 pub enum TraitCategory {
@@ -18,7 +20,8 @@ pub enum TraitCategory {
 }
 
 impl TraitCategory {
-	#[must_use] pub fn unskilled(&self) -> u8 {
+	#[must_use]
+	pub fn unskilled(&self) -> u8 {
 		match self {
 			TraitCategory::Mental => 3,
 			TraitCategory::Physical | TraitCategory::Social => 1,

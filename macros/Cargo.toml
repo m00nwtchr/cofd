@@ -19,4 +19,4 @@ syn = "2"
 
 ron.workspace = true
 
-convert_case = "0.6"
+convert_case = "0.10"

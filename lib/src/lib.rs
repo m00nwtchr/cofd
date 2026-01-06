@@ -1,4 +1,3 @@
-#![feature(let_chains)]
 #![warn(clippy::pedantic)]
 #![allow(
 	clippy::must_use_candidate,
@@ -25,9 +24,9 @@ pub mod prelude {
 	pub use cofd_schema::{
 		template::Template,
 		traits::{
+			TraitCategory,
 			attribute::{Attribute, AttributeKind},
 			skill::Skill,
-			TraitCategory,
 		},
 	};
 	pub use cofd_util::{AllVariants, VariantName};
@@ -47,10 +46,10 @@ mod tests {
 		character::CharacterInfo,
 		prelude::*,
 		splat::{
+			Merit, Splat,
 			mage::{Arcanum, Mage, MageMerit, Order, Path},
 			vampire::{Bloodline, Clan, Covenant, Discipline, Vampire, VampireMerit},
 			werewolf::{Auspice, Form, Renown, Tribe, Werewolf, WerewolfMerit},
-			Merit, Splat,
 		},
 	};
 

@@ -264,6 +264,144 @@
     ],
     gifts: [
         (
+            name: "Gift of Change",
+            facets: [
+                {
+                    "name": "Skin Thief",
+                    "reference": (WtF2e, 136),
+                    "description": [
+                        "Skin and don the hide of a human or predatory animal at least as large as a wolf to take its appearance, except for eyes, in Hishu or Urhan respectively.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Gaze of the Moon",
+                    "reference": (WtF2e, 136),
+                    "description": [
+                        "Inflict Lunacy with a look.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Luna\'s Embrace",
+                    "reference": (WtF2e, 136),
+                    "description": [
+                        "Change sex.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "The Father\'s Form",
+                    "reference": (WtF2e, 137),
+                    "description": [
+                        "You can adopt a modified Gauru that is less unstoppable, but which doesn\'t have to attack to hold back Death Rage. This is a breaking point towards flesh.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Quicksilver Flesh",
+                    "reference": (WtF2e, 137),
+                    "description": [
+                        "Manifest a partially shapeshifted aspect while in a different form, such as manipulative hands, human vocal cords, claws, or lupine striding legs.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Wolf,
+        ),
+        (
+            name: "Gift of Hunting",
+            facets: [
+                {
+                    "name": "Honed Senses",
+                    "reference": (WtF2e, 137),
+                    "description": [
+                        "Perception rolls achieve exceptional success on a threshold of three instead of five.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Cow the Prey",
+                    "reference": (WtF2e, 137),
+                    "description": [
+                        "Wield the Hunter\'s Aspect as a Persistent Condition.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Beast Talker",
+                    "reference": (WtF2e, 137),
+                    "description": [
+                        "Communicate with animals.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Tireless Hunter",
+                    "reference": (WtF2e, 137),
+                    "description": [
+                        "While pursuing the Sacred Hunt, ignore the need to eat or drink, the inability to spend Willpower, and up to your Purity in fatigue penalties.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Impossible Spoor",
+                    "reference": (WtF2e, 137),
+                    "description": [
+                        "Track infinitesimal traces, adding two successes to any successful tracking roll. Spend Essence to ignore penalties from old trails or from environmental degredation.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Wolf,
+        ),
+        (
+            name: "Gift of Pack",
+            facets: [
+                {
+                    "name": "Reflected Facets",
+                    "reference": (WtF2e, 138),
+                    "description": [
+                        "Use one of your Facets through a werewolf packmate within (Cunning) miles.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Down the Prey",
+                    "reference": (WtF2e, 138),
+                    "description": [
+                        "When striking an enemy wounded by a packmate, either inflict a temporary -2 penalty, gain a temporary +2 Defense against them, or if their Defense was reduced to zero, knock them down.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Totem\'s Wrath",
+                    "reference": (WtF2e, 138),
+                    "description": [
+                        "Materialize your totem spirit in a body-shell like a lesser Gauru, anchored by the Death Rage and bleeding Essence each turn. The raging totem will not strike allies with the Totem Merit.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Maw of Madness",
+                    "reference": (WtF2e, 138),
+                    "description": [
+                        "Infect a human with the Moon Taint Condition through your bite, threatening to unleash them for one night as a raging lesser werewolf.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Pack Awareness",
+                    "reference": (WtF2e, 138),
+                    "description": [
+                        "Sense the location and state of packmates within (Wisdom) miles. Spend Essence to communicate with them spiritually for a scene.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Wolf,
+        ),
+        (
             name: "Gift of Agony",
             facets: [
                 {
@@ -1182,144 +1320,6 @@
                 },
             ],
             kind: Shadow,
-        ),
-        (
-            name: "Gift of Change",
-            facets: [
-                {
-                    "name": "Skin Thief",
-                    "reference": (WtF2e, 136),
-                    "description": [
-                        "Skin and don the hide of a human or predatory animal at least as large as a wolf to take its appearance, except for eyes, in Hishu or Urhan respectively.",
-                    ],
-                    "renown": Cunning,
-                },
-                {
-                    "name": "Gaze of the Moon",
-                    "reference": (WtF2e, 136),
-                    "description": [
-                        "Inflict Lunacy with a look.",
-                    ],
-                    "renown": Glory,
-                },
-                {
-                    "name": "Luna\'s Embrace",
-                    "reference": (WtF2e, 136),
-                    "description": [
-                        "Change sex.",
-                    ],
-                    "renown": Honor,
-                },
-                {
-                    "name": "The Father\'s Form",
-                    "reference": (WtF2e, 137),
-                    "description": [
-                        "You can adopt a modified Gauru that is less unstoppable, but which doesn\'t have to attack to hold back Death Rage. This is a breaking point towards flesh.",
-                    ],
-                    "renown": Purity,
-                },
-                {
-                    "name": "Quicksilver Flesh",
-                    "reference": (WtF2e, 137),
-                    "description": [
-                        "Manifest a partially shapeshifted aspect while in a different form, such as manipulative hands, human vocal cords, claws, or lupine striding legs.",
-                    ],
-                    "renown": Wisdom,
-                },
-            ],
-            kind: Wolf,
-        ),
-        (
-            name: "Gift of Hunting",
-            facets: [
-                {
-                    "name": "Honed Senses",
-                    "reference": (WtF2e, 137),
-                    "description": [
-                        "Perception rolls achieve exceptional success on a threshold of three instead of five.",
-                    ],
-                    "renown": Cunning,
-                },
-                {
-                    "name": "Cow the Prey",
-                    "reference": (WtF2e, 137),
-                    "description": [
-                        "Wield the Hunter\'s Aspect as a Persistent Condition.",
-                    ],
-                    "renown": Glory,
-                },
-                {
-                    "name": "Beast Talker",
-                    "reference": (WtF2e, 137),
-                    "description": [
-                        "Communicate with animals.",
-                    ],
-                    "renown": Honor,
-                },
-                {
-                    "name": "Tireless Hunter",
-                    "reference": (WtF2e, 137),
-                    "description": [
-                        "While pursuing the Sacred Hunt, ignore the need to eat or drink, the inability to spend Willpower, and up to your Purity in fatigue penalties.",
-                    ],
-                    "renown": Purity,
-                },
-                {
-                    "name": "Impossible Spoor",
-                    "reference": (WtF2e, 137),
-                    "description": [
-                        "Track infinitesimal traces, adding two successes to any successful tracking roll. Spend Essence to ignore penalties from old trails or from environmental degredation.",
-                    ],
-                    "renown": Wisdom,
-                },
-            ],
-            kind: Wolf,
-        ),
-        (
-            name: "Gift of Pack",
-            facets: [
-                {
-                    "name": "Reflected Facets",
-                    "reference": (WtF2e, 138),
-                    "description": [
-                        "Use one of your Facets through a werewolf packmate within (Cunning) miles.",
-                    ],
-                    "renown": Cunning,
-                },
-                {
-                    "name": "Down the Prey",
-                    "reference": (WtF2e, 138),
-                    "description": [
-                        "When striking an enemy wounded by a packmate, either inflict a temporary -2 penalty, gain a temporary +2 Defense against them, or if their Defense was reduced to zero, knock them down.",
-                    ],
-                    "renown": Glory,
-                },
-                {
-                    "name": "Totem\'s Wrath",
-                    "reference": (WtF2e, 138),
-                    "description": [
-                        "Materialize your totem spirit in a body-shell like a lesser Gauru, anchored by the Death Rage and bleeding Essence each turn. The raging totem will not strike allies with the Totem Merit.",
-                    ],
-                    "renown": Honor,
-                },
-                {
-                    "name": "Maw of Madness",
-                    "reference": (WtF2e, 138),
-                    "description": [
-                        "Infect a human with the Moon Taint Condition through your bite, threatening to unleash them for one night as a raging lesser werewolf.",
-                    ],
-                    "renown": Purity,
-                },
-                {
-                    "name": "Pack Awareness",
-                    "reference": (WtF2e, 138),
-                    "description": [
-                        "Sense the location and state of packmates within (Wisdom) miles. Spend Essence to communicate with them spiritually for a scene.",
-                    ],
-                    "renown": Wisdom,
-                },
-            ],
-            kind: Wolf,
         ),
     ],
 )
