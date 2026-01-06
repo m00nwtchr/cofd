@@ -8,19 +8,19 @@ use derive_more::Display;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::{error, DOT_CHAR};
+use crate::{DOT_CHAR, error};
 
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[derive(Serialize, Clone, Debug, Deserialize, PartialEq, Eq, Display)]
 #[serde(untagged)]
 pub enum DotRange {
-	#[display("{}", "num_to_dots(*_0)")]
+	#[display("{}", num_to_dots(*_0))]
 	Num(u8),
-	#[display("{}", "_0.iter().map(|n| num_to_dots(*n)).join(\", \")")]
+	#[display("{}", _0.iter().map(|n| num_to_dots(*n)).join(", "))]
 	Set(Vec<u8>),
-	#[display("{} to {}", "num_to_dots(*_0.start())", "num_to_dots(*_0.end())")]
+	#[display("{} to {}", num_to_dots(*_0.start()), num_to_dots(*_0.end()))]
 	Range(RangeInclusive<u8>),
-	#[display("{}+", "num_to_dots(_0.start)")]
+	#[display("{}+", num_to_dots(_0.start))]
 	RangeFrom(
 		#[cfg_attr(feature = "json_schema", serde(with = "RangeFromDef::<u8>"))] RangeFrom<u8>,
 	),

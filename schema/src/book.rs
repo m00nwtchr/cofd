@@ -6,10 +6,10 @@ use strum::{Display, EnumString};
 use crate::{
 	error::{self, ParseError},
 	item::{
+		Item,
 		gift::{Gift, Moon, Other},
 		merit::Merit,
 		spell::Spell,
-		Item,
 	},
 };
 
@@ -199,6 +199,6 @@ mod tests {
 		use schemars::schema_for;
 
 		let schema = schema_for!(Book);
-		    println!("{}", serde_json::to_string_pretty(&schema).unwrap());
+		println!("{}", serde_json::to_string_pretty(&schema).unwrap());
 	}
 }

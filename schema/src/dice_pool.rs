@@ -6,7 +6,7 @@ use std::{
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::traits::{attribute::Attribute, skill::Skill, Trait};
+use crate::traits::{Trait, attribute::Attribute, skill::Skill};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, derive_more::Display)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
@@ -21,7 +21,7 @@ pub enum DicePool {
 	#[display("Higher of {_0} and {_1}")]
 	Max(Box<DicePool>, Box<DicePool>),
 
-	#[display("{}", "_0.iter().join(\" + \")")]
+	#[display("{}", _0.iter().join(" + "))]
 	Add(Vec<DicePool>),
 	#[display("{_0} - {_1}")]
 	Sub(Box<DicePool>, Box<DicePool>),

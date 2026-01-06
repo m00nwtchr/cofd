@@ -10,7 +10,7 @@ pub enum ParseError {
 	IntError(#[from] ParseIntError),
 	#[error(transparent)]
 	TryFromIntError(#[from] TryFromIntError),
-	#[error("The provided data was in a wrong format: {0}")]
+	#[error("The provided data was in a wrong format: {_0}")]
 	BadFormat(String),
 }
 

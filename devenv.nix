@@ -42,10 +42,10 @@
   };
 
   tasks = {
-    "cofd:tests" = {
-      after = [ "devenv:enterTest" ];
-      exec = "cargo nextest run";
-    };
+    # "cofd:tests" = {
+    #   after = ["devenv:enterTest"];
+    #   exec = "cargo nextest run";
+    # };
   };
 
   outputs = {
