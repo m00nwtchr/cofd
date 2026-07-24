@@ -28,6 +28,7 @@ impl TraitCategory {
 
 #[derive(Debug, Clone, Hash, Copy, facet::Facet, EnumString, Display, AsRefStr, PartialEq, Eq)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[strum(ascii_case_insensitive)]
 #[repr(u8)]
 pub enum DerivedTrait {
@@ -43,6 +44,7 @@ pub enum DerivedTrait {
 	Debug, Clone, Copy, Hash, facet::Facet, PartialEq, Eq, derive_more::Display, derive_more::From,
 )]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 // #[serde(untagged)]
 #[repr(u8)]
 pub enum Trait {

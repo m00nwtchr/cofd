@@ -19,6 +19,7 @@ use crate::traits::TraitCategory;
 	Default,
 )]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[strum(ascii_case_insensitive)]
 #[repr(u8)]
 pub enum Skill {

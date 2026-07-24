@@ -9,6 +9,7 @@ use crate::{dot_range::dots_to_num, error, template::Template, traits::Trait};
  */
 #[derive(Debug, Clone, facet::Facet, PartialEq, Eq, Display)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 // #[serde(untagged)]
 #[repr(u8)]
 pub enum RatedPrerequisiteKey {
@@ -31,6 +32,7 @@ impl FromStr for RatedPrerequisiteKey {
  */
 #[derive(Debug, Clone, facet::Facet, PartialEq, Eq, Display)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[display("{_0} {}", "num_to_dots(*_1)")]
 pub struct RatedPrerequisite(RatedPrerequisiteKey, u8);
 
@@ -55,6 +57,7 @@ impl FromStr for RatedPrerequisite {
  */
 #[derive(Debug, Clone, facet::Facet, PartialEq, Eq, Display)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 // #[serde(untagged)]
 #[repr(u8)]
 pub enum PrerequisiteKey {
@@ -78,6 +81,7 @@ impl FromStr for PrerequisiteKey {
  */
 #[derive(Debug, Clone, facet::Facet, PartialEq, Eq, Display)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 // #[serde(untagged)]
 #[repr(u8)]
 pub enum Prerequisite {
@@ -112,6 +116,7 @@ impl FromStr for Prerequisite {
  */
 #[derive(Default, Debug, Clone, facet::Facet, PartialEq, Eq, Display)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 // #[serde(transparent)]
 #[display("{}", "_0.iter().join(\", \")")]
 pub struct Prerequisites(Vec<Prerequisite>);

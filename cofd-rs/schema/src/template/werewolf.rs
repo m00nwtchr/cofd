@@ -1,8 +1,9 @@
 use crate::prelude::Skill;
 
-#[derive(Debug, Clone, Copy, Hash, facet::Facet, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Hash, facet::Facet, PartialEq, Eq, strum::EnumString)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[strum(ascii_case_insensitive)]
 #[repr(u8)]
 pub enum Renown {
 	Purity,

@@ -8,6 +8,7 @@ use derive_more::Display;
 use crate::{DOT_CHAR, error};
 
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, facet::Facet, PartialEq, Eq, Display)]
 // #[serde(untagged)]
 #[repr(u8)]
