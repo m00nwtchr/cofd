@@ -4,6 +4,7 @@
 # Nix / devenv state
 .direnv/
 .devenv/state/
+*.local.nix
 
 # Local data
 meta/*.json.local

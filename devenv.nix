@@ -26,6 +26,16 @@
       harfbuzz
       # build tools
       llvmPackages.clangUseLLVM # bindgen
+      # GUI stack — meta-editor and cofdtools are eframe/egui binaries
+      # that dlopen these at runtime (winit's wayland backend,
+      # xkbcommon for keyboard, libglvnd/EGL/GL/GBM for rendering,
+      # libX11 as the eframe X11 fallback). With default winit
+      # features, all of these must be on LD_LIBRARY_PATH.
+      wayland
+      libxkbcommon
+      libglvnd
+      libdrm
+      libX11
     ]
     ++ lib.optionals (!config.container.isBuilding) [
       git
@@ -35,16 +45,31 @@
 
   env.LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
 
+  # GUI binaries built with default winit features dlopen wayland,
+  # xkbcommon, EGL/GL/GBM, and X11 at runtime. The binary has no
+  # baked-in rpath for these, so we put the lib paths on
+  # LD_LIBRARY_PATH via the dynamic-loader wrapper.
+  env.LD_LIBRARY_PATH = lib.makeLibraryPath [
+    pkgs.wayland
+    pkgs.libxkbcommon
+    pkgs.libglvnd
+    pkgs.libdrm
+    pkgs.libX11
+  ];
+
   # https://devenv.sh/languages/
   languages.rust = {
     enable = true;
     mold.enable = true;
-    # Force nightly: cofd-miner pulls oxidize-pdf and other crates
-    # that require nightly-only features. The cofd-rs sub-project has
-    # been migrated to stable (rust-toolchain.toml); the override
-    # here applies only when the nightly toolchain is needed.
     channel = "stable";
-    components = [ "rust-src" ];
+    components = [
+      "rust-src"
+      "rustc"
+      "cargo"
+      "clippy"
+      "rustfmt"
+      "rust-analyzer"
+    ];
   };
 
   processes = {
@@ -62,6 +87,7 @@
   git-hooks.hooks = {
     treefmt.enable = true;
     clippy.enable = true;
+    oxfmt.enable = true;
   };
 
   tasks = {
