@@ -151,13 +151,14 @@ expression, no `#[cfg(debug_assertions)]` duplication (F18).
 use oxidize_pdf::text::ExtractionOptions;
 
 let options = ExtractionOptions {
-    preserve_layout: true,     // correctness-critical: without this, .fragments is empty
-    sort_by_position: true,    // correctness-critical: stream-order scrambles the line state machine
-    ..Default::default()        // merge_hyphenated: true, include_artifacts: false, etc.
+    preserve_layout: true,         // correctness-critical: without this, .fragments is empty
+    sort_by_position: true,        // correctness-critical: stream-order scrambles the line state machine
+    reconstruct_paragraphs: true,  // correctness-critical: without this, .fragments is per-Tj not per-line
+    ..Default::default()            // merge_hyphenated: true, include_artifacts: false, etc.
 };
 ```
 
-Both `preserve_layout: true` and `sort_by_position: true` are correctness-critical:
+All three flags are correctness-critical:
 
 - `preserve_layout: true` populates `ExtractedText.fragments` with the
   per-`Tj` text fragments with their `(x, y)` positions. With the default
@@ -169,6 +170,17 @@ Both `preserve_layout: true` and `sort_by_position: true` are correctness-critic
 - `sort_by_position: true` ensures fragments come out in `(x, y)` order
   instead of PDF content-stream order, so the line-reconstruction state
   machine sees adjacent baselines grouped together.
+- `reconstruct_paragraphs: true` groups per-`Tj` fragments on the same
+  baseline into single-line fragments, replicating mupdf's
+  `TextPage.lines()` semantics. Without this, a visual line like
+  "Matt Miller," is emitted as 11 single-character fragments and the
+  per-line indent-tab state machine sees a fragmented input. The flag
+  is documented in `oxidize-pdf-3.1.2/src/text/extraction.rs:52-63`:
+  *"Reconstruct visual lines and paragraphs from the raw text fragments
+  produced by PDF text-show operators. When `true`, the extractor groups
+  fragments by baseline into single-line fragments..."* This option is
+  forced on for `PdfDocument::partition*` entry points; we must opt in
+  explicitly for `extract_text_from_page_with_options`.
 
 The rest use defaults from
 `oxidize-pdf-3.1.2/src/text/extraction.rs:81-98`.
