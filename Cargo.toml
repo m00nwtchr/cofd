@@ -2,18 +2,18 @@
 resolver = "2"
 members = [
     # cofd-rs — domain model + character engine
-    "cofd-rs/schema",
-    "cofd-rs/lib",
-    "cofd-rs/derive",
-    "cofd-rs/macros",
-    "cofd-rs/util",
+    "crates/cofd-schema",
+    "crates/cofd",
+    "crates/cofd-derive",
+    "crates/cofd-macros",
+    "crates/cofd-util",
     # cofd-miner — PDF extraction pipeline
-    "cofd-miner/crates/miner",
-    "cofd-miner/crates/meta",
-    "cofd-miner/crates/meta-editor",
-    "cofd-miner/crates/codex-scraper",
+    "crates/cofd-miner",
+    "crates/cofd-meta",
+    "crates/meta-editor",
+    "crates/codex-scraper",
     # cofdtools — Dioxus reader app
-    "cofdtools",
+    "crates/cofdtools",
 ]
 
 [workspace.package]
@@ -26,12 +26,12 @@ publish = false
 
 [workspace.dependencies]
 # Inter-crate deps (path overrides in this monorepo).
-cofd-schema = { path = "cofd-rs/schema" }
-cofd-util = { path = "cofd-rs/util" }
-cofd-macros = { path = "cofd-rs/macros" }
-cofd-derive = { path = "cofd-rs/derive" }
-cofd-miner = { path = "cofd-miner/crates/miner" }
-cofd-meta = { path = "cofd-miner/crates/meta" }
+cofd-schema = { path = "crates/cofd-schema" }
+cofd-util = { path = "crates/cofd-util" }
+cofd-macros = { path = "crates/cofd-macros" }
+cofd-derive = { path = "crates/cofd-derive" }
+cofd-miner = { path = "crates/cofd-miner" }
+cofd-meta = { path = "crates/cofd-meta" }
 
 # External deps shared by multiple inner crates.
 serde = { version = "1", features = ["derive"] }

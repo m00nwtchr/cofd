@@ -1,4 +1,0 @@
-# cofd-miner is a directory under the monorepo root. Each leaf crate
-# (cofd-miner/crates/miner, cofd-miner/crates/meta, etc.) is a direct
-# member of the root workspace at ../Cargo.toml.
-[workspace]

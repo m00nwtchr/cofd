@@ -1,4 +1,0 @@
-# cofd-rs is a directory under the monorepo root. Each leaf crate
-# (cofd-rs/schema, cofd-rs/lib, cofd-rs/derive, cofd-rs/macros, cofd-rs/util)
-# is a direct member of the root workspace at ../Cargo.toml.
-[workspace]

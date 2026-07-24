@@ -1,0 +1,1325 @@
+(
+    info: (
+        name: "Codex of Darkness",
+        id: Codex,
+        hash: "0",
+        publicationDate: "1970-01-01",
+    ),
+    moon_gifts: [
+        (
+            name: "Crescent Moon\'s Gift",
+            facets: [
+                {
+                    "name": "Shadow Gaze",
+                    "reference": (WtF2e, 115),
+                    "description": [
+                        "Boosts interaction with spirits &amp; ridden. Reveals bane or ban.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 1,
+                },
+                {
+                    "name": "Spirit Whispers",
+                    "reference": (WtF2e, 115),
+                    "description": [
+                        "Ask spirit a question.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 2,
+                },
+                {
+                    "name": "Shadow Hunter",
+                    "reference": (WtF2e, 116),
+                    "description": [
+                        "Boosts specific rolls while in Shadow.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 3,
+                },
+                {
+                    "name": "Shadow Masquerade",
+                    "reference": (WtF2e, 116),
+                    "description": [
+                        "Mimic target spirit.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 4,
+                },
+                {
+                    "name": "Panopticon",
+                    "reference": (WtF2e, 117),
+                    "description": [
+                        "Gains awareness of spirits.  Use spirit\'s senses.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 5,
+                },
+            ],
+            kind: Moon,
+        ),
+        (
+            name: "Full Moon\'s Gift",
+            facets: [
+                {
+                    "name": "Killer Instinct",
+                    "reference": (WtF2e, 117),
+                    "description": [
+                        "8-again on Brawl and Weaponry",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 1,
+                },
+                {
+                    "name": "Warrior\'s Hide",
+                    "reference": (WtF2e, 117),
+                    "description": [
+                        "Boosts Health.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 2,
+                },
+                {
+                    "name": "Bloody-Handed Hunter",
+                    "reference": (WtF2e, 117),
+                    "description": [
+                        "Boosts attack rolls vs obstacles to the Hunt.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 3,
+                },
+                {
+                    "name": "Butchery",
+                    "reference": (WtF2e, 117),
+                    "description": [
+                        "Adds tilts to opponents that meet criteria.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 4,
+                },
+                {
+                    "name": "Crimson Spasm",
+                    "reference": (WtF2e, 118),
+                    "description": [
+                        "Use successes to boost Strength, Stamina, armor, damage.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 5,
+                },
+            ],
+            kind: Moon,
+        ),
+        (
+            name: "Gibbous Moon\'s Gift",
+            facets: [
+                {
+                    "name": "War Howl",
+                    "reference": (WtF2e, 118),
+                    "description": [
+                        "Boosts pack\'s Brawl and Weaponry",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 1,
+                },
+                {
+                    "name": "Voice of Glory",
+                    "reference": (WtF2e, 118),
+                    "description": [
+                        "Adds to Expression, Persuasion and First Impression",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 2,
+                },
+                {
+                    "name": "Dream Hunter",
+                    "reference": (WtF2e, 118),
+                    "description": [
+                        "Invades prey\'s dreams.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 3,
+                },
+                {
+                    "name": "Thousand Throat Howl",
+                    "reference": (WtF2e, 118),
+                    "description": [
+                        "Howl to apply Demoralized Condition.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 4,
+                },
+                {
+                    "name": "End of Story",
+                    "reference": (WtF2e, 119),
+                    "description": [
+                        "Story of prey\'s impending fate adds penalties to prey.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 5,
+                },
+            ],
+            kind: Moon,
+        ),
+        (
+            name: "Half Moon\'s Gift",
+            facets: [
+                {
+                    "name": "Scent Beneath the Surface",
+                    "reference": (WtF2e, 119),
+                    "description": [
+                        "Detect Lies",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 1,
+                },
+                {
+                    "name": "Binding Oath",
+                    "reference": (WtF2e, 119),
+                    "description": [
+                        "Bind oaths",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 2,
+                },
+                {
+                    "name": "Sly Hunter",
+                    "reference": (WtF2e, 119),
+                    "description": [
+                        "Boosts dice pools while pursuing Hunt.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 3,
+                },
+                {
+                    "name": "Ties of Word and Promise",
+                    "reference": (WtF2e, 120),
+                    "description": [
+                        "Acquire temporary access to Allies, Contacts, etc.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 4,
+                },
+                {
+                    "name": "Ties of Blood and Bone",
+                    "reference": (WtF2e, 120),
+                    "description": [
+                        "Switch location with packmate.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 5,
+                },
+            ],
+            kind: Moon,
+        ),
+        (
+            name: "New Moon\'s Gift",
+            facets: [
+                {
+                    "name": "Eviscerate",
+                    "reference": (WtF2e, 120),
+                    "description": [
+                        "Brawl or Weaponry  attack vs. unaware target becomes rote action.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 1,
+                },
+                {
+                    "name": "Slip Away",
+                    "reference": (WtF2e, 120),
+                    "description": [
+                        "Blurs observers memories.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 2,
+                },
+                {
+                    "name": "Relentless Hunter",
+                    "reference": (WtF2e, 120),
+                    "description": [
+                        "Boosts dice pools while pursuing prey.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 3,
+                },
+                {
+                    "name": "Divide and Conquer",
+                    "reference": (WtF2e, 121),
+                    "description": [
+                        "Lure prey away from their companions.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 4,
+                },
+                {
+                    "name": "Breach",
+                    "reference": (WtF2e, 121),
+                    "description": [
+                        "Cross the Gauntlet.",
+                    ],
+                    "auspice": Cahalith,
+                    "level": 5,
+                },
+            ],
+            kind: Moon,
+        ),
+    ],
+    gifts: [
+        (
+            name: "Gift of Agony",
+            facets: [
+                {
+                    "name": "Wrack",
+                    "reference": (NHSM, 15),
+                    "description": [
+                        "Penalise a touched targets attempts at tracking and foot-chases.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Stoicism",
+                    "reference": (NHSM, 15),
+                    "description": [
+                        "Ignore dice penalties from physical sources.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Pain Mirror",
+                    "reference": (NHSM, 15),
+                    "description": [
+                        "Cause opponents to take 1 bashing for every lethal or aggravated damage received, and copy a Physical Tilt to one linked opponent for (Honor) turns.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Catharsis",
+                    "reference": (NHSM, 15),
+                    "description": [
+                        "When spending Willpower in the same turn as suffering lethal or aggravated damage, increase the Willpower bonus by (Purity).",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Scourge",
+                    "reference": (NHSM, 15),
+                    "description": [
+                        "Suppress the effects of a Condition or Tilt that affects the user\'s mind or soul for (Wisdom) days.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of Blood",
+            facets: [
+                {
+                    "name": "Seep",
+                    "reference": (NHSM, 16),
+                    "description": [
+                        "Cause blood to seep from everything in an area of (Cunning x 25) yards, inflicting (Cunning) penalty to Athletics rolls and increasing time needed to interact with objects (reflexive to instant, instant to two instant). Also overpowers all other smells in area.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Purge",
+                    "reference": (NHSM, 16),
+                    "description": [
+                        "Reduce Toxicity of disease or poison by (Glory), ending if reduced to 0. Mundane addictions instantly purged, Clash against supernatural addictions with rote quality on dice pool; suppress Poisoned and Sick Tilts for rest of scene; expel foreign bodies and parasites. If used when another character consumes your flesh or blood, win contest of Strength + Empathy + Glory against opponent\'s Stamina + Primal Urge to transfer sickness, poison, or parasite.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Bind",
+                    "reference": (NHSM, 16),
+                    "description": [
+                        "Ignore a Facet\'s requirement to perceive, touch or strike an opponent by consuming the opponent\'s blood or of a close relative, which must be fresh.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Bleed",
+                    "reference": (NHSM, 16),
+                    "description": [
+                        "Opponents suffer 1 extra lethal in a turn where they are dealt lethal or aggravated damage, and penalizes all Medicine rolls to treat injuries by (Purity). Exceptional success makes such Medicine roll failures into dramatic failures.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Clot",
+                    "reference": (NHSM, 16),
+                    "description": [
+                        "Long-term lethal and aggravated healing is increased. Does not affect turn-to-turn regeneration.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of Death",
+            facets: [
+                {
+                    "name": "Cold Embrace",
+                    "reference": (WtF2e, 121),
+                    "description": [
+                        "Suppress vital signs and appear dead.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Barghest",
+                    "reference": (WtF2e, 121),
+                    "description": [
+                        "Perceive and interact with ghosts.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Memento Mori",
+                    "reference": (WtF2e, 121),
+                    "description": [
+                        "Awareness of packmates injuries. Transfer packmates injuries to self.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Bone Gnaw",
+                    "reference": (WtF2e, 121),
+                    "description": [
+                        "Gain knowledge from bones of deceased.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Eyes of the Dead",
+                    "reference": (WtF2e, 122),
+                    "description": [
+                        "View last thing seen by the deceased.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of Disease",
+            facets: [
+                {
+                    "name": "Festering Bite",
+                    "reference": (NHSM, 16),
+                    "description": [
+                        "Double the time for opponents to regenerate damage. Does not affect Gauru opponents. Other supernatural methods of healing must win Clash or become dramatic failure.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Rancid Maw",
+                    "reference": (NHSM, 17),
+                    "description": [
+                        "Attempt to inflict the moderate Poisoned Tilt from up to 20 yards range via 1L autofire cloud of disease; roll Dexterity + Athletics for attack roll and ignore Defense. For 1 turn, ranged attacks against user suffer a -2 penalty.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Leper\'s Bell",
+                    "reference": (NHSM, 17),
+                    "description": [
+                        "Severity of diseases the opponent suffers are increased; Opponent suffers a penalty to social rolls.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Rabid Fever",
+                    "reference": (NHSM, 18),
+                    "description": [
+                        "Increase resistance to disease; Increase Initiative modifier by (Purity).",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Pox Cauldron",
+                    "reference": (NHSM, 18),
+                    "description": [
+                        "Become infected with a disease that can be transmitted to a target.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of Dominance",
+            facets: [
+                {
+                    "name": "Primal Allure",
+                    "reference": (WtF2e, 122),
+                    "description": [
+                        "Perfect impression with target.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Glorious Lunacy",
+                    "reference": (WtF2e, 122),
+                    "description": [
+                        "When inflicting Lunacy, apply Awestruck Condition.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Lay Low the Challenger",
+                    "reference": (WtF2e, 122),
+                    "description": [
+                        "Inflicts the Cowed Condition on a struck opponent.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Snarl of the Predator",
+                    "reference": (WtF2e, 123),
+                    "description": [
+                        "Reduces penalty when forcing Doors.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Lead the Lesser Pack",
+                    "reference": (WtF2e, 123),
+                    "description": [
+                        "Adds temporary pack member.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of the Elementals",
+            facets: [
+                {
+                    "name": "Breath of Air",
+                    "reference": (WtF2e, 123),
+                    "description": [
+                        "Use the Air Influence at the same Essence cost as a spirit with (Cunning) dots.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Catastrophe",
+                    "reference": (WtF2e, 123),
+                    "description": [
+                        "Boosts influence gained from Elemental Facets; grants immunity to catastrophe boosted Influences.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Flesh of Earth",
+                    "reference": (WtF2e, 123),
+                    "description": [
+                        "Use the Earth Influence at the same Essence cost as a spirit with (Honor) dots.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Tongue of Flame",
+                    "reference": (WtF2e, 123),
+                    "description": [
+                        "Use the Fire Influence at the same Essence cost as a spirit with (Purity) dots.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Heart of Water",
+                    "reference": (WtF2e, 123),
+                    "description": [
+                        "Use the Water Influence at the same Essence cost as a spirit with (Wisdom) dots.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of Evasion",
+            facets: [
+                {
+                    "name": "Feet of Mist",
+                    "reference": (WtF2e, 123),
+                    "description": [
+                        "All attempts to track or locate the user fail.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Fog of War",
+                    "reference": (WtF2e, 124),
+                    "description": [
+                        "Something specific (bullet, package, etc.) reaches the wrong target",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Deny Everything",
+                    "reference": (WtF2e, 124),
+                    "description": [
+                        "Use Honor to resist Social/Manipulation actions.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Hit and Run",
+                    "reference": (WtF2e, 124),
+                    "description": [
+                        "Interrupt attack and disengage; Can inflict Shadow Paranoia Condition.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Exit Strategy",
+                    "reference": (WtF2e, 124),
+                    "description": [
+                        "Gain immediate knowledge of escape routes or boltholes.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of Fervor",
+            facets: [
+                {
+                    "name": "Crisis of Faith",
+                    "reference": (NHSM, 18),
+                    "description": [
+                        "Prevent an opponent from regaining Willpower from rest; Gain (Cunning) bonus to social rolls against them. Opponent also takes equal penalty to participate in or lead formalized expressions of ideology, both mundane and supernatural.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Fanaticism",
+                    "reference": (NHSM, 18),
+                    "description": [
+                        "Cause a human community to become more insular and despise outsiders.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Affirmation",
+                    "reference": (NHSM, 18),
+                    "description": [
+                        "Grant a point of Willpower to a target; Gain Willpower when they indulge in their morality traits.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Zeal",
+                    "reference": (NHSM, 19),
+                    "description": [
+                        "Increase Willpower, potentially exceeding 10",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Fervid Mission",
+                    "reference": (NHSM, 19),
+                    "description": [
+                        "Human or Wolf-Blooded target gains the Obsession Condition. Resolving the Condition ends the facet.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of Hunger",
+            facets: [
+                {
+                    "name": "Eater of Names",
+                    "reference": (NHSM, 19),
+                    "description": [
+                        "Prevent the target from using social merits or rites, or inflict a penalty on human attempts to remember and supernatural attempts to gain knowledge of a dead target for 1 year.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Famine Howl",
+                    "reference": (NHSM, 19),
+                    "description": [
+                        "Cause all physical food sources to wither, spoil and be infested; Attempts to gain Essence or similar resources are penalised.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Gluttony",
+                    "reference": (NHSM, 19),
+                    "description": [
+                        "Cause a living target or object to require to consume multiple times the normal requirement.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Wolf Hunger",
+                    "reference": (NHSM, 20),
+                    "description": [
+                        "Gain bonus Essence from flesh or spirit consumption during the Sacred Hunt",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Ravenous Maw",
+                    "reference": (NHSM, 20),
+                    "description": [
+                        "Initiate a Grapple at a range of (5 x Wisdom) yards, and can drag target closer if successful.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of Insight",
+            facets: [
+                {
+                    "name": "Prey on Weakness",
+                    "reference": (WtF2e, 125),
+                    "description": [
+                        "Gains awareness prey\'s weaknesses and conditions.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Read the World\'s Loom",
+                    "reference": (WtF2e, 125),
+                    "description": [
+                        "Gains insight; Learns of an event, threat or circumstance of meaningful relevence.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Echo Dream",
+                    "reference": (WtF2e, 125),
+                    "description": [
+                        "Gain information about an object or location.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Scent the Unnatural",
+                    "reference": (WtF2e, 126),
+                    "description": [
+                        "Detect supernatural creatures and effects.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "One Step Ahead",
+                    "reference": (WtF2e, 126),
+                    "description": [
+                        "Detect the way in which prey will flee.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of Inspiration",
+            facets: [
+                {
+                    "name": "Lunatic Inspiration",
+                    "reference": (WtF2e, 127),
+                    "description": [
+                        "Infects a human or Wolf-Blooded with ongoing Inspired and Madness Conditions, driving towards resolution through a prophetic or relevatory work.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Fearless Hunter",
+                    "reference": (WtF2e, 127),
+                    "description": [
+                        "Share contests and resistance against mental influence and fear with present packmates, and add Glory as a bonus to do so.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Pack Triumphs Together",
+                    "reference": (WtF2e, 127),
+                    "description": [
+                        "Allows packmates to share Initiative values, and grants them 8-Again on teamwork actions.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Unity",
+                    "reference": (WtF2e, 127),
+                    "description": [
+                        "Intervene in Social Maneuvering to grant a packmate your Purity in additional Doors.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Still Small Voice",
+                    "reference": (WtF2e, 127),
+                    "description": [
+                        "Talk werewolves down from the Soft Rage.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of Knowledge",
+            facets: [
+                {
+                    "name": "Needle",
+                    "reference": (WtF2e, 127),
+                    "description": [
+                        "Hides an item of knowledge in all forms from a target.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "This Story Is True",
+                    "reference": (WtF2e, 128),
+                    "description": [
+                        "Tells a tale whose lesson grants temporary bonus dots in a particular Skill to one listener.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Know Thy Prey",
+                    "reference": (WtF2e, 128),
+                    "description": [
+                        "Intuits a target\'s names and aliases, alternate identities, sources of fame and social connections.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Lore of the Land",
+                    "reference": (WtF2e, 128),
+                    "description": [
+                        "Identifies supernatural effects lain upon a territory. Locates material creatures and dangers within your pack\'s territory.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Sift the Sands",
+                    "reference": (WtF2e, 128),
+                    "description": [
+                        "Spirit hauntings aid research, and can optionally copy the sought knowledge to a new medium.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Nature\'s Gift",
+            facets: [
+                {
+                    "name": "Nature\'s Lure",
+                    "reference": (WtF2e, 129),
+                    "description": [
+                        "Lures an isolated group of up to (Cunning) non-werewolves into the heart of wilderness, and penalizes their Initiative by your Cunning.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Black Earth, Red Hunger",
+                    "reference": (WtF2e, 129),
+                    "description": [
+                        "Spurs guided plant overgrowth across a radius of (Glory × 10) yards, which consumes corpses. Until the next sunrise, sense any heartbeat or bloodshed within the overgrowth, and regenerate lethal damage when it soaks in blood.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Knotted Paths",
+                    "reference": (WtF2e, 129),
+                    "description": [
+                        "Prevents any path from leading prey out of the wilderness.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Pack Kin",
+                    "reference": (WtF2e, 129),
+                    "description": [
+                        "Inducts a predatory animal as a loyal member of the pack, which can understand commands from packmates and resists mental influence from without at a +3 bonus. Each werewolf with this Gift may induct up to (Purity) animals.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Beast Ride",
+                    "reference": (WtF2e, 130),
+                    "description": [
+                        "Enter a trance to ride an animal spiritually, receiving its senses and controlling its behavior.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of Rage",
+            facets: [
+                {
+                    "name": "Incite Fury",
+                    "reference": (WtF2e, 130),
+                    "description": [
+                        "Snarl to incite Death Rage in a werewolf or the Berserk Condition otherwise.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Berserker\'s Might",
+                    "reference": (WtF2e, 130),
+                    "description": [
+                        "While in a form that causes Lunacy, reduce damage from one attack by (Glory) points, or shrug off a physical injury Tilt. Use freely at no cost in Hard Rage.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Perfected Rage",
+                    "reference": (WtF2e, 130),
+                    "description": [
+                        "Increase controlled time in Gauru by (Honor) turns.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Slaughterer",
+                    "reference": (WtF2e, 130),
+                    "description": [
+                        "Use in Gauru to add (Purity) damage to a Brawl attack. Use freely at no cost in Hard Rage.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Raging Lunacy",
+                    "reference": (WtF2e, 131),
+                    "description": [
+                        "Inflict the Berserk Condition instead of normal Lunacy Conditions.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of Shaping",
+            facets: [
+                {
+                    "name": "Moldywarp",
+                    "reference": (WtF2e, 131),
+                    "description": [
+                        "Dalu form\'s claws spread and harden, able to tunnel through stone and concrete at a Speed equal to Strength + Cunning.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Shield-Breaker",
+                    "reference": (WtF2e, 131),
+                    "description": [
+                        "Add (Glory) Armor-Piercing to a Brawl or Weaponry attack.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Entropy\'s Toll",
+                    "reference": (WtF2e, 131),
+                    "description": [
+                        "Damage an object by twice your successes, ignoring Durability, with a shrieking howl.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Perfection of Form",
+                    "reference": (WtF2e, 131),
+                    "description": [
+                        "Whisper your successes into an object as a bonus to its equipment rating, which dissipates after use. Repair an equal amount of Structure damage.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Sculpt",
+                    "reference": (WtF2e, 131),
+                    "description": [
+                        "Render up to your Wisdom in Size\'s worth of material malleable like clay. You may spend Essence to extend the duration.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of Stealth",
+            facets: [
+                {
+                    "name": "Shadow Pelt",
+                    "reference": (WtF2e, 131),
+                    "description": [
+                        "Take the rote quality on your next (Cunning) Stealth rolls.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Predator\'s Shadow",
+                    "reference": (WtF2e, 132),
+                    "description": [
+                        "Inflict the Shadow Paranoia Condition, evoking panic on failed Perception actions.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Pack Stalks the Prey",
+                    "reference": (WtF2e, 132),
+                    "description": [
+                        "Allow packmates to share your success on a Stealth roll.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "The Hunter Waits",
+                    "reference": (WtF2e, 132),
+                    "description": [
+                        "While you remain still and unobtrusive, penalize Perception actions and supernatural powers to spot you by your Purity. Add Purity to your Initiative on an ambush.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Running Silent",
+                    "reference": (WtF2e, 132),
+                    "description": [
+                        "Moving at high speeds doesn\'t deter Stealth actions. Reduce terrain penalties and fall damage by your Wisdom.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of Strength",
+            facets: [
+                {
+                    "name": "Unchained",
+                    "reference": (WtF2e, 132),
+                    "description": [
+                        "Add (Cunning) to a grappling roll, or shatter any restraint or binding. Use freely at no cost in Hard Rage.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Predator\'s Unmatched Pursuit",
+                    "reference": (WtF2e, 132),
+                    "description": [
+                        "Add Glory to Urshul and Urhan Speed. Extend jump distances by (Glory) times over. Double Speed for a turn with Essence. Use freely at no cost in Hard Rage.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Crushing Blow",
+                    "reference": (WtF2e, 132),
+                    "description": [
+                        "Inflict Honor as a temporary Defense penalty with a Brawl strike. The strike deals lethal damage even in Hishu.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Primal Strength",
+                    "reference": (WtF2e, 132),
+                    "description": [
+                        "Add Purity to Strength. Use freely at no cost in Hard Rage.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Rending Claws",
+                    "reference": (WtF2e, 133),
+                    "description": [
+                        "Gauru and Urshul forms ignore up to (Wisdom) Durability, and add (Wisdom) Structure damage.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of Technology",
+            facets: [
+                {
+                    "name": "Garble",
+                    "reference": (WtF2e, 133),
+                    "description": [
+                        "Technology betrays and confounds the target at every turn.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Unmake",
+                    "reference": (WtF2e, 133),
+                    "description": [
+                        "Dismantles an object up to (Glory × 5) Size.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Command Artifice",
+                    "reference": (WtF2e, 134),
+                    "description": [
+                        "Issues a one-sentence command a device is capable of obeying.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Shutdown",
+                    "reference": (WtF2e, 134),
+                    "description": [
+                        "Extinguishes artificial lights, recording and communication devices, and security systems.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Iron Slave",
+                    "reference": (WtF2e, 134),
+                    "description": [
+                        "Enter a trance to ride a machine spiritually, perceiving its surroundings and controlling its functions.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of Warding",
+            facets: [
+                {
+                    "name": "Maze Ward",
+                    "reference": (WtF2e, 134),
+                    "description": [
+                        "Penalizes attempts by intruders to navigate a warded area by Cunning through rebelling geometry, expelling on failure.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Ward the Wolf\'s Den",
+                    "reference": (WtF2e, 134),
+                    "description": [
+                        "Penalizes attempts to cross worlds or scry through a warded area by Glory, and alerts the werewolf. Seals loci for (Glory) hours.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "All Doors Locked",
+                    "reference": (WtF2e, 135),
+                    "description": [
+                        "Senses doors and windows in a structure. The werewolf may open, close, or lock them at will.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Predator\'s Claim",
+                    "reference": (WtF2e, 135),
+                    "description": [
+                        "Increases the werewolf\'s honorary Rank by 2 within the warded area.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Boundary Ward",
+                    "reference": (WtF2e, 135),
+                    "description": [
+                        "Senses when a given type of being crosses the threshold of the warded area.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of Weather",
+            facets: [
+                {
+                    "name": "Cloak of Mist and Haze",
+                    "reference": (WtF2e, 135),
+                    "description": [
+                        "Conjures a haze to penalize sight, hearing, and ranged attacks by Cunning.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Heavens Unleashed",
+                    "reference": (WtF2e, 135),
+                    "description": [
+                        "Conjures a flooding storm to penalize Speed and Initiative by Glory.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Hunt Under Iron Skies",
+                    "reference": (WtF2e, 136),
+                    "description": [
+                        "Ignore negative effects conjured by your Weather Facets, and shield allies with Essence. Ignore up to your Honor in other environmental penalties.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Grasp of Howling Winds",
+                    "reference": (WtF2e, 136),
+                    "description": [
+                        "Howl a fierce gust that penalizes one target\'s Speed and Physical actions by your Purity.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Hunt of Fire and Ice",
+                    "reference": (WtF2e, 136),
+                    "description": [
+                        "Conjure either the Extreme Cold or Extreme Heat Tilt.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Shadow,
+        ),
+        (
+            name: "Gift of Change",
+            facets: [
+                {
+                    "name": "Skin Thief",
+                    "reference": (WtF2e, 136),
+                    "description": [
+                        "Skin and don the hide of a human or predatory animal at least as large as a wolf to take its appearance, except for eyes, in Hishu or Urhan respectively.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Gaze of the Moon",
+                    "reference": (WtF2e, 136),
+                    "description": [
+                        "Inflict Lunacy with a look.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Luna\'s Embrace",
+                    "reference": (WtF2e, 136),
+                    "description": [
+                        "Change sex.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "The Father\'s Form",
+                    "reference": (WtF2e, 137),
+                    "description": [
+                        "You can adopt a modified Gauru that is less unstoppable, but which doesn\'t have to attack to hold back Death Rage. This is a breaking point towards flesh.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Quicksilver Flesh",
+                    "reference": (WtF2e, 137),
+                    "description": [
+                        "Manifest a partially shapeshifted aspect while in a different form, such as manipulative hands, human vocal cords, claws, or lupine striding legs.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Wolf,
+        ),
+        (
+            name: "Gift of Hunting",
+            facets: [
+                {
+                    "name": "Honed Senses",
+                    "reference": (WtF2e, 137),
+                    "description": [
+                        "Perception rolls achieve exceptional success on a threshold of three instead of five.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Cow the Prey",
+                    "reference": (WtF2e, 137),
+                    "description": [
+                        "Wield the Hunter\'s Aspect as a Persistent Condition.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Beast Talker",
+                    "reference": (WtF2e, 137),
+                    "description": [
+                        "Communicate with animals.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Tireless Hunter",
+                    "reference": (WtF2e, 137),
+                    "description": [
+                        "While pursuing the Sacred Hunt, ignore the need to eat or drink, the inability to spend Willpower, and up to your Purity in fatigue penalties.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Impossible Spoor",
+                    "reference": (WtF2e, 137),
+                    "description": [
+                        "Track infinitesimal traces, adding two successes to any successful tracking roll. Spend Essence to ignore penalties from old trails or from environmental degredation.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Wolf,
+        ),
+        (
+            name: "Gift of Pack",
+            facets: [
+                {
+                    "name": "Reflected Facets",
+                    "reference": (WtF2e, 138),
+                    "description": [
+                        "Use one of your Facets through a werewolf packmate within (Cunning) miles.",
+                    ],
+                    "renown": Cunning,
+                },
+                {
+                    "name": "Down the Prey",
+                    "reference": (WtF2e, 138),
+                    "description": [
+                        "When striking an enemy wounded by a packmate, either inflict a temporary -2 penalty, gain a temporary +2 Defense against them, or if their Defense was reduced to zero, knock them down.",
+                    ],
+                    "renown": Glory,
+                },
+                {
+                    "name": "Totem\'s Wrath",
+                    "reference": (WtF2e, 138),
+                    "description": [
+                        "Materialize your totem spirit in a body-shell like a lesser Gauru, anchored by the Death Rage and bleeding Essence each turn. The raging totem will not strike allies with the Totem Merit.",
+                    ],
+                    "renown": Honor,
+                },
+                {
+                    "name": "Maw of Madness",
+                    "reference": (WtF2e, 138),
+                    "description": [
+                        "Infect a human with the Moon Taint Condition through your bite, threatening to unleash them for one night as a raging lesser werewolf.",
+                    ],
+                    "renown": Purity,
+                },
+                {
+                    "name": "Pack Awareness",
+                    "reference": (WtF2e, 138),
+                    "description": [
+                        "Sense the location and state of packmates within (Wisdom) miles. Spend Essence to communicate with them spiritually for a scene.",
+                    ],
+                    "renown": Wisdom,
+                },
+            ],
+            kind: Wolf,
+        ),
+    ],
+)
