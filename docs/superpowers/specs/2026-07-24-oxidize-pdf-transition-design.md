@@ -179,7 +179,7 @@ mupdf's `Document::open(...).ok_or(anyhow!("Path is not valid utf-8 string"))?`
 is replaced — `oxidize_pdf::parser::PdfDocument::open` takes
 `impl AsRef<Path>` directly, so the utf-8 cast goes away. Every
 `PdfDocument::open` / `extract_text_from_page_with_options` / `page_count`
-call wraps the error with `anyhow::Context::with_context(|| format!("opening {path:?}", path = path.as_ref()))` so failures are debuggable (drive-by on F9's general critique).
+call wraps the error with `anyhow::Context::with_context(|| format!("opening {}", path.display()))` so failures are debuggable (drive-by on F9's general critique).
 
 ### 4.5. `backend/mod.rs` (revised)
 
@@ -217,7 +217,7 @@ mupdf = ["dep:mupdf"]
 [dependencies]
 ...
 oxidize-pdf = { version = "3.1", optional = true }
-mupdf = { version = "0.4", default-features = false, optional = true, features = ["sys-lib"] }
+mupdf = { version = "0.4", default-features = false, optional = true }
 ...
 ```
 
@@ -226,33 +226,20 @@ mupdf = { version = "0.4", default-features = false, optional = true, features =
   `extract_text_from_page_with_options` method's exact signature (per
   `oxidize-pdf-3.1.2/src/parser/document.rs:1170`), so 3.1 is the safe lower
   bound.
-- `mupdf` re-declared as a real optional dep with `default-features = false, features = ["sys-lib"]` (matches the audit's commented-out line at `Cargo.toml:23-25` and avoids the
-  native build-toolchain requirements of the default feature set).
+- `mupdf` re-declared as a real optional dep with `default-features = false` (no `sys-lib`). The default feature set pulls in `font-kit`/`yeslogic-fontconfig-sys` which require `fontconfig` (not in the devenv) and `tesseract` (not needed for the PDF read path), and `sys-lib` requires a system mupdf with an ABI mupdf 0.4's bindings were generated against — nixpkgs ships `mupdf 1.27` which has different ABI. Disabling default features keeps only PDF reading via the vendored mupdf source that `mupdf-sys` ships and that the bindings are guaranteed to match.
 - The `lopdf` commented block is removed.
 
 ## 5. Testing
 
-### 5.1. Unit test (in-tree, CI-runnable)
+### 5.1. Algorithm coverage
 
-Add `#[cfg(test)] mod tests` at the bottom of
-`crates/cofd-miner/src/backend/oxidize.rs`. Two cases:
-
-1. **Indent-tab detection.** Use `oxidize_pdf`'s writer API to build a
-   1-page PDF in a `Vec<u8>` with two text fragments: one at body indent
-   (e.g. x=72) and one indented (e.g. x=120). Write the bytes to a
-   `tempfile::NamedTempFile`. Call
-   `extract_pages(temp.path())`. Assert that the result has one page, and
-   that the indented line is prefixed with `'\t'`.
-2. **Column threshold.** Two fragments on the same baseline at x=72 and
-   x=500. Assert the lines preserve their source ordering (or the specific
-   output ordering the algorithm produces — see plan for the exact
-   assertion).
+Algorithm coverage is verified by the post-merge smoke test (Task 5). The original plan included a synthetic-PDF in-tree test; the pre-flight review (see `progress.md` F-PRE-1) determined that the hand-rolled PDF's xref byte offsets were wrong, and the user elected to drop the in-tree test rather than compute correct offsets. Smoke test against `~/Documents/RPG/CofD/Books/` is the verification surface.
 
 ### 5.2. Integration test (unchanged)
 
 `crates/cofd-miner/tests/pdf_extract.rs` is left `#[ignore]`'d. It depends
-on the SSH-only test-data submodule and cannot run in CI; the unit test
-above covers the algorithm.
+on the SSH-only test-data submodule and cannot run in CI; the post-merge
+smoke test above is the verification surface.
 
 ### 5.3. Post-merge smoke test
 
@@ -265,7 +252,7 @@ non-zero counts (closes the F22 "info-only fixtures" regression).
 
 1. `cargo check --workspace --all-targets --features mupdf,oxidize` — both
    backends compile.
-2. `cargo test -p cofd-miner --lib` — synthetic-PDF unit tests pass.
+2. `cargo test -p cofd-miner --lib` — confirms the crate's library test target builds; algorithm coverage is provided by the smoke test below.
 3. `cargo clippy --workspace --all-targets --features mupdf,oxidize -- -D warnings` — no new warnings (the F20 simplification removes a
    `clippy::if_same_then_else`; the new code must not introduce others).
 4. `cargo run -p cofd-miner --example pdf-extract` (submodule-initialized host only) — produces non-info-only `Book` JSON for at least one of
@@ -288,9 +275,9 @@ non-zero counts (closes the F22 "info-only fixtures" regression).
 
 | Path                                                           | Change                                                                                          |
 | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `crates/cofd-miner/Cargo.toml`                                 | Bump `oxidize-pdf` floor to `3.1`; re-declare `mupdf` optional dep with `sys-lib`; drop commented `mupdf`/`lopdf` blocks. |
+| `crates/cofd-miner/Cargo.toml`                                 | Bump `oxidize-pdf` floor to `3.1`; re-declare `mupdf` optional dep with `default-features = false` (no `sys-lib` due to ABI mismatch; default fontconfig-dependent features are unavailable in the devenv); drop commented `mupdf`/`lopdf` blocks. |
 | `crates/cofd-miner/src/backend/mod.rs`                         | Drop `lopdf` cfg; keep `mupdf` and `oxidize` cfg; drop commented `lopdf` block.                 |
-| `crates/cofd-miner/src/backend/oxidize.rs`                     | Full algorithm port (≈100 lines, all live). Drop 105-line commented block. Drop `println!`. Add `#[cfg(test)] mod tests`. Apply F20 + F18 cleanups. |
+| `crates/cofd-miner/src/backend/oxidize.rs`                     | Full algorithm port (≈100 lines, all live). Drop 105-line commented block. Drop `println!`. No in-tree test; algorithm coverage is via the post-merge smoke test. Apply F20 + F18 cleanups. |
 | `crates/cofd-miner/src/backend/mupdf.rs`                       | Unchanged.                                                                                      |
 | `crates/cofd-miner/src/backend/lopdf.rs`                       | Deleted.                                                                                        |
 

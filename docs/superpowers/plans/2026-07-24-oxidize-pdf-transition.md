@@ -6,21 +6,21 @@
 
 **Architecture:** New `oxidize::extract_pages` consumes `oxidize_pdf::parser::PdfDocument::extract_text_from_page_with_options` (yielding `Vec<TextFragment>` with explicit `x`, `y`, `font_size`) and runs the same five-variable state machine already used in `mupdf.rs:23-128`. Output shape (`PdfText = BTreeMap<usize, Vec<String>>`) and the public `extract_pages` / `extract_text` / `process_section` signatures are unchanged. `mupdf` stays available behind `--features mupdf`; `lopdf` is deleted.
 
-**Tech Stack:** Rust nightly (per `rust-toolchain.toml`), `oxidize-pdf 3.1.2` (lockfile), `mupdf 0.4` (default features = vendored MuPDF), `anyhow`, `regex`, `once_cell`, `parking_lot`.
+**Tech Stack:** Rust nightly (per `rust-toolchain.toml`), `oxidize-pdf 3.1.2` (lockfile), `mupdf 0.4` (`default-features = false`; `sys-lib` has an ABI mismatch with nixpkgs and the default feature set requires fontconfig unavailable in the devenv), `anyhow`, `regex`, `once_cell`, `parking_lot`.
 
 **Spec:** `docs/superpowers/specs/2026-07-24-oxidize-pdf-transition-design.md`
 
 **Pre-flight changes from the original draft (2026-07-24):**
 
 1. **Synthetic-PDF test removed.** The hand-rolled PDF in the original Task 1 had wrong xref byte offsets and would have failed to parse. Per user direction, the in-tree unit test is dropped; algorithm coverage comes from the post-merge smoke test against `~/Documents/RPG/CofD/Books/`. Audit F22 (partial) is therefore not closed by this plan; the smoke test is the verification.
-2. **`mupdf` features changed to vendored (default).** The original draft used `default-features = false, features = ["sys-lib"]`, expecting a system mupdf. nixpkgs has `pkgs.mupdf` 1.27 but the `mupdf` 0.4 sys-lib feature expects a much older ABI and would not link cleanly. Switching to the default feature set makes `mupdf-sys` build MuPDF from source (a few minutes longer, but works without system mupdf).
+2. **`mupdf` features set to `default-features = false`.** The original draft used `default-features = false, features = ["sys-lib"]`, but nixpkgs has `pkgs.mupdf` 1.27 and the `mupdf` 0.4 `sys-lib` feature expects a much older ABI, so it would not link cleanly. The default feature set also pulls in fontconfig-dependent functionality that is unavailable in the devenv. The shipped declaration therefore disables default features and does not enable `sys-lib`.
 
 ## Global Constraints
 
 These apply to every task — copy verbatim from the spec; the implementer must not relax them without re-approval.
 
 - `oxidize-pdf` floor: `version = "3.1"` (per spec §4.6; lockfile resolves to 3.1.2).
-- `mupdf` declaration: `version = "0.4", optional = true, default-features = false` (minimal: only PDF reading via vendored MuPDF; no OCR, system fonts, EPUB, or HTML — those are not needed for the fallback path and they pull in `font-kit`/`tesseract`/`yeslogic-fontconfig-sys` which require system C libraries the devenv does not have). Does NOT use `sys-lib` because nixpkgs mupdf 1.27 has incompatible ABI with mupdf 0.4's bindings.
+- `mupdf` declaration: `version = "0.4", optional = true, default-features = false` (minimal PDF-reading fallback; no OCR, system fonts, EPUB, or HTML — those are not needed for the fallback path, and the default feature set pulls in fontconfig-dependent functionality that the devenv does not have). Does NOT use `sys-lib` because nixpkgs mupdf 1.27 has incompatible ABI with mupdf 0.4's bindings.
 - `default` features: `["oxidize", "embed_meta"]` (per spec §4.6; do not change).
 - `oxizide-pdf` API entry points used: `parser::PdfDocument::open(path)`, `doc.page_count()`, `doc.extract_text_from_page_with_options(i, options)`, returning `ExtractedText { text: String, fragments: Vec<TextFragment> }` where `TextFragment = { x: f64, y: f64, width: f64, height: f64, font_size: f64, text: String, ... }`. (See `oxidize-pdf-3.1.2/src/parser/document.rs:1170` and `oxidize-pdf-3.1.2/src/text/extraction.rs:127`.)
 - `ExtractionOptions` to pass: `ExtractionOptions { preserve_layout: true, sort_by_position: true, ..Default::default() }` (per spec §4.3; **both** `preserve_layout: true` and `sort_by_position: true` are correctness-critical — without the first, `fragments` is empty; without the second, fragments are in content-stream order).
@@ -43,7 +43,7 @@ These apply to every task — copy verbatim from the spec; the implementer must 
 - No `#[allow(clippy::if_same_then_else, clippy::nonminimal_bool)]` in the new `oxidize.rs` (per spec §2 F20).
 - `backend/mod.rs` `lopdf` cfg and commented lopdf block must be removed (per spec §4.5).
 - `mupdf` cfg and `oxidize` cfg both remain conditional on their respective features (per spec §4.5).
-- Error wrapping: every `oxidize-pdf` call wraps the error with `anyhow::Context::with_context(|| format!("opening {path:?}", path = path.as_ref()))` (per spec §4.4).
+- Error wrapping: every `oxidize-pdf` call wraps the error with `anyhow::Context::with_context(|| format!("opening {}", path.display()))` (per spec §4.4).
 - Local PDF corpus for the post-merge smoke test: `~/Documents/RPG/CofD/Books/`.
 
 ---
@@ -101,7 +101,7 @@ const THRESHOLD: f64 = 240.0;
 pub fn extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText> {
     let path = path.as_ref();
     let doc = PdfDocument::open(path)
-        .with_context(|| format!("opening {path:?}"))?;
+        .with_context(|| format!("opening {}", path.display()))?;
 
     let options = ExtractionOptions {
         sort_by_position: true,
@@ -110,14 +110,14 @@ pub fn extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText> {
 
     let page_count = doc
         .page_count()
-        .with_context(|| format!("reading page count for {path:?}"))?;
+        .with_context(|| format!("reading page count for {}", path.display()))?;
 
     let mut pages: PdfText = BTreeMap::new();
 
     for i in 0..page_count {
         let extracted = doc
             .extract_text_from_page_with_options(i, options.clone())
-            .with_context(|| format!("extracting page {i} from {path:?}"))?;
+            .with_context(|| format!("extracting page {i} from {}", path.display()))?;
 
         let mut l_indent = (f64::MAX, f64::MIN);
         let mut r_indent = (f64::MAX, f64::MIN);
@@ -348,7 +348,7 @@ oxidize-pdf; lopdf was never on the path. Closes F8."
 
 **Interfaces:**
 - Consumes: workspace constraints from `Cargo.toml` (root), `mupdf 0.4` published on crates.io, `oxidize-pdf 3.1` published on crates.io.
-- Produces: `[features] oxidize = ["dep:oxidize-pdf"]`, `mupdf = ["dep:mupdf"]`. Two optional deps: `oxidize-pdf = { version = "3.1", optional = true }` and `mupdf = { version = "0.4", optional = true }` (default features = vendored MuPDF build via `mupdf-sys`; no `sys-lib` because nixpkgs mupdf 1.27 has incompatible ABI with mupdf 0.4's bindings).
+- Produces: `[features] oxidize = ["dep:oxidize-pdf"]`, `mupdf = ["dep:mupdf"]`. Two optional deps: `oxidize-pdf = { version = "3.1", optional = true }` and `mupdf = { version = "0.4", optional = true, default-features = false }` (no `sys-lib` because nixpkgs mupdf 1.27 has incompatible ABI with mupdf 0.4's bindings; the default feature set requires fontconfig unavailable in the devenv).
 
 - [ ] **Step 1: Replace the `[features]` block**
 
@@ -381,9 +381,7 @@ In the same file, the current `[dependencies]` block fragment (lines 22–26) re
 
 ```toml
 oxidize-pdf = {version="3.0", optional =true}
-# mupdf = { version = "0.4", default-features = false, optional = true, features = [
-# 	"sys-lib",
-# ] }
+# mupdf = { version = "0.4", optional = true, default-features = false }
 # lopdf = { version = "0.31", optional = true }
 ```
 
@@ -430,10 +428,7 @@ git commit -m "build(cofd-miner): bump oxidize-pdf to 3.1, re-declare mupdf opti
 - Bump oxidize-pdf floor from 3.0 to 3.1. The 3.1 line is the
   first to expose PdfDocument::extract_text_from_page_with_options
   with the exact signature the new backend uses.
-- Re-declare mupdf as a real optional dep (default features =
-  vendored MuPDF build). The previous commented-out block
-  implied a sys-lib feature that does not work against nixpkgs
-  mupdf 1.27 (ABI mismatch with mupdf 0.4's bindings).
+- Re-declare mupdf as a real optional dep with `default-features = false`; do not enable `sys-lib`. The default feature set requires fontconfig, which is unavailable in the devenv, and `sys-lib` does not work against nixpkgs mupdf 1.27 because of the ABI mismatch with mupdf 0.4's bindings.
 - Drop the commented lopdf lines (the backend is deleted in
   the previous commit).
 
@@ -522,7 +517,7 @@ Closes F22 (fixture re-population)."
 | §4.4: error wrapping with `with_context` | Task 1 |
 | §4.5: `mod.rs` cfg structure | Task 2 |
 | §4.6: `oxidize-pdf` floor `3.1` | Task 4 |
-| §4.6: `mupdf` declared (default features, vendored) | Task 4 |
+| §4.6: `mupdf` declared (`default-features = false`; no `sys-lib` because of ABI mismatch and unavailable fontconfig) | Task 4 |
 | §5.2: integration test left `#[ignore]`'d | (no task — already done, untouched) |
 | §5.3: post-merge smoke test | Task 5 |
 | §6: pre-merge verification gates | Task 5 |
@@ -531,6 +526,6 @@ Closes F22 (fixture re-population)."
 
 **3. Type consistency:** `extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText>` is defined in Task 1 and consumed by `source::extract_text` in `crates/cofd-miner/src/source.rs:101` (unchanged). `PdfText` is the type alias from `backend/mod.rs` Task 2. `DOT_REGEX`, `THRESHOLD`, and `ExtractionOptions` are declared in Task 1 and consumed in Task 1. No drift.
 
-**4. mupdf 0.4 + nixpkgs 1.27 ABI compatibility:** `mupdf` 0.4's `sys-lib` feature expects a system mupdf that the FFI bindings were generated against. nixpkgs ships `mupdf 1.27`, which is API-incompatible with the older bindings (the `mupdf` C library has had ABI breaks across major versions). Using `mupdf-sys`'s default vendored build sidesteps the problem entirely — `mupdf-sys` ships its own pinned mupdf source that the FFI bindings are guaranteed to match. Build time cost: 5–10 minutes first compile, then incremental.
+**4. mupdf 0.4 + nixpkgs 1.27 compatibility:** Do not enable `sys-lib`: nixpkgs ships `mupdf 1.27`, which has an incompatible ABI with mupdf 0.4's bindings. Also disable default features because they require fontconfig, which is unavailable in the devenv. The shipped `default-features = false` declaration keeps the fallback dependency limited to the PDF-reading path.
 
 **5. Plan makes sense on its own:** A reader who has not seen the spec can execute this plan from the top, commit per task, and end with a working transition. The Global Constraints section captures every spec-level invariant the implementer needs.
