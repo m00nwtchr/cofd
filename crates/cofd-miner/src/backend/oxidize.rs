@@ -19,6 +19,7 @@ pub fn extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText> {
 	let options = ExtractionOptions {
 		preserve_layout: true,
 		sort_by_position: true,
+		reconstruct_paragraphs: true,
 		..Default::default()
 	};
 
@@ -48,8 +49,20 @@ pub fn extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText> {
 
 			let y_shift = (y - last_y).floor();
 
+			// oxidize-pdf's fragment.y is in bottom-up page coordinates
+			// (PDF native: y=0 at bottom of page, y=792 at top). The
+			// original mupdf port used `line.bounds().y0` which is in
+			// top-down coordinates (y=0 at top of page, increasing as
+			// you go down). The "End of Page Content" check therefore
+			// needs to fire when y goes *down* past the content
+			// (negative y_shift in bottom-up), not when it goes *up*
+			// (positive y_shift in top-down). The first fragment of a
+			// new page has a large positive y_shift (jumping from
+			// last_y=0.0 to y≈739 at the top of the page); inverting
+			// the check skips the bogus "blank" flag that was
+			// previously dropping every page after page 1.
 			if y_shift.abs() > 100.0 {
-				blank = y_shift > 0.0; // End of Page Content
+				blank = y_shift < 0.0; // End of Page Content (bottom-up y)
 			}
 			last_y = y;
 
