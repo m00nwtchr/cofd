@@ -86,7 +86,7 @@ pub fn extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText> {
 				let indent = if dot { indent.max(9.0) } else { indent };
 
 				let should_tab = if indent > last_indent {
-					!(last_has_dot && !dot)
+					!last_has_dot || dot
 				} else if indent < last_indent {
 					dot
 				} else if last_line.trim().ends_with(':') && dot {
