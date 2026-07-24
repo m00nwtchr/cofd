@@ -31,9 +31,12 @@ impl PdfExtract {
 
 		for section in self.sections {
 			match &section.kind {
-				PageKind::Merit(_) => parse
-					.merits
-					.extend(parse_merits(&parse.info, &section).unwrap()),
+				PageKind::Merit(_) => match parse_merits(&parse.info, &section) {
+					Ok(items) => parse.merits.extend(items),
+					Err(e) => log::warn!(
+						"parse_merits failed for section (skipping): {e}"
+					),
+				},
 				// PageKind::MageSpell => parse.mage_spells.extend(vec.into_iter().map(|i| match i {
 				// 	_ => unreachable!(),
 				// })),
@@ -61,7 +64,15 @@ fn get_book_reference(
 	info: &BookInfo,
 ) -> BookReference {
 	let page = if let Some(match_) = captures.get(0) {
-		let orig_pos = section.original.find(match_.as_str()).unwrap();
+		// F6 fix: capture text may not appear in `section.original` if the
+		// original has been post-processed (e.g. via Op::RegexReplace) in
+		// a way that drops the captured substring. Fall back to position
+		// 0 (which resolves to the section's first page via
+		// get_page_number) rather than panicking.
+		let orig_pos = section
+			.original
+			.find(match_.as_str())
+			.unwrap_or(0);
 		get_page_number(&section.page_ranges, orig_pos)
 	} else {
 		unreachable!()
