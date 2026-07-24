@@ -27,9 +27,6 @@ toml = "*"
 
 anyhow = "*"
 
-cofd-miner = { git = "https://github.com/m00nwtchr/cofd-miner.git", tag = "cofd-miner-v0.1.0" }
-cofd-schema = { git = "https://github.com/m00nwtchr/cofd.git", tag = "cofd-schema-v0.1.0" }
+cofd-miner.workspace = true
+cofd-schema.workspace = true
 tokio = "1.49.0"
-
-# cofd-miner = { path = "../cofd-miner/cofd-miner" }
-# cofd-schema = { path = "../cofd-miner/cofd-schema" }

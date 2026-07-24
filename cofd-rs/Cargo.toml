@@ -1,30 +1,4 @@
+# cofd-rs is a directory under the monorepo root. Each leaf crate
+# (cofd-rs/schema, cofd-rs/lib, cofd-rs/derive, cofd-rs/macros, cofd-rs/util)
+# is a direct member of the root workspace at ../Cargo.toml.
 [workspace]
-members = ["schema", "lib", "derive", "macros", "util"]
-resolver = "2"
-
-[workspace.package]
-version = "0.1.0"
-authors = ["m00n"]
-edition = "2024"
-license = "MPL"
-
-[workspace.dependencies]
-cofd-schema = { path = "schema" }
-cofd-macros = { path = "macros" }
-cofd-util = { path = "util" }
-cofd-derive = { path = "derive" }
-
-facet = { version =  "0.43", features = ["chrono", "reflect"]}
-facet-json = { version = "0.43", features = ["streaming"] }
-serde = { version = "1", features = ["derive"] }
-strum = "0.27"
-convert_case = "0.8"
-
-derive_more = { version = "2" }
-
-systema = { git = "https://github.com/m00nwtchr/systema.git", features = ["serde"] }
-
-ron = "0.10"
-
-[workspace.metadata.crane]
-name = "cofd-workspace"

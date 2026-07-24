@@ -1,0 +1,70 @@
+[workspace]
+resolver = "2"
+members = [
+    # cofd-rs — domain model + character engine
+    "cofd-rs/schema",
+    "cofd-rs/lib",
+    "cofd-rs/derive",
+    "cofd-rs/macros",
+    "cofd-rs/util",
+    # cofd-miner — PDF extraction pipeline
+    "cofd-miner/crates/miner",
+    "cofd-miner/crates/meta",
+    "cofd-miner/crates/meta-editor",
+    "cofd-miner/crates/codex-scraper",
+    # cofdtools — Dioxus reader app
+    "cofdtools",
+]
+
+[workspace.package]
+version = "0.1.0"
+authors = ["m00n"]
+edition = "2024"
+license = "MPL-2.0"
+repository = "https://github.com/m00nwtchr/cofd"
+publish = false
+
+[workspace.dependencies]
+# Inter-crate deps (path overrides in this monorepo).
+cofd-schema = { path = "cofd-rs/schema" }
+cofd-util = { path = "cofd-rs/util" }
+cofd-macros = { path = "cofd-rs/macros" }
+cofd-derive = { path = "cofd-rs/derive" }
+cofd-miner = { path = "cofd-miner/crates/miner" }
+cofd-meta = { path = "cofd-miner/crates/meta" }
+
+# External deps shared by multiple inner crates.
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_regex = "1"
+strum = { version = "0.27", features = ["derive"] }
+regex = "1.10"
+itertools = "0.14"
+log = "0.4"
+anyhow = { version = "1", features = ["backtrace"] }
+thiserror = "2"
+once_cell = "1"
+parking_lot = "0.12"
+rayon = "1.8"
+chrono = { version = "0.4", features = ["serde"] }
+facet = { version = "0.43", features = ["chrono", "reflect"] }
+facet-json = { version = "0.43", features = ["streaming"] }
+derive_more = { version = "2", features = ["debug", "from", "try_into", "display"] }
+convert_case = "0.8"
+proc-macro2 = "1"
+quote = "1"
+syn = { version = "2", features = ["full"] }
+ron = "0.10"
+rmp-serde = "1"
+schemars = { version = "1.0.0-alpha.17", features = ["chrono04"] }
+highway = "1.1.0"
+
+# systema lives outside this monorepo; consume via path.
+systema = { path = "../systema", features = ["serde"] }
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+
+[workspace.metadata.crane]
+name = "cofd-monorepo"
