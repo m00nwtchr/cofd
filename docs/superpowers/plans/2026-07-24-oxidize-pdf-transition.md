@@ -20,16 +20,16 @@
 These apply to every task — copy verbatim from the spec; the implementer must not relax them without re-approval.
 
 - `oxidize-pdf` floor: `version = "3.1"` (per spec §4.6; lockfile resolves to 3.1.2).
-- `mupdf` declaration: `version = "0.4", optional = true` (default features; vendored MuPDF build via `mupdf-sys`; does NOT use `sys-lib` because nixpkgs mupdf 1.27 has incompatible ABI). Builds in 3–5 minutes the first time; subsequent builds are cached.
+- `mupdf` declaration: `version = "0.4", optional = true, default-features = false` (minimal: only PDF reading via vendored MuPDF; no OCR, system fonts, EPUB, or HTML — those are not needed for the fallback path and they pull in `font-kit`/`tesseract`/`yeslogic-fontconfig-sys` which require system C libraries the devenv does not have). Does NOT use `sys-lib` because nixpkgs mupdf 1.27 has incompatible ABI with mupdf 0.4's bindings.
 - `default` features: `["oxidize", "embed_meta"]` (per spec §4.6; do not change).
 - `oxizide-pdf` API entry points used: `parser::PdfDocument::open(path)`, `doc.page_count()`, `doc.extract_text_from_page_with_options(i, options)`, returning `ExtractedText { text: String, fragments: Vec<TextFragment> }` where `TextFragment = { x: f64, y: f64, width: f64, height: f64, font_size: f64, text: String, ... }`. (See `oxidize-pdf-3.1.2/src/parser/document.rs:1170` and `oxidize-pdf-3.1.2/src/text/extraction.rs:127`.)
-- `ExtractionOptions` to pass: `ExtractionOptions { sort_by_position: true, ..Default::default() }` (per spec §4.3; `sort_by_position: true` is correctness-critical).
+- `ExtractionOptions` to pass: `ExtractionOptions { preserve_layout: true, sort_by_position: true, ..Default::default() }` (per spec §4.3; **both** `preserve_layout: true` and `sort_by_position: true` are correctness-critical — without the first, `fragments` is empty; without the second, fragments are in content-stream order).
 - Column threshold: `const THRESHOLD: f64 = 240.0;` (per spec §4.2; was `f32` in mupdf).
 - Page-blank detection: `(y - last_y).floor().abs() > 100.0` (per spec §4.2).
 - Indent-tab F20 simplification (per spec §4.2):
   ```rust
   let should_tab = if indent > last_indent {
-      !(last_has_dot && !dot)
+      !last_has_dot || dot
   } else if indent < last_indent {
       dot
   } else if last_line.trim().ends_with(':') && dot {
@@ -391,7 +391,7 @@ Replace with:
 
 ```toml
 oxidize-pdf = { version = "3.1", optional = true }
-mupdf = { version = "0.4", optional = true }
+mupdf = { version = "0.4", optional = true, default-features = false }
 ```
 
 - [ ] **Step 3: Verify `cargo check` succeeds on the default build**

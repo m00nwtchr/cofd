@@ -124,7 +124,7 @@ simplification applied in the same edit:
 
 ```rust
 let should_tab = if indent > last_indent {
-    !(last_has_dot && !dot)
+    !last_has_dot || dot
 } else if indent < last_indent {
     dot
 } else if last_line.trim().ends_with(':') && dot {
@@ -136,7 +136,10 @@ let should_tab = if indent > last_indent {
 
 (The two outer `if-then-else` arms in the original are each already
 booleans; collapsing them is a drive-by correctness/cleanup pass that the
-audit called out as F20.)
+audit called out as F20. The De Morgan's-law equivalent `!last_has_dot
+|| dot` is used instead of `!(last_has_dot && !dot)` to avoid
+`clippy::nonminimal_bool` under the crate's `#![warn(clippy::pedantic)]`
+plus `-D warnings` gate. The two forms are algorithmically identical.)
 
 `INDENT_DEBUG` branch (`mupdf.rs:120-127`): replaced with a single
 `if std::env::var("INDENT_DEBUG").is_ok() { format!("{indent}\t{line}", …) }`
@@ -148,13 +151,26 @@ expression, no `#[cfg(debug_assertions)]` duplication (F18).
 use oxidize_pdf::text::ExtractionOptions;
 
 let options = ExtractionOptions {
+    preserve_layout: true,     // correctness-critical: without this, .fragments is empty
     sort_by_position: true,    // correctness-critical: stream-order scrambles the line state machine
-    ..Default::default()        // preserve_layout: false, merge_hyphenated: false, include_artifacts: false
+    ..Default::default()        // merge_hyphenated: true, include_artifacts: false, etc.
 };
 ```
 
-`sort_by_position: true` is the only correctness-critical option. The rest
-use defaults from
+Both `preserve_layout: true` and `sort_by_position: true` are correctness-critical:
+
+- `preserve_layout: true` populates `ExtractedText.fragments` with the
+  per-`Tj` text fragments with their `(x, y)` positions. With the default
+  `preserve_layout: false`, `extract_text_from_page_with_options` returns
+  `ExtractedText { text: <string>, fragments: vec![] }` (per
+  `oxidize-pdf-3.1.2/src/text/extraction.rs:105`: *"Text fragments with
+  position information (if preserve_layout is true)"*). The algorithm
+  iterates over `fragments`; an empty Vec produces an empty page.
+- `sort_by_position: true` ensures fragments come out in `(x, y)` order
+  instead of PDF content-stream order, so the line-reconstruction state
+  machine sees adjacent baselines grouped together.
+
+The rest use defaults from
 `oxidize-pdf-3.1.2/src/text/extraction.rs:81-98`.
 
 ### 4.4. Error handling
