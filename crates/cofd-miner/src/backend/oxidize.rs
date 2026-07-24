@@ -79,14 +79,14 @@ pub fn extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText> {
 			// space; if a wider gap exists (a true inter-word break), the
 			// source PDF usually emits a space character inside the Tj's
 			// string operand, which already preserves itself here.
-			if let Some((prev_x, prev_text)) = lines.last_mut() {
-				if y_shift.abs() < 2.0 {
-					if x < *prev_x {
-						*prev_x = x;
-					}
-					prev_text.push_str(&line);
-					continue;
+			if let Some((prev_x, prev_text)) = lines.last_mut()
+				&& y_shift.abs() < 2.0
+			{
+				if x < *prev_x {
+					*prev_x = x;
 				}
+				prev_text.push_str(&line);
+				continue;
 			}
 
 			lines.push((x, line));
