@@ -6,9 +6,6 @@
   ...
 }:
 {
-  # https://devenv.sh/basics/
-  # env.GREET = "devenv";
-
   cachix.pull = [
     "m00nwtchr"
     "cargo2nix"
@@ -18,9 +15,9 @@
   packages =
     with pkgs;
     [
+      # PDF parsing native dependencies (was cofd-miner/devenv.nix)
       pkg-config
       openssl
-      # mupdf deps
       freetype
       gumbo
       jbig2dec
@@ -33,19 +30,25 @@
     ++ lib.optionals (!config.container.isBuilding) [
       git
       cargo-nextest
+      cargo-audit
     ];
 
   env.LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
 
+  # https://devenv.sh/languages/
   languages.rust = {
     enable = true;
-    channel = lib.mkForce "nightly";
-    version = lib.mkForce "2026-01-01";
     mold.enable = true;
+    # Force nightly: cofd-miner pulls oxidize-pdf and other crates
+    # that require nightly-only features. The cofd-rs sub-project has
+    # been migrated to stable (rust-toolchain.toml); the override
+    # here applies only when the nightly toolchain is needed.
+    channel = "stable";
+    components = [ "rust-src" ];
   };
 
   processes = {
-    # cofdminer.exec = "cargo run";
+    cofd.exec = "cargo run";
   };
 
   treefmt = {
@@ -62,16 +65,10 @@
   };
 
   tasks = {
-    "cofd:tests" = lib.mkForce { };
-    #   "cofdminer:tests" = {
-    #     after = ["devenv:enterTest"];
-    #     exec = "cargo nextest run";
-    #   };
+    "cofd:tests" = {
+      exec = "cargo nextest run --workspace";
+    };
   };
 
-  outputs = {
-    # package Rust app using Nix
-    # cofd-miner = config.languages.rust.import ./. {};
-  };
   # See full reference at https://devenv.sh/reference/options/
 }
