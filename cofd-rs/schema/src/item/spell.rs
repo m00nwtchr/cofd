@@ -9,6 +9,7 @@ use crate::{
 
 #[derive(Debug, Clone, Copy, facet::Facet, EnumString, PartialEq, Eq)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(u8)]
 pub enum PrimaryFactor {
 	Duration,
@@ -45,6 +46,7 @@ impl FromStr for SpellFactor {
 
 #[derive(Debug, Clone, facet::Facet, PartialEq, Eq)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ReachEffect {
 	cost: u8,
 	description: Vec<String>,
@@ -52,6 +54,7 @@ pub struct ReachEffect {
 
 #[derive(Debug, Clone, facet::Facet, PartialEq, Eq)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(u8)]
 pub enum ArcanumEffectKind {
 	Add,
@@ -62,6 +65,7 @@ pub enum ArcanumEffectKind {
 
 #[derive(Debug, Clone, facet::Facet, PartialEq, Eq)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ArcanumEffect {
 	arcanum: Arcanum,
 	rating: u8,
@@ -71,6 +75,7 @@ pub struct ArcanumEffect {
 
 #[derive(Debug, Clone, facet::Facet, PartialEq, Eq)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 // #[serde(rename_all = "camelCase")]
 pub struct Spell {
 	arcana: Vec<(Arcanum, u8)>,

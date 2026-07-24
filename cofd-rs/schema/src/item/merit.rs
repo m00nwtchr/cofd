@@ -24,6 +24,7 @@ pub enum MeritTag {
 
 #[derive(Debug, Clone, facet::Facet, PartialEq, Eq)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 // #[serde(rename_all = "camelCase")]
 pub struct MeritSubItem {
 	pub name: String,
@@ -37,6 +38,7 @@ pub struct MeritSubItem {
 
 #[derive(Default, Debug, Clone, facet::Facet, PartialEq, Eq)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 // #[serde(rename_all = "camelCase")]
 pub struct Merit {
 	pub dot_rating: DotRange,

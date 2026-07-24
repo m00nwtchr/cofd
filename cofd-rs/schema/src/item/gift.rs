@@ -3,6 +3,7 @@ use crate::template::werewolf::{Auspice, Renown};
 
 #[derive(Clone, Debug, facet::Facet, PartialEq, Eq)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Moon {
 	pub auspice: Auspice,
 	pub level: u8,
@@ -10,12 +11,14 @@ pub struct Moon {
 
 #[derive(Clone, Debug, facet::Facet, PartialEq, Eq)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Other {
 	pub renown: Renown,
 }
 
 #[derive(Clone, Debug, facet::Facet, PartialEq, Eq)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Facet<T> {
 	// #[serde(flatten)]
 	pub action: Option<ActionFields>,
