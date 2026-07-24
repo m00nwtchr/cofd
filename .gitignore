@@ -3,7 +3,7 @@
 
 # Nix / devenv state
 .direnv/
-.devenv/state/
+.devenv/
 *.local.nix
 
 # Local data
