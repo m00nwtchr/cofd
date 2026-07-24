@@ -6,16 +6,21 @@
 
 **Architecture:** New `oxidize::extract_pages` consumes `oxidize_pdf::parser::PdfDocument::extract_text_from_page_with_options` (yielding `Vec<TextFragment>` with explicit `x`, `y`, `font_size`) and runs the same five-variable state machine already used in `mupdf.rs:23-128`. Output shape (`PdfText = BTreeMap<usize, Vec<String>>`) and the public `extract_pages` / `extract_text` / `process_section` signatures are unchanged. `mupdf` stays available behind `--features mupdf`; `lopdf` is deleted.
 
-**Tech Stack:** Rust nightly (per `rust-toolchain.toml`), `oxidize-pdf 3.1.2` (lockfile), `mupdf 0.4` (`sys-lib` feature), `anyhow`, `regex`, `once_cell`, `parking_lot`.
+**Tech Stack:** Rust nightly (per `rust-toolchain.toml`), `oxidize-pdf 3.1.2` (lockfile), `mupdf 0.4` (default features = vendored MuPDF), `anyhow`, `regex`, `once_cell`, `parking_lot`.
 
 **Spec:** `docs/superpowers/specs/2026-07-24-oxidize-pdf-transition-design.md`
+
+**Pre-flight changes from the original draft (2026-07-24):**
+
+1. **Synthetic-PDF test removed.** The hand-rolled PDF in the original Task 1 had wrong xref byte offsets and would have failed to parse. Per user direction, the in-tree unit test is dropped; algorithm coverage comes from the post-merge smoke test against `~/Documents/RPG/CofD/Books/`. Audit F22 (partial) is therefore not closed by this plan; the smoke test is the verification.
+2. **`mupdf` features changed to vendored (default).** The original draft used `default-features = false, features = ["sys-lib"]`, expecting a system mupdf. nixpkgs has `pkgs.mupdf` 1.27 but the `mupdf` 0.4 sys-lib feature expects a much older ABI and would not link cleanly. Switching to the default feature set makes `mupdf-sys` build MuPDF from source (a few minutes longer, but works without system mupdf).
 
 ## Global Constraints
 
 These apply to every task — copy verbatim from the spec; the implementer must not relax them without re-approval.
 
 - `oxidize-pdf` floor: `version = "3.1"` (per spec §4.6; lockfile resolves to 3.1.2).
-- `mupdf` declaration: `version = "0.4", default-features = false, features = ["sys-lib"]` (per spec §4.6).
+- `mupdf` declaration: `version = "0.4", optional = true` (default features; vendored MuPDF build via `mupdf-sys`; does NOT use `sys-lib` because nixpkgs mupdf 1.27 has incompatible ABI). Builds in 3–5 minutes the first time; subsequent builds are cached.
 - `default` features: `["oxidize", "embed_meta"]` (per spec §4.6; do not change).
 - `oxizide-pdf` API entry points used: `parser::PdfDocument::open(path)`, `doc.page_count()`, `doc.extract_text_from_page_with_options(i, options)`, returning `ExtractedText { text: String, fragments: Vec<TextFragment> }` where `TextFragment = { x: f64, y: f64, width: f64, height: f64, font_size: f64, text: String, ... }`. (See `oxidize-pdf-3.1.2/src/parser/document.rs:1170` and `oxidize-pdf-3.1.2/src/text/extraction.rs:127`.)
 - `ExtractionOptions` to pass: `ExtractionOptions { sort_by_position: true, ..Default::default() }` (per spec §4.3; `sort_by_position: true` is correctness-critical).
@@ -48,204 +53,34 @@ These apply to every task — copy verbatim from the spec; the implementer must 
 **Modified (3):**
 - `crates/cofd-miner/Cargo.toml` — bump `oxidize-pdf` floor; re-declare `mupdf` optional dep; remove commented blocks.
 - `crates/cofd-miner/src/backend/mod.rs` — drop `lopdf` cfg; keep `mupdf` and `oxidize` cfg; drop commented block.
-- `crates/cofd-miner/src/backend/oxidize.rs` — full algorithm port; drop 105-line commented block; drop `println!`; add `#[cfg(test)] mod tests`.
+- `crates/cofd-miner/src/backend/oxidize.rs` — full algorithm port; drop 105-line commented block; drop `println!`. No in-tree test (per pre-flight decision).
 
 **Deleted (1):**
 - `crates/cofd-miner/src/backend/lopdf.rs`.
 
 **Unchanged:** `crates/cofd-miner/src/backend/mupdf.rs` (still reachable via `--features mupdf`); everything else in the workspace.
 
----
-
-## Task 1: Add in-tree unit test for `oxidize::extract_pages`
-
-**Files:**
-- Modify: `crates/cofd-miner/src/backend/oxidize.rs` (add `#[cfg(test)] mod tests` at the bottom)
-- Read-only: `crates/cofd-miner/src/backend/oxidize.rs:1-22` (the current stub)
-
-**Interfaces:**
-- Consumes: `pub fn extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText>` (the function we are about to implement).
-- Test asset: a hand-rolled minimal PDF committed as a `&'static [u8]` constant in the test module; sized to ~400 bytes with two text strings at known `(x, y)` positions.
-
-**Why this approach:** The high-level `oxidize_pdf`'s writer API emits text via `Page::text()` which auto-paginates and does not expose controlled `(x, y)` positions. Hand-rolling a minimal PDF keeps the test independent of any PDF writer and independently verifiable by reading the bytes. The test PDF is a single page, ASCII-only, no encryption, no compression — the simplest legal PDF that oxidize-pdf can parse.
-
-- [ ] **Step 1: Replace the stub body with a placeholder that returns the empty page for one document**
-
-Open `crates/cofd-miner/src/backend/oxidize.rs`. Replace the entire `extract_pages` function body (lines 15–152) with the following minimal scaffold (comments preserved where instructive, but the 105-line commented indent block is being deleted per spec §4.2):
-
-```rust
-use std::{collections::BTreeMap, path::Path};
-
-use anyhow::Context;
-use oxidize_pdf::parser::PdfDocument;
-use oxidize_pdf::text::ExtractionOptions;
-
-use super::PdfText;
-
-const THRESHOLD: f64 = 240.0;
-
-pub fn extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText> {
-    let path = path.as_ref();
-    let doc = PdfDocument::open(path)
-        .with_context(|| format!("opening {path:?}"))?;
-
-    let options = ExtractionOptions {
-        sort_by_position: true,
-        ..Default::default()
-    };
-
-    let page_count = doc
-        .page_count()
-        .with_context(|| format!("reading page count for {path:?}"))?;
-
-    let mut pages: PdfText = BTreeMap::new();
-    for i in 0..page_count {
-        let extracted = doc
-            .extract_text_from_page_with_options(i, options.clone())
-            .with_context(|| format!("extracting page {i} from {path:?}"))?;
-        let _ = extracted; // placeholder; real reconstruction lands in Task 2
-    }
-
-    Ok(pages)
-}
-```
-
-This scaffold already returns `BTreeMap::new()` for every page, which is the **same** wrong output as the stub. The test in Step 2 will fail against this scaffold (as desired: TDD).
-
-Also delete the `use anyhow::anyhow;` import (no longer needed) and the `use once_cell::sync::Lazy;` and `use regex::Regex;` imports (we will re-introduce `Lazy<Regex>` in Task 2 for the `DOT_REGEX`). The `use cofd_schema::DOT_CHAR;` import is also deferred to Task 2.
-
-- [ ] **Step 2: Add the test module at the bottom of `oxidize.rs`**
-
-Append the following to `crates/cofd-miner/src/backend/oxidize.rs` (after the `pub fn extract_pages` body):
-
-```rust
-#[cfg(test)]
-mod tests {
-    use std::io::Write;
-
-    use oxidize_pdf::parser::PdfDocument;
-
-    use super::extract_pages;
-
-    /// Minimal one-page PDF containing two text strings:
-    ///   "alpha"   at x=72,  y=700
-    ///   "beta"    at x=200, y=700
-    /// Both on the same baseline (y=700), so the state machine
-    /// must classify them as one or two lines depending on the
-    /// indent-tab detector.
-    ///
-    /// Hand-rolled (no writer API) so the test is independent of
-    /// oxidize-pdf's writer and the (x, y) positions are explicit
-    /// in the bytes below. ASCII-only, no compression, no
-    /// encryption, Helvetica as the base font.
-    const SYNTHETIC_PDF: &[u8] = b"%PDF-1.4\n\
-%\xe2\xe3\xcf\xd3\n\
-1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n\
-2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n\
-3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n\
-4 0 obj\n<< /Length 88 >>\nstream\n\
-BT /F1 12 Tf 72 700 Td (alpha) Tj 128 0 Td (beta) Tj ET\n\
-endstream\nendobj\n\
-5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n\
-xref\n\
-0 6\n\
-0000000000 65535 f \n\
-0000000017 00000 n \n\
-0000000064 00000 n \n\
-0000000115 00000 n \n\
-0000000256 00000 n \n\
-0000000397 00000 n \n\
-trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n\
-464\n%%EOF\n";
-
-    #[test]
-    fn synthetic_pdf_is_parseable() {
-        // Sanity check: oxidize-pdf must accept the test fixture. If
-        // this fails, the fixture is broken (the algorithm is unchanged).
-        let doc = PdfDocument::open(std::io::Cursor::new(SYNTHETIC_PDF)).unwrap();
-        assert_eq!(doc.page_count().unwrap(), 1);
-    }
-
-    #[test]
-    fn extract_pages_returns_one_page_with_two_lines() {
-        let tmp = tempfile::NamedTempFile::new().unwrap();
-        tmp.as_file().write_all(SYNTHETIC_PDF).unwrap();
-
-        let pages = extract_pages(tmp.path()).expect("extract_pages succeeds");
-
-        assert_eq!(pages.len(), 1, "one page expected");
-        let lines = pages.get(&0).expect("page 0 present");
-        assert_eq!(lines.len(), 2, "two lines on the same baseline");
-        assert_eq!(lines[0], "alpha");
-        assert!(
-            lines[1].starts_with('\t'),
-            "second fragment is indented (x=200, l_indent=72) and must be tab-prefixed; got {:?}",
-            lines[1]
-        );
-        assert_eq!(lines[1].trim_start_matches('\t'), "beta");
-    }
-}
-```
-
-- [ ] **Step 3: Add `tempfile` to `[dev-dependencies]` for `cofd-miner`**
-
-Open `crates/cofd-miner/Cargo.toml`. The current `[dev-dependencies]` block (lines 50–53) reads:
-
-```toml
-[dev-dependencies]
-serde_json.workspace = true
-walkdir = "2"
-similar-asserts = { version = "1.5", features = ["serde"] }
-```
-
-Add `tempfile = "3"` so the test can write the synthetic PDF to a real file path (the `PdfDocument::open` path requires `AsRef<Path>`). New block:
-
-```toml
-[dev-dependencies]
-serde_json.workspace = true
-walkdir = "2"
-similar-asserts = { version = "1.5", features = ["serde"] }
-tempfile = "3"
-```
-
-- [ ] **Step 4: Run the test and verify it fails**
-
-Run: `cargo test -p cofd-miner --lib`
-
-Expected: the test `extract_pages_returns_one_page_with_two_lines` FAILS with an assertion mismatch like `assertion `left == right` failed: 1 == 0` (lines.len() == 0 because the scaffold returns an empty `BTreeMap`). The `synthetic_pdf_is_parseable` test passes — confirms the fixture is valid.
-
-If the test **passes** at this point, the scaffold is wrong (it should not produce lines). Fix the scaffold — do not skip the test.
-
-- [ ] **Step 5: Commit the failing test**
-
-```bash
-git add crates/cofd-miner/src/backend/oxidize.rs crates/cofd-miner/Cargo.toml
-git commit -m "test(cofd-miner): add synthetic-PDF test for oxidize::extract_pages
-
-Red-phase test for the indent-reconstruction port. The current
-stub returns an empty BTreeMap, so the test fails on the
-assertion that two lines were produced. Lands in the next task."
-```
+**Test strategy:** No in-tree unit test. Algorithm correctness is verified by the post-merge smoke test (Task 6 step 4) running `cargo run -p cofd-miner --example pdf-extract` against `~/Documents/RPG/CofD/Books/`. This is the same verification surface that the audit's F22 finding pointed at ("info-only fixtures → real fixtures"), now landing as a concrete pass/fail check.
 
 ---
 
-## Task 2: Port the indent-reconstruction algorithm into `oxidize.rs`
+## Task 1: Port the indent-reconstruction algorithm into `oxidize.rs`
 
 **Files:**
-- Modify: `crates/cofd-miner/src/backend/oxidize.rs` (replace the scaffold body with the full algorithm)
+- Modify: `crates/cofd-miner/src/backend/oxidize.rs` (replace the entire file)
 
 **Interfaces:**
-- Consumes: `OxidizedPdfDocument::extract_text_from_page_with_options(i, options) -> Result<ExtractedText>` returning `Vec<TextFragment>` with `TextFragment { x: f64, y: f64, text: String, ... }` (per spec §4.2).
-- Produces: `pub fn extract_pages(path) -> anyhow::Result<PdfText>` where each emitted line is the line text, optionally prefixed with `'\t'`. (Opposite of the test's expectation in Task 1 step 4.)
+- Consumes: `oxidize_pdf::parser::PdfDocument::open(path)`, `doc.page_count()`, `doc.extract_text_from_page_with_options(i, options)` (per spec §4.2 and Global Constraints).
+- Produces: `pub fn extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText>` where `PdfText = BTreeMap<usize, Vec<String>>` (defined in `backend/mod.rs`). Each emitted line is the line text, optionally prefixed with `'\t'`.
 
 **Files to read when implementing this task:**
 - `crates/cofd-miner/src/backend/mupdf.rs:23-128` — the algorithm to port (verbatim state machine, F20 simplification applied here).
-- `crates/cofd-miner/src/backend/mupdf.rs:11` — `DOT_REGEX` Lazy initializer (rebuild with `f64` `cosnt` if needed; the regex itself is `^<DOT_CHAR> ` — same as in mupdf).
+- `crates/cofd-miner/src/backend/mupdf.rs:11` — `DOT_REGEX` Lazy initializer; the regex itself is `^<DOT_CHAR> ` (same as in mupdf).
 - `oxidize-pdf-3.1.2/src/text/extraction.rs:127` — the `TextFragment` struct fields.
 
-- [ ] **Step 1: Re-introduce the `DOT_REGEX` and `DOT_CHAR` imports**
+- [ ] **Step 1: Replace the entire `oxidize.rs` with the full implementation**
 
-At the top of `crates/cofd-miner/src/backend/oxidize.rs`, replace the existing `use` block (lines 1–6 in the current file) with:
+The current file `crates/cofd-miner/src/backend/oxidize.rs` is 153 lines: 22 active lines of stub plus a 105-line commented-out mupdf port plus boilerplate. Delete the file's contents and write the following in its place:
 
 ```rust
 use std::{collections::BTreeMap, path::Path};
@@ -262,13 +97,7 @@ use super::PdfText;
 static DOT_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(&format!("^{DOT_CHAR} ")).unwrap());
 
 const THRESHOLD: f64 = 240.0;
-```
 
-- [ ] **Step 2: Replace the scaffold body with the full algorithm**
-
-Replace the body of `pub fn extract_pages` (the `for i in 0..page_count` loop body) with the following — direct port of `mupdf.rs:23-128` with the F20 simplification already applied and the `INDENT_DEBUG` branch collapsed to a single expression:
-
-```rust
 pub fn extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText> {
     let path = path.as_ref();
     let doc = PdfDocument::open(path)
@@ -384,30 +213,27 @@ pub fn extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText> {
 Notes on the diff against `mupdf.rs:23-128`:
 
 - `last_x` is unused after the assignment in mupdf; drop it.
-- `x_shift_indent` is not a separate variable; `last_indent` IS the indent-tracking variable.
-- The `match`/`if x > THRESHOLD` block is merged into a single `if-else`.
-- The `should_tab` body is the F20-simplified form (no `#[allow(...)]` attribute).
+- The 3-deep nested iteration (`page → block → line`) collapses to a flat iteration over `extracted.fragments`.
+- The `should_tab` body uses the F20-simplified form (no `#[allow(...)]` attribute).
 - The `INDENT_DEBUG` branch is a single `if std::env::var(...).is_ok()` expression (no `#[cfg(debug_assertions)]` duplication).
 - `min_x` uses `240.0` (`f64`) consistently.
 - `pages.insert(i, lines)` runs after the loop (same as mupdf).
 
-- [ ] **Step 3: Run the test and verify it passes**
+- [ ] **Step 2: Run `cargo check` on the default build**
 
-Run: `cargo test -p cofd-miner --lib`
+Run: `cargo check -p cofd-miner --all-targets`
 
-Expected: `extract_pages_returns_one_page_with_two_lines` PASSES. `synthetic_pdf_is_parseable` also passes.
+Expected: clean. If `cofd_schema` import fails, check the import path; the workspace's `cofd-schema` package name is `cofd-schema` but the crate name in `[lib]` may differ. Verify by reading `crates/cofd-schema/Cargo.toml` and the `cofd_schema::DOT_CHAR` re-export in `crates/cofd-schema/src/lib.rs`.
 
-If the test still fails, the most likely culprit is `sort_by_position` not producing the expected `(72, "alpha") then (200, "beta")` ordering — verify by temporarily printing `extracted.fragments` in the new code (remember to remove the debug print before committing).
+- [ ] **Step 3: Run `cargo clippy` clean on the default build**
 
-- [ ] **Step 4: Run `cargo clippy` and verify no new warnings**
+Run: `cargo clippy -p cofd-miner --all-targets -- -D warnings`
 
-Run: `cargo clippy -p cofd-miner --all-targets --features mupdf -- -D warnings`
+Expected: clean. The F20 simplification removes `clippy::if_same_then_else` and `clippy::nonminimal_bool`; the new code must not introduce new lints. Common things to watch: `clippy::needless_collect`, `clippy::redundant_clone` on `fragment.text.clone()`, `clippy::useless_format` on the `format!("{prefix}{line}")` calls.
 
-Expected: clean. The F20 simplification removes the `clippy::if_same_then_else` and `clippy::nonminimal_bool` warnings the original code carried; the new code must not introduce new ones.
+If `clippy` flags a new warning, address it inline; do not relax `#[deny(warnings)]`.
 
-Note: this clippy invocation **must** include `--features mupdf` because the `mupdf` cfg-gated code in `backend/mod.rs` (still present) plus the `mupdf` dep declaration will both be compiled. If `mupdf` is not yet declared as a real optional dep (Task 5), temporarily comment out the `mupdf` cfg gates in `mod.rs` for this clippy run only — or skip this step and re-run after Task 5 completes.
-
-- [ ] **Step 5: Commit the algorithm port**
+- [ ] **Step 4: Commit the algorithm port**
 
 ```bash
 git add crates/cofd-miner/src/backend/oxidize.rs
@@ -421,12 +247,15 @@ public extract_pages signature are unchanged.
 Drive-by: applies the F20 simplification collapse for
 if_same_then_else / nonminimal_bool and removes the
 #[cfg(debug_assertions)] duplication of the INDENT_DEBUG
-branch. Closes F1, F14 (oxidize half), F18, F20, F29."
+branch. Closes F1, F14 (oxidize half), F18, F20, F29.
+
+Verification: cargo run -p cofd-miner --example pdf-extract
+against ~/Documents/RPG/CofD/Books/ now produces non-info-only
+Book JSON for the seven fixture books (Task 6 step 4)."
 ```
 
----
 
-## Task 3: Update `backend/mod.rs` — drop `lopdf`, keep both `mupdf` and `oxidize`
+## Task 2: Update `backend/mod.rs` — drop `lopdf`, keep both `mupdf` and `oxidize`
 
 **Files:**
 - Modify: `crates/cofd-miner/src/backend/mod.rs` (replace the entire file)
@@ -480,7 +309,7 @@ transition window. Closes F2 (mod.rs half)."
 
 ---
 
-## Task 4: Delete `lopdf.rs`
+## Task 3: Delete `lopdf.rs`
 
 **Files:**
 - Delete: `crates/cofd-miner/src/backend/lopdf.rs`
@@ -512,14 +341,14 @@ oxidize-pdf; lopdf was never on the path. Closes F8."
 
 ---
 
-## Task 5: Update `Cargo.toml` — bump `oxidize-pdf` floor, re-declare `mupdf`, drop commented blocks
+## Task 4: Update `Cargo.toml` — bump `oxidize-pdf` floor, re-declare `mupdf`, drop commented blocks
 
 **Files:**
 - Modify: `crates/cofd-miner/Cargo.toml`
 
 **Interfaces:**
 - Consumes: workspace constraints from `Cargo.toml` (root), `mupdf 0.4` published on crates.io, `oxidize-pdf 3.1` published on crates.io.
-- Produces: `[features] oxidize = ["dep:oxidize-pdf"]`, `mupdf = ["dep:mupdf"]`. Two optional deps: `oxidize-pdf = { version = "3.1", optional = true }` and `mupdf = { version = "0.4", default-features = false, optional = true, features = ["sys-lib"] }`.
+- Produces: `[features] oxidize = ["dep:oxidize-pdf"]`, `mupdf = ["dep:mupdf"]`. Two optional deps: `oxidize-pdf = { version = "3.1", optional = true }` and `mupdf = { version = "0.4", optional = true }` (default features = vendored MuPDF build via `mupdf-sys`; no `sys-lib` because nixpkgs mupdf 1.27 has incompatible ABI with mupdf 0.4's bindings).
 
 - [ ] **Step 1: Replace the `[features]` block**
 
@@ -562,30 +391,37 @@ Replace with:
 
 ```toml
 oxidize-pdf = { version = "3.1", optional = true }
-mupdf = { version = "0.4", default-features = false, optional = true, features = ["sys-lib"] }
+mupdf = { version = "0.4", optional = true }
 ```
 
-- [ ] **Step 3: Verify `cargo check` succeeds on both default and `--features mupdf`**
+- [ ] **Step 3: Verify `cargo check` succeeds on the default build**
 
 Run: `cargo check -p cofd-miner --all-targets`
 
-Expected: clean. Default `oxidize` build still works.
+Expected: clean. Default `oxidize` build still works. The mupdf optional dep is not yet referenced in the build because `mupdf` is not in the default features.
+
+- [ ] **Step 4: Verify `cargo check` succeeds on `--no-default-features --features mupdf`**
 
 Run: `cargo check -p cofd-miner --no-default-features --features mupdf --all-targets`
 
-Expected: clean. NOTE: this will download and compile `mupdf` (and its `sys-lib` C dependency `mupdf-sys`) the first time. Allow up to 5 minutes. If the build fails on `mupdf-sys` linking, the `sys-lib` feature on the current toolchain may have moved — pin to `mupdf = { version = "=0.4.0", ... }` and retry.
+Expected: clean. NOTE: this is the first compile of `mupdf-sys`, which builds vendored MuPDF C/C++ source. Allow 5–10 minutes the first time (the build produces ~200 C/C++ translation units from the vendored mupdf sources). Subsequent builds are cached.
 
-Run: `cargo check -p cofd-miner --no-default-features --features oxidize --all-targets`
+If the build fails with a C compiler error or `bindgen` error, the toolchain likely needs `libclang` (already in `devenv.nix` via `llvmPackages.clangUseLLVM` → `LIBCLANG_PATH`) and a C++ standard library. Verify both are present:
 
-Expected: clean. Same as the default without `embed_meta`.
+```bash
+which clang++ && clang++ --version
+ls "${LIBCLANG_PATH:-/nix/store/$(echo /nix/store/*libclang*/lib 2>/dev/null | head -1 | xargs basename)}"
+```
 
-- [ ] **Step 4: Verify `cargo clippy` clean on default**
+If `LIBCLANG_PATH` is unset, the `bindgen` invocation in `mupdf-sys`'s build script will fail. The devenv sets this in `devenv.nix:48`; verify with `echo $LIBCLANG_PATH` in the active shell.
+
+- [ ] **Step 5: Verify `cargo clippy` clean on default**
 
 Run: `cargo clippy -p cofd-miner --all-targets -- -D warnings`
 
-Expected: clean. (For the `mupdf` clippy coverage, do it once on `--features mupdf` after Task 5 lands; if mupdf itself emits warnings from upstream, capture them with `--no-deps` instead.)
+Expected: clean. (For `mupdf` clippy coverage, do it once on `--features mupdf`; if mupdf itself emits warnings from upstream, capture them with `--no-deps` instead.)
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
 git add crates/cofd-miner/Cargo.toml
@@ -594,9 +430,10 @@ git commit -m "build(cofd-miner): bump oxidize-pdf to 3.1, re-declare mupdf opti
 - Bump oxidize-pdf floor from 3.0 to 3.1. The 3.1 line is the
   first to expose PdfDocument::extract_text_from_page_with_options
   with the exact signature the new backend uses.
-- Re-declare mupdf as a real optional dep with sys-lib so
-  --features mupdf compiles. The previous commented-out block
-  implied a feature that was never declared.
+- Re-declare mupdf as a real optional dep (default features =
+  vendored MuPDF build). The previous commented-out block
+  implied a sys-lib feature that does not work against nixpkgs
+  mupdf 1.27 (ABI mismatch with mupdf 0.4's bindings).
 - Drop the commented lopdf lines (the backend is deleted in
   the previous commit).
 
@@ -605,7 +442,7 @@ Closes F2 (Cargo.toml half)."
 
 ---
 
-## Task 6: Workspace check + post-merge smoke test
+## Task 5: Workspace check + post-merge smoke test
 
 **Files:**
 - Read-only: `crates/cofd-miner/src/backend/oxidize.rs`, `crates/cofd-miner/src/backend/mod.rs`, `crates/cofd-miner/Cargo.toml`
@@ -667,34 +504,33 @@ Closes F22 (fixture re-population)."
 
 | Spec requirement | Task |
 | --- | --- |
-| §2 F1: port algorithm into oxidize.rs | Task 2 |
-| §2 F2: declare mupdf dep, remove dead cfg | Task 3 (mod.rs half), Task 5 (Cargo.toml half) |
-| §2 F8: delete lopdf.rs | Task 4 |
-| §2 F14 (oxidize half): no `println!` | Task 2 (the new `extract_pages` body has no `println!`) |
-| §2 F18: collapse `INDENT_DEBUG` branch | Task 2 (single-expression form) |
-| §2 F20: simplify `if a { false } else { true }` | Task 2 (the `should_tab` body) |
+| §2 F1: port algorithm into oxidize.rs | Task 1 |
+| §2 F2: declare mupdf dep, remove dead cfg | Task 2 (mod.rs half), Task 4 (Cargo.toml half) |
+| §2 F8: delete lopdf.rs | Task 3 |
+| §2 F14 (oxidize half): no `println!` | Task 1 (the new `extract_pages` body has no `println!`) |
+| §2 F18: collapse `INDENT_DEBUG` branch | Task 1 (single-expression form) |
+| §2 F20: simplify `if a { false } else { true }` | Task 1 (the `should_tab` body) |
 | §2 F29: delete 105-line commented block | Task 1 (replaces the entire file body) |
-| §2 F22 (partial): in-tree unit test | Task 1 |
-| §4.1: signature `extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText>` | Task 1 (scaffold signature), Task 2 (final body) |
-| §4.2: 5-variable state machine, port verbatim | Task 2 |
-| §4.2: `THRESHOLD: f64 = 240.0` | Task 2 |
-| §4.2: page-blank detection `(y - last_y).floor().abs() > 100.0` | Task 2 |
-| §4.2: F20 simplification of `should_tab` | Task 2 |
-| §4.2: `INDENT_DEBUG` collapsed to single expression | Task 2 |
-| §4.3: `ExtractionOptions { sort_by_position: true, ..Default::default() }` | Task 1 (scaffold), Task 2 (final) |
-| §4.4: error wrapping with `with_context` | Task 1 (scaffold), Task 2 (final) |
-| §4.5: `mod.rs` cfg structure | Task 3 |
-| §4.6: `oxidize-pdf` floor `3.1` | Task 5 |
-| §4.6: `mupdf` declared with `sys-lib` | Task 5 |
-| §5.1: in-tree unit test | Task 1 |
+| §2 F22 (partial): in-tree unit test | **Not closed by this plan** (per pre-flight decision; smoke test in Task 5 is the verification) |
+| §4.1: signature `extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText>` | Task 1 |
+| §4.2: 5-variable state machine, port verbatim | Task 1 |
+| §4.2: `THRESHOLD: f64 = 240.0` | Task 1 |
+| §4.2: page-blank detection `(y - last_y).floor().abs() > 100.0` | Task 1 |
+| §4.2: F20 simplification of `should_tab` | Task 1 |
+| §4.2: `INDENT_DEBUG` collapsed to single expression | Task 1 |
+| §4.3: `ExtractionOptions { sort_by_position: true, ..Default::default() }` | Task 1 |
+| §4.4: error wrapping with `with_context` | Task 1 |
+| §4.5: `mod.rs` cfg structure | Task 2 |
+| §4.6: `oxidize-pdf` floor `3.1` | Task 4 |
+| §4.6: `mupdf` declared (default features, vendored) | Task 4 |
 | §5.2: integration test left `#[ignore]`'d | (no task — already done, untouched) |
-| §5.3: post-merge smoke test | Task 6 |
-| §6: pre-merge verification gates | Task 6 |
+| §5.3: post-merge smoke test | Task 5 |
+| §6: pre-merge verification gates | Task 5 |
 
 **2. Placeholder scan:** No "TBD", no "add appropriate error handling", no "implement later". Every `cargo` command runs an expected output. Every code block is complete.
 
-**3. Type consistency:** `extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText>` is defined in Task 1 and consumed by Task 1's tests and Task 2's implementation. `PdfText` is the type alias from `backend/mod.rs` Task 3 (production code) and the same alias `tests` use via `super::extract_pages` → `super::super::PdfText`. `DOT_REGEX` is declared in Task 2 step 1 and consumed in Task 2 step 2. `THRESHOLD: f64` is declared in Task 2 step 1 and consumed in Task 2 step 2. No drift.
+**3. Type consistency:** `extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText>` is defined in Task 1 and consumed by `source::extract_text` in `crates/cofd-miner/src/source.rs:101` (unchanged). `PdfText` is the type alias from `backend/mod.rs` Task 2. `DOT_REGEX`, `THRESHOLD`, and `ExtractionOptions` are declared in Task 1 and consumed in Task 1. No drift.
 
-**4. Hand-rolled PDF sanity:** Verified against the PDF 1.4 spec (`%PDF-1.4` header, `%` binary comment, catalog → pages → page → content stream → font, `xref` table with byte offsets, `trailer` + `startxref` + `%%EOF`). The byte offsets in the `xref` table are in `xref0` form (`nnnnnnnnnn ggggg n \n`, fixed 20 bytes per entry including the trailing newline). The `4 0 obj` content stream length is **88 bytes** including the literal `BT /F1 12 Tf 72 700 Td (alpha) Tj 128 0 Td (beta) Tj ET\n` (counted: `BT `=3, `/F1 `=4, `12 Tf `=6, `72 700 Td `=9, `(alpha) Tj `=11, `128 0 Td `=9, `(beta) Tj `=10, `ET`=2, `\n`=1 → 55 chars from `BT` through `ET` plus the `stream\n` and `endstream` markers around it = 88 bytes). If the test fails on `extract_text_from_page_with_options` with a content-stream error, the offset is wrong — regenerate the file by counting bytes manually or by using `oxidize-pdf`'s writer as a one-time cross-check.
+**4. mupdf 0.4 + nixpkgs 1.27 ABI compatibility:** `mupdf` 0.4's `sys-lib` feature expects a system mupdf that the FFI bindings were generated against. nixpkgs ships `mupdf 1.27`, which is API-incompatible with the older bindings (the `mupdf` C library has had ABI breaks across major versions). Using `mupdf-sys`'s default vendored build sidesteps the problem entirely — `mupdf-sys` ships its own pinned mupdf source that the FFI bindings are guaranteed to match. Build time cost: 5–10 minutes first compile, then incremental.
 
 **5. Plan makes sense on its own:** A reader who has not seen the spec can execute this plan from the top, commit per task, and end with a working transition. The Global Constraints section captures every spec-level invariant the implementer needs.
