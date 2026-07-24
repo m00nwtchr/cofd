@@ -17,6 +17,7 @@ pub fn extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText> {
 	let doc = PdfDocument::open(path).with_context(|| format!("opening {}", path.display()))?;
 
 	let options = ExtractionOptions {
+		preserve_layout: true,
 		sort_by_position: true,
 		..Default::default()
 	};
@@ -38,7 +39,7 @@ pub fn extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText> {
 		let mut last_y = 0.0;
 		let mut blank = false;
 
-		let mut lines = Vec::new();
+		let mut lines: Vec<(f64, String)> = Vec::new();
 
 		for fragment in &extracted.fragments {
 			let x = fragment.x;
@@ -62,6 +63,30 @@ pub fn extract_pages(path: impl AsRef<Path>) -> anyhow::Result<PdfText> {
 				}
 			} else if x < l_indent.0 {
 				l_indent.0 = x;
+			}
+
+			// Group adjacent fragments on the same baseline into a single line.
+			// oxidize-pdf emits one TextFragment per Tj operator; mupdf's
+			// TextPage already concatenates per-Tj fragments on the same
+			// baseline into a single TextLine, so to keep the per-line
+			// indent-tab state machine working we must do the same here.
+			// Tolerance: 2.0 PDF units handles sub-pixel y jitter from
+			// descenders on adjacent lines.
+			//
+			// Concatenation: PDF Tj operators typically render adjacent
+			// glyphs in the same text run, so the next Tj starts where the
+			// previous one ended. We concatenate without inserting a
+			// space; if a wider gap exists (a true inter-word break), the
+			// source PDF usually emits a space character inside the Tj's
+			// string operand, which already preserves itself here.
+			if let Some((prev_x, prev_text)) = lines.last_mut() {
+				if y_shift.abs() < 2.0 {
+					if x < *prev_x {
+						*prev_x = x;
+					}
+					prev_text.push_str(&line);
+					continue;
+				}
 			}
 
 			lines.push((x, line));
