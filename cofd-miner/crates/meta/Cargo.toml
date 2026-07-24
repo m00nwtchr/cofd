@@ -7,7 +7,7 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-cofd-schema.workspace = true
+cofd-schema = { workspace = true, features = ["json_schema"] }
 regex.workspace = true
 
 serde = { workspace = true, features = ["derive"] }

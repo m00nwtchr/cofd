@@ -16,7 +16,7 @@ oxidize = ["dep:oxidize-pdf"]
 # lopdf = ["dep:lopdf"]
 
 [dependencies]
-cofd-schema.workspace = true
+cofd-schema = { workspace = true, features = ["json_schema"] }
 cofd-meta.workspace = true
 
 oxidize-pdf = {version="3.0", optional =true}
