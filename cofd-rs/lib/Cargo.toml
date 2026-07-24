@@ -1,0 +1,24 @@
+[package]
+name = "cofd"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+
+derive_more = { workspace = true, features = ["from", "try_into", "display"] }
+enum_dispatch = "0.3"
+strum = { workspace = true, features = ["derive"] }
+facet.workspace = true
+
+systema.workspace = true
+
+cofd-schema.workspace = true
+cofd-util.workspace = true
+cofd-macros.workspace = true
+#once_cell = "1.20.3"
+
+[dev-dependencies]
+ron.workspace = true

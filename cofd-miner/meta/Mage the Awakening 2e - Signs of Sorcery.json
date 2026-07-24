@@ -1,0 +1,116 @@
+{
+	"info": {
+		"name": "Mage the Awakening Second Edition: Signs of Sorcery",
+		"id": "SoS",
+		"hash": "5035D593CD90296C",
+		"publicationDate": "2019-06-19"
+	},
+	"sections": [
+		{
+			"name": "Mage Sight Merits",
+			"pages": {
+				"start": 26,
+				"end": 26
+			},
+			"range": "(?sm)Merit: (.*)^High Speech\\n\\tOne",
+			"kind": {
+				"Merit": "Awakened"
+			},
+			"ops": [
+				{
+					"type": "RegexReplace",
+					"regex": "(?sm)^Merit: ",
+					"replace": ""
+				}
+			]
+		},
+		{
+			"name": "High Speech Merits",
+			"pages": {
+				"start": 26,
+				"end": 26
+			},
+			"range": "(?sm)High Speech(.*)^Active Mage Sight$",
+			"kind": {
+				"Merit": null
+			}
+		},
+		{
+			"name": "Supernal Taxonomy",
+			"pages": {
+				"start": 27,
+				"end": 27
+			},
+			"range": "(?sm)Merit: (.*)^Focused Mage Sight$",
+			"kind": {
+				"Merit": "Awakened"
+			}
+		},
+		{
+			"name": "Supernal Watcher",
+			"pages": {
+				"start": 43,
+				"end": 43
+			},
+			"range": "(?sm)Merit: (.*)$",
+			"kind": {
+				"Merit": "Awakened"
+			}
+		},
+		{
+			"name": "Yantra Merits",
+			"pages": {
+				"start": 57,
+				"end": 57
+			},
+			"range": "(?sm)Merits(.*)Ritual Interruption$",
+			"kind": {
+				"Merit": "Awakened"
+			}
+		},
+		{
+			"name": "Item Merits",
+			"pages": {
+				"start": 76,
+				"end": 77
+			},
+			"range": "(?s)New Merits(.*)",
+			"kind": {
+				"Merit": "Awakened"
+			}
+		},
+		{
+			"name": "Grimoire Merits",
+			"pages": {
+				"start": 87,
+				"end": 87
+			},
+			"range": "(?s)New Merits(.*)",
+			"kind": {
+				"Merit": "Awakened"
+			}
+		},
+		{
+			"name": "Soul Stone Merits",
+			"pages": {
+				"start": 91,
+				"end": 92
+			},
+			"range": "(?sm)New Merits(.*)The Nimbus$",
+			"kind": {
+				"Merit": "Awakened"
+			}
+		},
+		{
+			"name": "Order Archive",
+			"pages": {
+				"start": 97,
+				"end": 97
+			},
+			"range": "(?s)New Merit(.*)",
+			"kind": {
+				"Merit": "Awakened"
+			}
+		}
+	]
+}

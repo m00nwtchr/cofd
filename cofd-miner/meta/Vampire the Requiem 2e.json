@@ -1,0 +1,87 @@
+{
+	"info": {
+		"name": "Vampire the Requiem Second Edition",
+		"id": "VtR2e",
+		"hash": "A4B653D08D7503AF",
+		"publicationDate": "2013-12-19"
+	},
+	"sections": [
+		{
+			"name": "General Kindred Merits",
+			"pages": {
+				"start": 109,
+				"end": 115
+			},
+			"range": "(?sm)General Kindred Merits(.*)^Carthian Law$",
+			"kind": {
+				"Merit": "Kindred"
+			},
+			"ops": [
+				{
+					"type": "Insert",
+					"pos": 33016,
+					"char": "("
+				},
+				{
+					"type": "Insert",
+					"pos": 33023,
+					"char": ")"
+				}
+			]
+		},
+		{
+			"name": "Carthian Law",
+			"pages": {
+				"start": 116,
+				"end": 116
+			},
+			"range": "(?sm)(.*)^Invictus Oaths$",
+			"kind": {
+				"Merit": null
+			}
+		},
+		{
+			"name": "Invictus Oaths",
+			"pages": {
+				"start": 116,
+				"end": 117
+			},
+			"range": "(?sm)(Notary \\(.*)^Kindred Fighting Merits$",
+			"kind": {
+				"Merit": null
+			}
+		},
+		{
+			"name": "Kindred Fighting Merits",
+			"pages": {
+				"start": 117,
+				"end": 118
+			},
+			"range": "(?sm)(Kindred Dueling.*)^Human Merits$",
+			"kind": {
+				"Merit": "Kindred"
+			}
+		},
+		{
+			"name": "General Merits",
+			"pages": {
+				"start": 118,
+				"end": 124
+			},
+			"range": "(?sm)(Allies.*)",
+			"kind": {
+				"Merit": null
+			}
+		},
+		{
+			"name": "Ghoul and Mortal Merits",
+			"pages": {
+				"start": 298,
+				"end": 300
+			},
+			"kind": {
+				"Merit": null
+			}
+		}
+	]
+}

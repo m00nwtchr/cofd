@@ -1,0 +1,28 @@
+[package]
+name = "cofd-schema"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[features]
+serde = ["dep:serde"]
+json_schema = ["dep:schemars", "serde"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"], optional = true }
+thiserror = "2"
+
+cofd-util.workspace = true
+
+chrono = { version = "0.4", features = ["serde"] }
+strum = { workspace = true, features = ["derive"] }
+derive_more = { workspace = true, features = ["display", "from"] }
+facet.workspace = true
+
+itertools = "*"
+
+schemars = { version = "1.0.0-alpha.17", features = ["chrono04"], optional = true }
+
+# [dev-dependencies]
+# serde_json = { }"1" }

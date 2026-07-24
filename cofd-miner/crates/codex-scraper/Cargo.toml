@@ -1,0 +1,21 @@
+[package]
+name = "codex-scraper"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "A scraper for the codexofdarkness.com wiki."
+
+[dependencies]
+cofd-schema.workspace = true
+
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls-webpki-roots"] }
+scraper = "0.25"
+
+log.workspace = true
+anyhow.workspace = true
+itertools.workspace = true
+
+ron = "0.12.0"
+tokio = { version = "1.33.0", features = ["rt", "macros"] }

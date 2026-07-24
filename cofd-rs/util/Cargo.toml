@@ -1,0 +1,11 @@
+[package]
+name = "cofd-util"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+cofd-derive.workspace = true
+strum.workspace = true
+facet.workspace = true

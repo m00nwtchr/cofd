@@ -1,0 +1,130 @@
+{
+	"info": {
+		"name": "Werewolf the Forsaken Second Edition",
+		"id": "WtF2e",
+		"hash": "3B3E7EBAEFF94CDB",
+		"publicationDate": "2015-03-04"
+	},
+	"sections": [
+		{
+			"name": "General Werewolf Merits",
+			"pages": {
+				"start": 105,
+				"end": 108
+			},
+			"range": "(?sm)WEREWOLF MERITS(.*)^WEREWOLF\\s+FIGHTING MERITS$",
+			"kind": {
+				"Merit": "Werewolf"
+			},
+			"ops": [
+				{
+					"type": "RegexReplace",
+					"regex": "\\n(Chapter Three: Laws of the Kill|Merits)\\n\\d{3}",
+					"replace": ""
+				}
+			]
+		},
+		{
+			"name": "Werewolf Fighting Merits",
+			"pages": {
+				"start": 108,
+				"end": 110
+			},
+			"range": "(?sm)FIGHTING MERITS(.*)^HUMAN MERITS$",
+			"kind": {
+				"Merit": "Werewolf"
+			},
+			"ops": [
+				{
+					"type": "RegexReplace",
+					"regex": "\\n(Chapter Three: Laws of the Kill|Merits)\\n\\d{3}",
+					"replace": ""
+				}
+			]
+		},
+		{
+			"name": "Human Merits",
+			"pages": {
+				"start": 110,
+				"end": 113
+			},
+			"range": "(?sm)HUMAN MERITS(.*)",
+			"kind": {
+				"Merit": null
+			},
+			"ops": [
+				{
+					"type": "RegexReplace",
+					"regex": "\\n(Chapter Three: Laws of the Kill|Merits)\\n\\d{3}",
+					"replace": ""
+				}
+			]
+		},
+		{
+			"name": "Moon Gifts",
+			"pages": {
+				"start": 115,
+				"end": 121
+			},
+			"range": "(?sm)MOON GIFTS(.*)^SHADOW GIFTS$",
+			"kind": {
+				"Gift": "Moon"
+			}
+		},
+		{
+			"name": "Shadow Gifts",
+			"pages": {
+				"start": 121,
+				"end": 136
+			},
+			"range": "(?sm)SHADOW GIFTS(.*)^WOLF GIFTS$",
+			"kind": {
+				"Gift": "Shadow"
+			}
+		},
+		{
+			"name": "Wolf Gifts",
+			"pages": {
+				"start": 136,
+				"end": 138
+			},
+			"range": "(?sm)WOLF GIFTS(.*)^RITES$",
+			"kind": {
+				"Gift": "Wolf"
+			}
+		},
+		{
+			"name": "Tribal Affiliate Merits",
+			"pages": {
+				"start": 304,
+				"end": 304
+			},
+			"range": "(?sm)AFFILIATE MERIT S(.*)^MOON BIRTH MERIT S",
+			"kind": {
+				"Merit": null
+			}
+		},
+		{
+			"name": "Moon Birth Merits",
+			"pages": {
+				"start": 305,
+				"end": 305
+			},
+			"range": "(?sm)(.*)^WOLF-BLOODED MERIT S$",
+			"kind": {
+				"Merit": null
+			}
+		},
+		{
+			"name": "Wolf-Blooded Merits",
+			"pages": {
+				"start": 305,
+				"end": 305
+			},
+			"range": "(?sm)WOLF-BLOODED MERIT S(.*)",
+			"kind": {
+				"Merit": null
+			}
+		}
+	]
+}

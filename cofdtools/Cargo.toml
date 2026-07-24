@@ -1,0 +1,35 @@
+[package]
+name = "cofdtools"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[profile.release]
+lto = true
+
+[features]
+default = ["desktop"]
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]
+
+[dependencies]
+dioxus = { version = "0.7", features = ["router"] }
+
+directories = "*"
+once_cell = "*"
+futures = "*"
+env_logger = "0.11"
+log = "0.4"
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "*"
+toml = "*"
+
+anyhow = "*"
+
+cofd-miner = { git = "https://github.com/m00nwtchr/cofd-miner.git", tag = "cofd-miner-v0.1.0" }
+cofd-schema = { git = "https://github.com/m00nwtchr/cofd.git", tag = "cofd-schema-v0.1.0" }
+tokio = "1.49.0"
+
+# cofd-miner = { path = "../cofd-miner/cofd-miner" }
+# cofd-schema = { path = "../cofd-miner/cofd-schema" }

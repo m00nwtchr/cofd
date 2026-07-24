@@ -1,0 +1,63 @@
+{
+	"info": {
+		"name": "Mage the Awakening Second Edition",
+		"id": "MtA2e",
+		"hash": "6545B34A4E989DCA",
+		"publicationDate": "2016-05-04"
+	},
+	"sections": [
+		{
+			"name": "Awakened Merits",
+			"pages": {
+				"start": 99,
+				"end": 104
+			},
+			"range": "(?sm)Merits(.*)Mundane Merits$",
+			"kind": {
+				"Merit": "Awakened"
+			}
+		},
+		{
+			"name": "General Merits",
+			"pages": {
+				"start": 104,
+				"end": 107
+			},
+			"range": "(?sm)Mundane Merits(.*)",
+			"kind": {
+				"Merit": null
+			}
+		},
+		{
+			"name": "Sleeper Merits",
+			"pages": {
+				"start": 302,
+				"end": 303
+			},
+			"range": "(?sm)Sleeper Merits(.*)Sleepwalkers$",
+			"kind": {
+				"Merit": "Sleeper"
+			}
+		},
+		{
+			"name": "Sleepwalker Merits",
+			"pages": {
+				"start": 305,
+				"end": 306
+			},
+			"range": "(?sm)Sleepwalker Merits(.*)",
+			"kind": {
+				"Merit": null
+			}
+		},
+		{
+			"name": "Death",
+			"pages": {
+				"start": 128,
+				"end": 134
+			},
+			"range": "(?sm)Death$(.*)^Fate$",
+			"kind": "MageSpell"
+		}
+	]
+}

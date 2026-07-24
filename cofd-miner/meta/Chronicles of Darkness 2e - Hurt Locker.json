@@ -1,0 +1,176 @@
+{
+	"info": {
+		"name": "Chronicles of Darkness: Hurt Locker",
+		"id": "HL",
+		"hash": "A76966C7A997D8A4",
+		"publicationDate": "2016-12-07"
+	},
+	"sections": [
+		{
+			"name": "General Merits",
+			"pages": {
+				"start": 41,
+				"end": 43
+			},
+			"range": "(?sm)New General Merits(.*)",
+			"kind": {
+				"Merit": null
+			},
+			"ops": [
+				{
+					"type": "RegexReplace",
+					"regex": "(?s)Chapter Two:\\s+Instruments\\s+of Violence\\n",
+					"replace": ""
+				}
+			]
+		},
+		{
+			"name": "Fighting Merits",
+			"pages": {
+				"start": 46,
+				"end": 56
+			},
+			"range": "(?sm)Style Merits(.*)LASTING TRAUMA$",
+			"kind": {
+				"Merit": null
+			},
+			"ops": [
+				{
+					"type": "RegexReplace",
+					"regex": "\\n\\d{2}\\s+(chapter two-instruments of violence|Fighting Merits)",
+					"replace": ""
+				}
+			]
+		},
+		{
+			"name": "Supernatural Merits",
+			"pages": {
+				"start": 72,
+				"end": 77
+			},
+			"range": "(?sm)(Animal Possession \\(.*)Supernatural\\s+Merit Templates$",
+			"kind": {
+				"Merit": "Mortal"
+			}
+		},
+		{
+			"name": "Supernatural Resistance",
+			"pages": {
+				"start": 78,
+				"end": 78
+			},
+			"range": "(?sm)New Merit: (.*)ATARIYA$",
+			"kind": {
+				"Merit": null
+			}
+		},
+		{
+			"name": "Atariya Merits",
+			"pages": {
+				"start": 79,
+				"end": 81
+			},
+			"range": "(?sm)(Damn Lucky\\s+\\(.*)RIO MATSUMURA$",
+			"kind": {
+				"Merit": null
+			},
+			"ops": [
+				{
+					"type": "RegexReplace",
+					"regex": "(?s)\\tStory Hooks.*stay unremarkable\\?\\n",
+					"replace": ""
+				}
+			]
+		},
+		{
+			"name": "Dreamer Merits",
+			"pages": {
+				"start": 83,
+				"end": 86
+			},
+			"range": "(?sm)(Subliminal Conditioning\\s+\\(.*)DIANE THAYER$",
+			"kind": {
+				"Merit": null
+			},
+			"ops": [
+				{
+					"type": "RegexReplace",
+					"regex": "(?s)\\tStory Hooks.*of his head. \\n",
+					"replace": ""
+				}
+			]
+		},
+		{
+			"name": "Infected Merits",
+			"pages": {
+				"start": 88,
+				"end": 90
+			},
+			"range": "(?sm)(Carrier\\s+\\(.*)RICHARD \"RICK\" STARR$",
+			"kind": {
+				"Merit": null
+			},
+			"ops": [
+				{
+					"type": "RegexReplace",
+					"regex": "\\n\\d{2}\\s+(Chapter three-The Other Side|The Infected)",
+					"replace": ""
+				}
+			]
+		},
+		{
+			"name": "Plain Merits",
+			"pages": {
+				"start": 92,
+				"end": 95
+			},
+			"range": "(?sm)(Plain Reader \\(.*)AMARR HARROLD$",
+			"kind": {
+				"Merit": null
+			},
+			"ops": [
+				{
+					"type": "RegexReplace",
+					"regex": "(?s)\\tStory Hooks.*and consensual.\\n",
+					"replace": ""
+				}
+			]
+		},
+		{
+			"name": "Lost Boy Merits",
+			"pages": {
+				"start": 96,
+				"end": 100
+			},
+			"range": "(?sm)New Merit: (The Protocol.*)STUART OLMO $",
+			"kind": {
+				"Merit": null
+			},
+			"ops": [
+				{
+					"type": "RegexReplace",
+					"regex": "(?s)\\tStory Hooks.*is the Serum. \\n",
+					"replace": ""
+				}
+			]
+		},
+		{
+			"name": "Psychic Vampire Merits",
+			"pages": {
+				"start": 101,
+				"end": 104
+			},
+			"range": "(?sm)(Psychic Vampirism\\s+\\(.*)LUCIA",
+			"kind": {
+				"Merit": null
+			},
+			"ops": [
+				{
+					"type": "RegexReplace",
+					"regex": "(?s)\\tStory Hooks.*to activate the power. \\n",
+					"replace": ""
+				}
+			]
+		}
+	]
+}

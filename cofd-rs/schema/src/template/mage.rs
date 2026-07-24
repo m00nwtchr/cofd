@@ -1,0 +1,173 @@
+use strum::{EnumString, VariantArray};
+
+use crate::traits::skill::Skill;
+
+#[derive(
+	Debug,
+	Clone,
+	Copy,
+	facet::Facet,
+	EnumString,
+	PartialEq,
+	Eq,
+	VariantArray,
+	Hash,
+	derive_more::Display,
+)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[repr(u8)]
+pub enum Arcanum {
+	Death,
+	Fate,
+	Forces,
+	Life,
+	Matter,
+	Mind,
+	Prime,
+	Space,
+	Spirit,
+	Time,
+}
+
+impl Arcanum {
+	#[must_use]
+	pub fn all() -> &'static [Self] {
+		Self::VARIANTS
+	}
+}
+
+#[derive(Debug, Clone, Copy, facet::Facet, EnumString, PartialEq, Eq)]
+#[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
+#[repr(u8)]
+pub enum Practice {
+	Compelling,
+	Knowing,
+	Unveiling,
+
+	Ruling,
+	Shielding,
+	Veiling,
+
+	Fraying,
+	Perfecting,
+	Weaving,
+
+	Patterning,
+	Unraveling,
+
+	Making,
+	Unmaking,
+}
+
+#[derive(Clone, facet::Facet, Debug, PartialEq, Eq, Default)]
+#[repr(u8)]
+pub enum Path {
+	#[default]
+	Acanthus,
+	Mastigos,
+	Moros,
+	Obrimos,
+	Thyrsus,
+}
+
+impl Path {
+	#[must_use]
+	pub fn ruling_arcana(&self) -> [Arcanum; 2] {
+		match self {
+			Path::Acanthus => [Arcanum::Time, Arcanum::Fate],
+			Path::Mastigos => [Arcanum::Space, Arcanum::Mind],
+			Path::Moros => [Arcanum::Matter, Arcanum::Death],
+			Path::Obrimos => [Arcanum::Forces, Arcanum::Prime],
+			Path::Thyrsus => [Arcanum::Life, Arcanum::Spirit],
+		}
+	}
+
+	#[must_use]
+	pub fn inferior_arcanum(&self) -> Arcanum {
+		match self {
+			Path::Acanthus => Arcanum::Forces,
+			Path::Mastigos => Arcanum::Matter,
+			Path::Moros => Arcanum::Spirit,
+			Path::Obrimos => Arcanum::Death,
+			Path::Thyrsus => Arcanum::Mind,
+		}
+	}
+}
+
+#[derive(Clone, facet::Facet, Debug, PartialEq, Eq)]
+#[repr(u8)]
+pub enum Order {
+	AdamantineArrow,
+	GuardiansOfTheVeil,
+	Mysterium,
+	SilverLadder,
+	FreeCouncil,
+	// #[expand]
+	SeersOfTheThrone(Option<Ministry>),
+	Custom {
+		name: String,
+		rote_skills: [Skill; 3],
+	},
+}
+
+#[derive(Clone, facet::Facet, Debug, PartialEq, Eq)]
+#[repr(u8)]
+pub enum Ministry {
+	Hegemony,
+	Panopticon,
+	Paternoster,
+	Praetorian,
+	Custom {
+		name: String,
+		rote_skills: [Skill; 3],
+	},
+}
+
+impl Order {
+	#[must_use]
+	pub fn rote_skills(&self) -> &[Skill; 3] {
+		match self {
+			Order::AdamantineArrow => &[Skill::Athletics, Skill::Intimidation, Skill::Medicine],
+			Order::GuardiansOfTheVeil => &[Skill::Investigation, Skill::Stealth, Skill::Subterfuge],
+			Order::Mysterium => &[Skill::Investigation, Skill::Occult, Skill::Survival],
+			Order::SilverLadder => &[Skill::Expression, Skill::Persuasion, Skill::Subterfuge],
+			Order::FreeCouncil => &[Skill::Crafts, Skill::Persuasion, Skill::Science],
+			Order::SeersOfTheThrone(ministry) => match ministry {
+				Some(ministry) => match ministry {
+					Ministry::Hegemony => &[Skill::Politics, Skill::Persuasion, Skill::Empathy],
+					Ministry::Panopticon => {
+						&[Skill::Investigation, Skill::Stealth, Skill::Subterfuge]
+					}
+					Ministry::Paternoster => &[Skill::Academics, Skill::Occult, Skill::Expression],
+					Ministry::Praetorian => {
+						&[Skill::Athletics, Skill::Larceny, Skill::Intimidation]
+					}
+					Ministry::Custom { rote_skills, .. } => rote_skills,
+				},
+				None => &[Skill::Investigation, Skill::Occult, Skill::Persuasion],
+			},
+			Order::Custom { rote_skills, .. } => rote_skills,
+		}
+	}
+}
+
+impl From<Ministry> for Order {
+	fn from(ministry: Ministry) -> Self {
+		Order::SeersOfTheThrone(Some(ministry))
+	}
+}
+
+#[derive(Clone, facet::Facet, Debug, PartialEq, Eq)]
+pub struct Legacy {
+	pub name: String,
+	pub ruling_arcanum: Arcanum,
+}
+
+#[derive(Debug, Clone, facet::Facet, PartialEq, Eq)]
+pub struct Rote {
+	pub arcanum: Arcanum,
+	pub level: u16,
+	pub spell: String,
+	pub creator: String,
+	pub skill: Skill,
+}
