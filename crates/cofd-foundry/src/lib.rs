@@ -4,8 +4,6 @@
 //! `wasm-bindgen` CLI generates the JavaScript loader and bindings consumed by
 //! the Foundry system.
 
-use std::mem::size_of;
-
 use cofd::{
 	character::Character,
 	schema::{prelude::Attribute, template::Template, traits::DerivedTrait},
@@ -37,14 +35,6 @@ pub fn mortal_character() -> SplatCharacter {
 	SplatCharacter::Mortal(Character::<Mortal>::new(Mortal))
 }
 
-/// Size, in bytes, of the in-memory layout of a mortal character.
-#[must_use]
-pub fn mortal_character_size() -> u32 {
-	let character = mortal_character();
-	assert!(matches!(character, SplatCharacter::Mortal(_)));
-	size_of::<Character<Mortal>>() as u32
-}
-
 /// Version of the embedded rules engine.
 #[wasm_bindgen]
 pub fn version() -> String {
@@ -55,12 +45,6 @@ pub fn version() -> String {
 #[wasm_bindgen(js_name = templateCount)]
 pub fn template_count_export() -> u32 {
 	template_count()
-}
-
-/// Size, in bytes, of the in-memory layout of a mortal character.
-#[wasm_bindgen(js_name = mortalCharacterSize)]
-pub fn mortal_character_size_export() -> u32 {
-	mortal_character_size()
 }
 
 fn mortal_character_with_attributes(
@@ -118,7 +102,6 @@ mod tests {
 	fn mortal_character_can_be_built() {
 		let character = mortal_character();
 		assert!(matches!(character, SplatCharacter::Mortal(_)));
-		assert!(mortal_character_size() > 0);
 	}
 
 	#[test]

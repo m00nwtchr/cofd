@@ -1,5 +1,4 @@
 import init, {
-  mortalCharacterSize,
   mortalHealth,
   mortalWillpower,
   templateCount,
@@ -13,7 +12,6 @@ const api = {
   id: SYSTEM_ID,
   version: null,
   templateCount: 0,
-  mortalCharacterSize: 0,
   mortalHealth: null,
   mortalWillpower: null,
   ready: false,
@@ -178,7 +176,6 @@ function wasmContext() {
     status: api.ready ? "Ready" : api.error ? "Unavailable" : "Loading",
     version: api.version,
     templateCount: api.templateCount,
-    mortalCharacterSize: api.mortalCharacterSize,
     error: api.error?.message ?? null,
   };
 }
@@ -236,7 +233,6 @@ const ready = loadWasm()
     api.instance = exports;
     api.version = version();
     api.templateCount = templateCount();
-    api.mortalCharacterSize = mortalCharacterSize();
     api.mortalHealth = mortalHealth;
     api.mortalWillpower = mortalWillpower;
     api.ready = true;
@@ -343,9 +339,9 @@ if (typeof Hooks !== "undefined") {
 
   Hooks.once("init", () => {
     ready
-      .then(({ version, templateCount, mortalCharacterSize }) => {
+      .then(({ version, templateCount }) => {
         console.log(
-          `${SYSTEM_ID} | CofD engine ready (wasm ${version}, ${templateCount} templates, mortal character ${mortalCharacterSize} bytes)`,
+          `${SYSTEM_ID} | CofD engine ready (wasm ${version}, ${templateCount} templates)`,
         );
       })
       .catch(() => {});

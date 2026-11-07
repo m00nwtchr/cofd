@@ -24,7 +24,7 @@ and asks the embedded engine for derived mortal Health and Willpower values.
 
 ```js
 const api = await globalThis.cofdFoundryWasmReady;
-console.log(api.version, api.templateCount, api.mortalCharacterSize);
+console.log(api.version, api.templateCount);
 console.log(api.mortalHealth(1, 5));
 ```
 
@@ -35,7 +35,6 @@ WebAssembly module has been instantiated:
 | ---------------------------- | -------------------------------------------------- |
 | `version`                    | Version of the embedded `cofd` crate               |
 | `templateCount`              | Number of character templates known to `cofd`      |
-| `mortalCharacterSize`        | Size in bytes of a mortal character in memory      |
 | `ready`                      | `true` once the WebAssembly module is instantiated |
 | `error`                      | The error that prevented loading, if any           |
 | `instance`                   | The generated wasm-bindgen exports object           |

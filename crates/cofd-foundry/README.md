@@ -25,7 +25,6 @@ the matching `wasm-bindgen` CLI with `--target web`, producing `cofd_foundry.js`
 | ---------------------- | -------------------------------------------- |
 | `version`              | Version of the embedded `cofd` crate         |
 | `templateCount`        | Number of character templates                 |
-| `mortalCharacterSize`  | Size of a mortal character in memory         |
 | `mortalHealth`         | Engine-derived Health for stamina and size   |
 | `mortalWillpower`      | Engine-derived Willpower for Resolve and Composure |
 
