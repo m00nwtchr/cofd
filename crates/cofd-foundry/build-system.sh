@@ -9,6 +9,7 @@ set -euo pipefail
 CRATE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(cd "$CRATE_DIR/../.." && pwd)"
 system_ID="cofd"
+PACKAGE_NAME="cofd-foundry"
 TARGET="wasm32-unknown-unknown"
 WASM_NAME="cofd_foundry.wasm"
 WASM_BINDGEN_NAME="cofd_foundry"
@@ -45,7 +46,7 @@ if [ "$CLI_VERSION" != "$WASM_BINDGEN_VERSION" ]; then
 	exit 1
 fi
 
-cargo build -p "$system_ID" --target "$TARGET" --release --locked
+cargo build -p "$PACKAGE_NAME" --target "$TARGET" --release --locked
 
 rm -rf "$STAGE_DIR"
 mkdir -p "$STAGE_DIR/templates"
