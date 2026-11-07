@@ -3,7 +3,6 @@ use cofd_schema::{
 	prelude::{Attribute, Skill},
 	template::SupernaturalTolerance,
 };
-use serde::{Deserialize, Serialize};
 
 use crate::ability::Ability;
 // #[derive(
@@ -39,17 +38,9 @@ use crate::ability::Ability;
 // }
 
 #[derive(
-	Debug,
-	Clone,
-	Hash,
-	Serialize,
-	Deserialize,
-	PartialEq,
-	Eq,
-	derive_more::Display,
-	derive_more::From,
+	Debug, Clone, Hash, PartialEq, Eq, facet::Facet, derive_more::Display, derive_more::From,
 )]
-#[serde(untagged)]
+#[repr(u8)]
 pub enum Trait {
 	Ability(Ability),
 	Attribute(Attribute),

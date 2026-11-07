@@ -1,8 +1,8 @@
 use cofd_schema::template::Template;
 pub use cofd_schema::template::mage as schema;
+use cofd_util::AllVariants;
 use derive_more::{From, TryInto};
 use schema::{Arcanum, Legacy, Order, Rote};
-use serde::{Deserialize, Serialize};
 
 use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat};
 use crate::{
@@ -166,7 +166,7 @@ impl SplatTrait for Mage {
 	}
 
 	fn merits(&self) -> Vec<Merit> {
-		MageMerit::all().map(Into::into).to_vec()
+		MageMerit::all().into_iter().map(Into::into).collect()
 	}
 }
 
@@ -217,9 +217,21 @@ impl Path {
 	}
 }
 
-#[derive(Clone, Debug, facet::Facet, PartialEq, Eq, Hash, derive_more::Display)]
+#[derive(
+	Clone,
+	Debug,
+	facet::Facet,
+	PartialEq,
+	Eq,
+	Hash,
+	derive_more::Display,
+	Default,
+	cofd_util::AllVariants,
+	cofd_util::VariantName,
+)]
 #[repr(u8)]
 pub enum MageMerit {
+	#[default]
 	HighSpeech,
 }
 

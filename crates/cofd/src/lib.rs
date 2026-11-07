@@ -1,14 +1,11 @@
 #![warn(clippy::pedantic)]
 
-#[macro_use]
-extern crate cofd_util;
-
 use std::{
 	collections::HashMap,
 	sync::{Arc, LazyLock, Mutex},
 };
 
-use serde::{Deserialize, Serialize};
+use cofd_util::AllVariants;
 use strum::VariantArray;
 pub use systema;
 use systema::{
@@ -25,22 +22,22 @@ pub mod dice_pool;
 pub mod merits;
 pub mod splat;
 pub mod traits;
+#[allow(dead_code)]
 mod util;
 
 pub use cofd_schema as schema;
 use cofd_schema::{
 	prelude::{Attribute, Skill},
-	template::{
-		Template,
-		werewolf::{Form, Renown},
-	},
+	template::{Template, werewolf::Form},
 	traits::DerivedTrait,
 };
-use cofd_util::AllVariants;
 
 use crate::{
 	ability::Ability,
-	splat::{SplatCharacter, XSplat, werewolf::MoonGift},
+	splat::{
+		SplatCharacter, XSplat,
+		werewolf::{MoonGift, RENOWNS},
+	},
 	traits::Trait,
 };
 
@@ -214,9 +211,9 @@ fn splat_attribute_builder(
 		Template::Werewolf => {
 			// builder = builder.add(Trait::);
 
-			for renown in Renown::VARIANTS {
+			for renown in RENOWNS {
 				builder = builder.add(
-					Trait::Ability(Ability::Renown(*renown)),
+					Trait::Ability(Ability::Renown(renown)),
 					AttributeInstance::builder(systema::prelude::Attribute::Value(0)),
 				);
 			}
@@ -248,6 +245,7 @@ fn splat_attributes(template: Template) -> Arc<AttributeSupplier<Trait, Modifier
 pub struct CofDSystem;
 
 #[derive(Debug, Clone, PartialEq, Eq, facet::Facet)]
+#[repr(u8)]
 pub enum Modifier {
 	Trait(Trait),
 
@@ -256,6 +254,7 @@ pub enum Modifier {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, facet::Facet)]
+#[repr(u8)]
 pub enum COp {
 	Add,
 	Sub,

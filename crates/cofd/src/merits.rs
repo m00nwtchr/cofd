@@ -1,5 +1,5 @@
 use cofd_schema::prelude::Skill;
-use serde::{Deserialize, Serialize};
+use cofd_util::VariantName;
 
 use crate::{
 	ability::{AbilityTrait, CModifier},
@@ -11,7 +11,16 @@ use crate::{
 };
 
 #[derive(
-	Clone, Debug, PartialEq, Eq, facet::Facet, Hash, derive_more::From, derive_more::Display,
+	Clone,
+	Debug,
+	PartialEq,
+	Eq,
+	facet::Facet,
+	Hash,
+	derive_more::From,
+	derive_more::Display,
+	cofd_util::AllVariants,
+	cofd_util::VariantName,
 )]
 #[repr(u8)]
 pub enum Merit {

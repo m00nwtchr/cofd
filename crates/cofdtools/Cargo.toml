@@ -5,12 +5,12 @@ edition = "2024"
 publish = false
 
 [features]
-default = ["desktop"]
-web = ["dioxus/web"]
+default = []
+web = ["dioxus/web", "dioxus/devtools"]
 desktop = ["dioxus/desktop"]
 
 [dependencies]
-dioxus = { version = "0.7", features = ["router"] }
+dioxus = { version = "0.7", default-features = false, features = ["launch", "lib", "router"] }
 
 directories = "*"
 once_cell = "*"
@@ -26,4 +26,7 @@ anyhow = "*"
 
 cofd-miner.workspace = true
 cofd-schema.workspace = true
-tokio = "1.49.0"
+tokio = { version = "1.49.0", features = ["rt"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.4", features = ["wasm_js"] }

@@ -8,12 +8,11 @@ use cofd_schema::{
 use damage::Damage;
 use enum_dispatch::enum_dispatch;
 use info::{CharacterInfo, Weapon};
-use serde::{Deserialize, Serialize};
 use systema::prelude::{Actor, AttributeMap};
 
 use crate::{
 	CofDSystem, ability::Ability, merits::Merit, prelude::SplatTrait, splat_attributes,
-	traits::Trait, util::is_empty_vec,
+	traits::Trait,
 };
 
 pub(crate) mod damage;
@@ -32,6 +31,7 @@ pub struct Character<S: SplatTrait> {
 
 	pub info: CharacterInfo,
 
+	#[facet(opaque)]
 	attributes: AttributeMap<CofDSystem>,
 	pub specialties: HashMap<Skill, Vec<String>>,
 
@@ -39,7 +39,6 @@ pub struct Character<S: SplatTrait> {
 
 	// pub willpower: u16,
 	// pub fuel: u16,
-	#[serde(skip_serializing_if = "is_empty_vec")]
 	pub touchstones: Vec<String>,
 
 	// #[serde(skip)]

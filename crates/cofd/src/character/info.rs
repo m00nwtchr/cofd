@@ -1,7 +1,3 @@
-use serde::{Deserialize, Serialize};
-
-use crate::util::is_empty;
-
 #[derive(Clone, Default, facet::Facet, Debug, PartialEq, Eq)]
 // #[serde(default)]
 pub struct CharacterInfo {

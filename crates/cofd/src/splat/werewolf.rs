@@ -4,18 +4,20 @@ pub use cofd_schema::template::werewolf as schema;
 use cofd_schema::{template::SupernaturalTolerance, traits::DerivedTrait};
 use derive_more::{From, TryInto};
 use facet::Partial;
-use schema::{Form, HuntersAspect::Monstrous, Lodge, Renown};
-use serde::{Deserialize, Serialize};
-use strum::VariantArray;
+use schema::{Form, Lodge, Renown};
 use systema::prelude::{Actor, AttributeModifier, Value};
 
 use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat};
-use crate::{
-	COp, CofDSystem, Modifier,
-	ability::{Ability, AbilityTrait, CModifier},
-	prelude::*,
-	traits::{NameKey, Trait},
-};
+use crate::{COp, CofDSystem, Modifier, ability::AbilityTrait, prelude::*, traits::Trait};
+
+/// Every renown tracked by the werewolf template.
+pub const RENOWNS: [Renown; 5] = [
+	Renown::Purity,
+	Renown::Glory,
+	Renown::Honor,
+	Renown::Wisdom,
+	Renown::Cunning,
+];
 
 #[derive(Clone, Default, Debug, facet::Facet, PartialEq, Eq)]
 // #[serde(default)]
@@ -627,6 +629,8 @@ pub enum Gift {
 
 impl AbilityTrait for Renown {}
 
+impl AbilityTrait for MoonGift {}
+
 // impl NameKey for MoonGift {
 // 	fn name_key(&self) -> String {
 // 		format!("moon-gifts.{}", self.name())
@@ -746,15 +750,18 @@ pub enum Rite {
 	Eq,
 	facet::Facet,
 	Hash,
-	// derive_more::Display,
+	derive_more::Display,
+	Default,
+	cofd_util::VariantName,
 )]
 #[repr(u8)]
 pub enum WerewolfMerit {
-	// #[display("Favored Form ({form})")]
+	#[display("Favored Form ({form:?})")]
 	FavoredForm {
 		form: Form,
 		//
 	},
+	#[default]
 	EfficientKiller,
 	Totem,
 

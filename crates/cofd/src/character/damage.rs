@@ -1,9 +1,5 @@
 use std::ops::Index;
 
-use serde::{Deserialize, Serialize};
-
-use crate::util::is_zero;
-
 #[derive(Default, Debug, Clone, Copy)]
 pub enum Wound {
 	#[default]

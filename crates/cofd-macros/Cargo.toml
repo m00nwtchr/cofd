@@ -9,12 +9,14 @@ license.workspace = true
 proc-macro = true
 
 [dependencies]
-cofd-schema.workspace = true
+cofd-schema = { workspace = true, features = ["serde"] }
 
 proc-macro2 = "1"
 quote = "1"
 syn = { version = "2", features = ["full"] }
 
 facet-json.workspace = true
+serde.workspace = true
+ron.workspace = true
 
 convert_case.workspace = true

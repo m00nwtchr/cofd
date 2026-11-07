@@ -169,208 +169,168 @@ pub fn derive_splat_enum(input: proc_macro::TokenStream) -> proc_macro::TokenStr
 	proc_macro::TokenStream::from(expanded)
 }
 
-// #[proc_macro_derive(VariantName, attributes(expand))]
-// pub fn derive_variant_name(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-// 	let input = parse_macro_input!(input as DeriveInput);
+/// Returns `true` when the variant is annotated with `#[expand]`.
+fn is_expand(variant: &Variant) -> bool {
+	variant
+		.attrs
+		.iter()
+		.any(|attr| attr.path().is_ident("expand"))
+}
 
-// 	let name = &input.ident;
-// 	let data = &input.data;
+/// Describes the single field of an `#[expand]` variant.
+///
+/// Returns `None` when the variant cannot be expanded, i.e. when it does not
+/// hold exactly one unnamed field.
+fn expand_field(variant: &Variant) -> Option<Option<Type>> {
+	let Fields::Unnamed(fields) = &variant.fields else {
+		return None;
+	};
+	if fields.unnamed.len() != 1 {
+		return None;
+	}
+	let field = fields.unnamed.first()?;
+	let Type::Path(type_path) = &field.ty else {
+		return None;
+	};
+	let segment = type_path.path.segments.last()?;
+	if segment.ident != "Option" {
+		return Some(None);
+	}
+	let PathArguments::AngleBracketed(arguments) = &segment.arguments else {
+		return None;
+	};
+	let Some(GenericArgument::Type(inner)) = arguments.args.first() else {
+		return None;
+	};
+	Some(Some(inner.clone()))
+}
 
-// 	let mut name_fun_variants = TokenStream::new();
+/// Builds the pattern and value expression used to read the name of a `Custom` variant.
+fn custom_variant_binding(variant: &Variant) -> (TokenStream, TokenStream) {
+	match &variant.fields {
+		Fields::Unnamed(fields) => {
+			if fields.unnamed.len() > 1 {
+				(quote! { (name, ..) }, quote! { name })
+			} else {
+				(quote! { (name) }, quote! { name })
+			}
+		}
+		Fields::Named(fields) => {
+			if fields
+				.named
+				.iter()
+				.any(|field| field.ident.as_ref().is_some_and(|ident| ident == "name"))
+			{
+				(quote! { { name, .. } }, quote! { name })
+			} else {
+				(quote! { { .. } }, quote! { "" })
+			}
+		}
+		Fields::Unit => (quote! {}, quote! { "" }),
+	}
+}
 
-// 	if let Data::Enum(data) = data {
-// 		for variant in &data.variants {
-// 			let variant_name = &variant.ident;
+#[proc_macro_derive(VariantName, attributes(expand))]
+pub fn derive_variant_name(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+	let input = parse_macro_input!(input as DeriveInput);
+	let name = &input.ident;
+	let Data::Enum(data) = &input.data else {
+		return derive_error!("VariantName is only implemented for enums");
+	};
 
-// 			let mut expand = false;
+	let mut arms = TokenStream::new();
 
-// 			for attr in &variant.attrs {
-// 				if attr.path().is_ident("expand") {
-// 					expand = true;
-// 					break;
-// 				}
-// 			}
+	for variant in &data.variants {
+		let variant_ident = &variant.ident;
+		let kebab = variant_ident.to_string().to_case(convert_case::Case::Kebab);
 
-// 			if variant_name.eq("Custom") {
-// 				if let Fields::Unnamed(fields) = &variant.fields {
-// 					if let Some(field) = fields.unnamed.first() {
-// 						name_fun_variants.extend(quote_spanned! {field.span()=>
-// 							#name::#variant_name (name, ..) => name,
-// 						});
-// 					}
-// 				}
-// 			} else {
-// 				let mut match_arm = TokenStream::new();
+		if variant_ident == "Custom" {
+			let (pattern, value) = custom_variant_binding(variant);
+			arms.extend(quote! { #name::#variant_ident #pattern => #value, });
+			continue;
+		}
 
-// 				let fields_in_variant = if expand && variant.fields.len() == 1 {
-// 					quote_spanned! {variant.span()=> (val) }
-// 				} else {
-// 					variant_fields(variant)
-// 				};
+		if is_expand(variant)
+			&& let Some(optional) = expand_field(variant)
+		{
+			let value = if optional.is_some() {
+				quote! {
+					match value {
+						Some(inner) => cofd_util::VariantName::name(inner),
+						None => #kebab,
+					}
+				}
+			} else {
+				quote! { cofd_util::VariantName::name(value) }
+			};
+			arms.extend(quote! { #name::#variant_ident (value) => #value, });
+			continue;
+		}
 
-// 				let variant_name_lower =
-// 					variant_name.to_string().to_case(convert_case::Case::Kebab);
+		let fields = variant_fields(variant);
+		arms.extend(quote! { #name::#variant_ident #fields => #kebab, });
+	}
 
-// 				if expand {
-// 					if let Fields::Unnamed(fields) = &variant.fields
-// 						&& let Some(field) = fields.unnamed.first()
-// 						&& let Type::Path(ty) = &field.ty
-// 					{
-// 						if ty.path.segments.first().unwrap().ident.eq("Option") {
-// 							match_arm.extend(quote_spanned! {ty.span()=>
-// 								match val {
-// 									Some(val) => VariantName::name(val),
-// 									None => #variant_name_lower
-// 								}
-// 							});
-// 						} else {
-// 							match_arm.extend(quote_spanned! {ty.span()=>
-// 								VariantName::name(val)
-// 							});
-// 						}
-// 					}
-// 				} else {
-// 					match_arm.extend(quote_spanned! {variant.span()=> #variant_name_lower });
-// 				}
+	let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-// 				name_fun_variants.extend(quote_spanned! {variant.span()=>
-// 					#name::#variant_name #fields_in_variant => #match_arm,
-// 				});
-// 			}
-// 		}
-// 	} else {
-// 		return derive_error!("VariantName is only implemented for enums");
-// 	}
+	quote! {
+		impl #impl_generics cofd_util::VariantName for #name #ty_generics #where_clause {
+			fn name(&self) -> &str {
+				match self {
+					#arms
+				}
+			}
+		}
+	}
+	.into()
+}
 
-// 	let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+#[proc_macro_derive(AllVariants, attributes(expand))]
+pub fn derive_all_variants(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+	let input = parse_macro_input!(input as DeriveInput);
+	let name = &input.ident;
+	let Data::Enum(data) = &input.data else {
+		return derive_error!("AllVariants is only implemented for enums");
+	};
 
-// 	let expanded = quote! {
-// 		impl #impl_generics cofd_util::VariantName for #name #ty_generics #where_clause {
-// 			fn name(&self) -> &str {
-// 				match self {
-// 					#name_fun_variants
-// 				}
-// 			}
-// 		}
-// 	};
+	let mut variants = TokenStream::new();
 
-// 	proc_macro::TokenStream::from(expanded)
-// }
+	for variant in &data.variants {
+		if variant.ident == "Custom" {
+			continue;
+		}
+		let variant_ident = &variant.ident;
+		let fields = match &variant.fields {
+			Fields::Unit => quote! {},
+			Fields::Unnamed(fields) => {
+				let defaults = fields
+					.unnamed
+					.iter()
+					.map(|_| quote! { Default::default(), });
+				quote! { (#(#defaults)*) }
+			}
+			Fields::Named(fields) => {
+				let defaults = fields.named.iter().map(|field| {
+					let ident = field.ident.as_ref().unwrap();
+					quote! { #ident: Default::default(), }
+				});
+				quote! { { #(#defaults)* } }
+			}
+		};
+		variants.extend(quote! { #name::#variant_ident #fields, });
+	}
 
-// #[proc_macro_derive(AllVariants, attributes(expand))]
-// pub fn derive_all_variants(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-// 	let input = parse_macro_input!(input as DeriveInput);
+	let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-// 	let name = &input.ident;
-// 	let data = &input.data;
-
-// 	let mut all_variants = TokenStream::new();
-// 	let mut sub_enums = TokenStream::new();
-
-// 	let mut num: usize = 0;
-
-// 	let mut flag = false;
-
-// 	if let Data::Enum(data) = data {
-// 		for variant in &data.variants {
-// 			let variant_name = &variant.ident;
-
-// 			if variant_name.eq("Custom") {
-// 				continue;
-// 			}
-
-// 			let mut flag1 = false;
-
-// 			for attr in &variant.attrs {
-// 				if attr.path().is_ident("expand") {
-// 					flag1 = true;
-// 					flag = true;
-// 					break;
-// 				}
-// 			}
-
-// 			let fields = match &variant.fields {
-// 				Fields::Unnamed(fields) => {
-// 					let mut field_tokens = TokenStream::new();
-
-// 					if !flag1 {
-// 						for field in &fields.unnamed {
-// 							field_tokens
-// 								.extend(quote_spanned! { field.span()=> Default::default(), });
-// 						}
-// 					} else if let Some(field) = fields.unnamed.first() {
-// 						if let syn::Type::Path(ty) = &field.ty {
-// 							if let Some(segment) = ty.path.segments.first() {
-// 								if let PathArguments::AngleBracketed(arguments) = &segment.arguments
-// 								{
-// 									if let Some(GenericArgument::Type(ty2)) = arguments.args.first()
-// 									{
-// 										sub_enums.extend(
-// 											quote_spanned! { field.span()=> vec.extend(<#ty2 as AllVariants>::all().map(Into::into)); },
-// 										);
-// 									}
-
-// 									if segment.ident.to_string().eq("Box") {
-// 										continue;
-// 									} else {
-// 										field_tokens.extend(
-// 											quote_spanned! { field.span()=> Default::default(), },
-// 										);
-// 									}
-// 								} else {
-// 									sub_enums.extend(
-// 										quote_spanned! { field.span()=> vec.extend(<#ty as AllVariants>::all().map(Into::into)); },
-// 									);
-
-// 									continue;
-// 								}
-// 							}
-// 						}
-// 					}
-// 					quote_spanned! {variant.span()=> (#field_tokens) }
-// 				}
-// 				Fields::Unit => quote_spanned! { variant.span()=> },
-// 				_ => continue,
-// 			};
-
-// 			all_variants.extend(quote_spanned! {variant.span()=>
-// 				#name::#variant_name #fields,
-// 			});
-// 			num += 1;
-// 		}
-// 	} else {
-// 		return derive_error!("AllVariants is only implemented for enums");
-// 	}
-
-// 	let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-
-// 	let mut all_vec = TokenStream::new();
-
-// 	if flag {
-// 		all_vec.extend(quote! {
-// 			impl #impl_generics cofd_util::AllVariants for #name #ty_generics #where_clause {
-// 				fn all() -> Vec<#name> {
-// 					let mut vec = std::vec::Vec::from(<#name as cofd_util::AllVariants>::all());
-// 					#sub_enums
-// 					vec
-// 				}
-// 			}
-// 		});
-// 	}
-
-// 	let expanded = quote! {
-// 		impl #impl_generics cofd_util::AllVariants for #name #ty_generics #where_clause {
-// 			fn all() -> Vec<Self> {
-// 				vec![
-// 					#all_variants
-// 				]
-// 			}
-// 		}
-// 		#all_vec
-// 	};
-
-// 	proc_macro::TokenStream::from(expanded)
-// }
+	quote! {
+		impl #impl_generics cofd_util::AllVariants for #name #ty_generics #where_clause {
+			fn all() -> Vec<Self> {
+				vec![#variants]
+			}
+		}
+	}
+	.into()
+}
 
 #[proc_macro_derive(NameKey, attributes(expand))]
 pub fn derive_name_key(input: proc_macro::TokenStream) -> proc_macro::TokenStream {

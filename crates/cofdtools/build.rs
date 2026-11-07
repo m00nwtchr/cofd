@@ -47,6 +47,8 @@ fn main() {
 			.spawn()
 			.unwrap();
 	} else {
-		panic!("Neither `pnpm` nor `tailwindcss` is available; cannot build Tailwind CSS.");
+		println!(
+			"cargo:warning=Neither `pnpm` nor `tailwindcss` is available; using the committed Tailwind CSS asset."
+		);
 	}
 }

@@ -5,13 +5,14 @@ use crate::{app::use_books, components::NavComponent};
 #[component]
 pub fn Books() -> Element {
 	let mut files_uploaded = use_signal(Vec::new);
-	let books_context = use_books();
+	let mut books_context = use_books();
 
 	let upload = move |evt: Event<FormData>| {
 		let files = evt.files();
 		files_uploaded.with_mut(|files_uploaded| {
 			for file in files {
 				let file_name = file.name();
+				let pending_file_name = file_name.clone();
 				let file_path = file.path().to_owned();
 				spawn(async move {
 					let task = tokio::task::spawn_blocking({
@@ -25,12 +26,17 @@ pub fn Books() -> Element {
 							books.push(book);
 							let _ = books.save();
 						}
-						Ok(Err(cofd_miner::error::CofDMinerError::NoSuchMeta)) => {
+						Ok(Err(err))
+							if matches!(
+								err.downcast_ref::<cofd_miner::error::CofDMinerError>(),
+								Some(cofd_miner::error::CofDMinerError::NoSuchMeta)
+							) =>
+						{
 							log::warn!(
 								"No metadata for {file_path:?}; \
 								 run `cargo meta-edit {file_path:?}` to create one."
 							);
-							books_context.write().needs_meta.push(file_name);
+							books_context.write().needs_meta.push(pending_file_name);
 						}
 						Ok(Err(err)) => {
 							log::error!("Failed to parse {file_path:?}: {err}");

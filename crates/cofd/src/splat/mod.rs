@@ -1,7 +1,6 @@
 #![allow(clippy::wildcard_imports)]
 use cofd_schema::template::Template;
 use enum_dispatch::enum_dispatch;
-use serde::{Deserialize, Serialize};
 use strum::EnumDiscriminants;
 use systema::prelude::{Actor, AttributeMap};
 
@@ -52,6 +51,7 @@ use werewolf::{schema::Lodge, *};
 )]
 // #[strum_discriminants(name(SplatKind), derive(strum::VariantArray, strum::AsRefStr))]
 #[enum_dispatch(CharacterTrait)]
+#[repr(u8)]
 pub enum SplatCharacter {
 	Mortal(Character<Mortal>),
 	Vampire(Character<Vampire>),
@@ -168,6 +168,7 @@ pub trait SplatTrait: Default {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, facet::Facet, derive_more::From, derive_more::TryInto)]
+#[repr(u8)]
 pub enum XSplat {
 	// #[expand]
 	Clan(Clan),

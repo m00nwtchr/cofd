@@ -1,4 +1,5 @@
 use cofd_schema::template::Template;
+use cofd_util::{AllVariants, VariantName};
 use serde::{Deserialize, Serialize};
 
 use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat};
@@ -111,7 +112,16 @@ impl Burden {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, facet::Facet, Default)]
+#[derive(
+	Debug,
+	Clone,
+	PartialEq,
+	Eq,
+	facet::Facet,
+	Default,
+	cofd_util::AllVariants,
+	cofd_util::VariantName,
+)]
 #[repr(u8)]
 pub enum Archetype {
 	#[default]
@@ -123,7 +133,20 @@ pub enum Archetype {
 	Custom(String),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, derive_more::Display)]
+#[derive(
+	Debug,
+	Clone,
+	PartialEq,
+	Eq,
+	Hash,
+	Serialize,
+	Deserialize,
+	derive_more::Display,
+	facet::Facet,
+	cofd_util::AllVariants,
+	cofd_util::VariantName,
+)]
+#[repr(u8)]
 pub enum Haunt {
 	Boneyard,
 	Caul,
@@ -140,7 +163,7 @@ pub enum Haunt {
 
 impl AbilityTrait for Haunt {}
 
-#[derive(Clone, Debug, facet::Facet, PartialEq, Eq)]
+#[derive(Clone, Debug, facet::Facet, PartialEq, Eq, cofd_util::VariantName)]
 #[repr(u8)]
 pub enum Key {
 	Beasts,

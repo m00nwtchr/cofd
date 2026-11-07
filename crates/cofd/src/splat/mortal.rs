@@ -1,5 +1,5 @@
 use cofd_schema::template::Template;
-use serde::{Deserialize, Serialize};
+use cofd_util::AllVariants;
 
 use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat};
 

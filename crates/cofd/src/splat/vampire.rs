@@ -1,5 +1,6 @@
 use cofd_schema::template::Template;
 pub use cofd_schema::template::vampire as schema;
+use cofd_util::AllVariants;
 use derive_more::{From, TryInto};
 
 use super::{Merit, SplatTrait, XSplat, YSplat, ZSplat};
@@ -129,7 +130,7 @@ impl SplatTrait for Vampire {
 	}
 
 	fn merits(&self) -> Vec<Merit> {
-		VampireMerit::all().map(Into::into).to_vec()
+		VampireMerit::all().into_iter().map(Into::into).collect()
 	}
 }
 
@@ -202,7 +203,9 @@ impl Clan {
 	}
 }
 
-#[derive(Clone, facet::Facet, Debug, PartialEq, Eq)]
+#[derive(
+	Clone, facet::Facet, Debug, PartialEq, Eq, cofd_util::AllVariants, cofd_util::VariantName,
+)]
 #[repr(u8)]
 pub enum Covenant {
 	CarthianMovement,
@@ -213,17 +216,31 @@ pub enum Covenant {
 	Custom(String),
 }
 
-#[derive(Clone, facet::Facet, Debug, PartialEq, Eq)]
+#[derive(
+	Clone, facet::Facet, Debug, PartialEq, Eq, cofd_util::AllVariants, cofd_util::VariantName,
+)]
 #[repr(u8)]
 pub enum Bloodline {
 	Custom(String, Option<[Discipline; 4]>),
 }
 
 #[derive(
-	Clone, Debug, PartialEq, PartialOrd, Eq, Ord, facet::Facet, Hash, derive_more::Display,
+	Clone,
+	Debug,
+	PartialEq,
+	PartialOrd,
+	Eq,
+	Ord,
+	facet::Facet,
+	Hash,
+	derive_more::Display,
+	Default,
+	cofd_util::AllVariants,
+	cofd_util::VariantName,
 )]
 #[repr(u8)]
 pub enum Discipline {
+	#[default]
 	Animalism,
 	Auspex,
 	Celerity,
@@ -294,9 +311,21 @@ pub enum MaskDirge {
 	Custom(String),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, facet::Facet, Hash, derive_more::Display)]
+#[derive(
+	Clone,
+	Debug,
+	PartialEq,
+	Eq,
+	facet::Facet,
+	Hash,
+	derive_more::Display,
+	Default,
+	cofd_util::AllVariants,
+	cofd_util::VariantName,
+)]
 #[repr(u8)]
 pub enum VampireMerit {
+	#[default]
 	AcuteSenses,
 	Atrocious,
 	Beloved, // TY

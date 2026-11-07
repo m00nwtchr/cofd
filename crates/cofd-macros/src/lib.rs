@@ -1,10 +1,43 @@
 use std::{env, fs, fs::File, path::Path};
 
-use cofd_schema::{book::Book, item::gift::GiftKind};
+use cofd_schema::{
+	book::{Book, BookInfo, BookReference},
+	item::{
+		Item,
+		gift::{Facet, Gift, GiftKind, Moon, Other},
+	},
+	template::werewolf::{Auspice, Renown},
+};
 use convert_case::Casing;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
+use serde::Deserialize;
 use syn::{Error, ItemEnum, parse_macro_input};
+
+#[derive(Deserialize)]
+struct RawFacet {
+	name: String,
+	reference: BookReference,
+	description: Vec<String>,
+	#[serde(rename = "auspice")]
+	auspice: Option<Auspice>,
+	level: Option<u8>,
+	renown: Option<Renown>,
+}
+
+#[derive(Deserialize)]
+struct RawGift {
+	name: String,
+	facets: Vec<RawFacet>,
+	kind: GiftKind,
+}
+
+#[derive(Deserialize)]
+struct RawBook {
+	info: BookInfo,
+	moon_gifts: Vec<RawGift>,
+	gifts: Vec<RawGift>,
+}
 
 macro_rules! derive_error {
 	($string: tt) => {
@@ -34,12 +67,89 @@ fn facet_name_to_id(name: &str) -> String {
 
 #[proc_macro]
 pub fn gifts(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-	let path = Path::new(&env::var("CARGO_MANIFEST_DIR").expect(""))
-		.join("data")
-		.join("Gifts.json");
+	let data_path = Path::new(&env::var("CARGO_MANIFEST_DIR").expect("")).join("data");
+	let json_path = data_path.join("Gifts.json");
+	let ron_path = data_path.join("Gifts.ron");
 
-	let book: Book = if path.exists() {
-		facet_json::from_reader(File::open(path).expect("")).expect("Parsing error")
+	let book: Book = if json_path.exists() {
+		facet_json::from_reader(File::open(json_path).expect("")).expect("Parsing error")
+	} else if ron_path.exists() {
+		let source = fs::read_to_string(ron_path).expect("Reading error");
+		let source = source
+			.replace('{', "RawFacet(")
+			.replace('}', ")")
+			.replace("\"name\":", "name:")
+			.replace("\"reference\":", "reference:")
+			.replace("\"description\":", "description:")
+			.replace("\"auspice\":", "auspice:")
+			.replace("\"level\":", "level:")
+			.replace("\"renown\":", "renown:")
+			.replace("auspice: Cahalith", "auspice: Some(Cahalith)")
+			.replace("renown: Cunning", "renown: Some(Cunning)")
+			.replace("renown: Glory", "renown: Some(Glory)")
+			.replace("renown: Honor", "renown: Some(Honor)")
+			.replace("renown: Purity", "renown: Some(Purity)")
+			.replace("renown: Wisdom", "renown: Some(Wisdom)")
+			.replace("level: 1", "level: Some(1)")
+			.replace("level: 2", "level: Some(2)")
+			.replace("level: 3", "level: Some(3)")
+			.replace("level: 4", "level: Some(4)")
+			.replace("level: 5", "level: Some(5)");
+		let raw: RawBook = ron::de::from_str(&source).expect("Parsing error");
+		Book {
+			info: raw.info,
+			merits: Vec::new(),
+			mage_spells: Vec::new(),
+			moon_gifts: raw
+				.moon_gifts
+				.into_iter()
+				.map(|gift| Gift {
+					name: gift.name,
+					kind: gift.kind,
+					facets: gift
+						.facets
+						.into_iter()
+						.map(|facet| Item {
+							name: facet.name,
+							reference: facet.reference,
+							description: facet.description,
+							effects: Vec::new(),
+							inner: Facet {
+								action: None,
+								inner: Moon {
+									auspice: facet.auspice.expect("Missing auspice"),
+									level: facet.level.expect("Missing level"),
+								},
+							},
+						})
+						.collect(),
+				})
+				.collect(),
+			gifts: raw
+				.gifts
+				.into_iter()
+				.map(|gift| Gift {
+					name: gift.name,
+					kind: gift.kind,
+					facets: gift
+						.facets
+						.into_iter()
+						.map(|facet| Item {
+							name: facet.name,
+							reference: facet.reference,
+							description: facet.description,
+							effects: Vec::new(),
+							inner: Facet {
+								action: None,
+								inner: Other {
+									renown: facet.renown.expect("Missing renown"),
+								},
+							},
+						})
+						.collect(),
+				})
+				.collect(),
+		}
 	} else {
 		Book::default()
 	};
@@ -102,7 +212,7 @@ pub fn gifts(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
 	let expanded = quote! {
 		#[derive(
-			Clone, Debug, PartialEq, PartialOrd, Eq, Ord, facet::Facet, VariantName, AllVariants, Hash, derive_more::Display,
+			Clone, Debug, PartialEq, PartialOrd, Eq, Ord, facet::Facet, cofd_util::VariantName, cofd_util::AllVariants, Hash, derive_more::Display,
 		)]
 		#[repr(u8)]
 		pub enum MoonGift {
@@ -170,7 +280,7 @@ pub fn merits(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 	} else {
 		Book::default()
 	};
-	for merit in book.merits {}
+	for _ in book.merits {}
 
 	let expanded = quote! {};
 

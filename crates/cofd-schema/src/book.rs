@@ -194,6 +194,8 @@ mod hex {
 
 #[cfg(test)]
 mod tests {
+	#[cfg(feature = "json_schema")]
+	use super::Book;
 
 	#[test]
 	#[cfg(feature = "json_schema")]

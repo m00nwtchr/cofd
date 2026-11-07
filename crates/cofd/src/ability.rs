@@ -1,6 +1,5 @@
 use cofd_schema::template::werewolf::Renown;
 use enum_dispatch::enum_dispatch;
-use serde::{Deserialize, Serialize};
 use systema::prelude::AttributeModifier;
 
 use crate::{
@@ -19,6 +18,7 @@ pub enum Ability {
 	// #[expand]
 	Discipline(Discipline),
 	// #[expand]
+	#[display("{_0:?}")]
 	Renown(Renown),
 	// #[expand]
 	MoonGift(MoonGift),

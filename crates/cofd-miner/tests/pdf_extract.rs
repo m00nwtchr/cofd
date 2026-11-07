@@ -1,3 +1,5 @@
+#![cfg(feature = "embed_meta")]
+
 use std::{
 	collections::HashMap,
 	fs::{DirEntry, File},
@@ -55,7 +57,7 @@ fn is_data(entry: &DirEntry) -> bool {
 fn pdf_extract() -> Result<()> {
 	let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
 	let data_path = manifest_dir.join("res/tests/data");
-	let pdf_path = manifest_dir.join("../pdf/");
+	let pdf_path = manifest_dir.join("../../pdf/");
 	if !data_path.exists() || !pdf_path.exists() {
 		return Err(anyhow!("Test data doesn't exist, skipped."));
 	}

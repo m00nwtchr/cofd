@@ -1,4 +1,5 @@
 pub use cofd_schema::template::changeling as schema;
+use cofd_util::AllVariants;
 use derive_more::{From, TryInto};
 use serde::{Deserialize, Serialize};
 use strum::VariantArray;
@@ -125,7 +126,7 @@ impl SplatTrait for Changeling {
 	}
 
 	fn merits(&self) -> Vec<Merit> {
-		ChangelingMerit::all().map(Into::into).to_vec()
+		ChangelingMerit::all().into_iter().map(Into::into).collect()
 	}
 }
 
@@ -180,7 +181,9 @@ impl Seeming {
 	}
 }
 
-#[derive(Clone, facet::Facet, Debug, PartialEq, Eq)]
+#[derive(
+	Clone, facet::Facet, Debug, PartialEq, Eq, cofd_util::AllVariants, cofd_util::VariantName,
+)]
 #[repr(u8)]
 pub enum Court {
 	Spring,
@@ -190,7 +193,9 @@ pub enum Court {
 	Custom(String),
 }
 
-#[derive(Clone, facet::Facet, Debug, PartialEq, Eq)]
+#[derive(
+	Clone, facet::Facet, Debug, PartialEq, Eq, cofd_util::AllVariants, cofd_util::VariantName,
+)]
 #[repr(u8)]
 pub enum Kith {
 	Artist,
@@ -208,9 +213,23 @@ pub enum Kith {
 	Custom(String),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, derive_more::Display)]
+#[derive(
+	Clone,
+	Debug,
+	PartialEq,
+	Eq,
+	Serialize,
+	Deserialize,
+	Hash,
+	derive_more::Display,
+	facet::Facet,
+	Default,
+	cofd_util::AllVariants,
+	cofd_util::VariantName,
+)]
 #[repr(u8)]
 pub enum ChangelingMerit {
+	#[default]
 	Mantle,
 }
 
