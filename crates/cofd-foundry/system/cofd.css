@@ -1,0 +1,227 @@
+.cofd.actor-sheet {
+  --cofd-text: #191813;
+  --cofd-border: #bbb;
+  --cofd-surface: rgba(243, 243, 243, 0.55);
+}
+
+.theme-dark .cofd.actor-sheet,
+.cofd.actor-sheet.theme-dark,
+:root.theme-dark .cofd.actor-sheet {
+  --cofd-text: #eeeeee;
+  --cofd-border: #555;
+  --cofd-surface: rgba(30, 30, 30, 0.55);
+}
+
+.cofd.actor-sheet {
+  min-width: 680px;
+}
+
+.cofd-actor-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  color: var(--cofd-text);
+}
+
+.cofd-sheet-header {
+  display: grid;
+  grid-template-columns: 84px 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cofd-actor-image {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border: 1px solid var(--cofd-border);
+  border-radius: 4px;
+}
+
+.cofd-actor-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cofd-actor-name {
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.cofd-actor-heading label,
+.cofd-identity label,
+.cofd-skill-field,
+.cofd-tracks label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.cofd-wasm-status {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+  font-size: 0.8rem;
+}
+
+.cofd-wasm-status small {
+  opacity: 0.7;
+}
+
+.cofd-status-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: #999;
+}
+
+.cofd-status-Ready {
+  background: #3c9b55;
+}
+
+.cofd-status-Unavailable {
+  background: #bd3d3d;
+}
+
+.cofd-status-Loading {
+  background: #c38b2d;
+}
+
+.cofd-identity,
+.cofd-card {
+  padding: 0.65rem;
+  border: 1px solid var(--cofd-border);
+  border-radius: 4px;
+  background: var(--cofd-surface);
+}
+
+.cofd-identity h2,
+.cofd-card h2 {
+  margin: 0 0 0.55rem;
+  font-size: 1rem;
+  border-bottom: 1px solid var(--cofd-border);
+}
+
+.cofd-field-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.cofd-sheet-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(210px, 1fr);
+  gap: 0.75rem;
+}
+
+.cofd-sheet-columns main,
+.cofd-sheet-columns aside {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cofd-attribute-groups {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.cofd-attribute-groups fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0.45rem;
+}
+
+.cofd-attribute-groups legend {
+  padding: 0 0.25rem;
+  font-weight: 600;
+}
+
+.cofd-dot-field,
+.cofd-tracks label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0.3rem 0;
+}
+
+.cofd-dot-field input {
+  width: 3.25rem;
+  text-align: center;
+}
+
+.cofd-skill-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem 0.7rem;
+}
+
+.cofd-skill-field {
+  display: grid;
+  grid-template-columns: 1fr 3rem;
+  align-items: center;
+}
+
+.cofd-skill-field span {
+  grid-column: 1;
+}
+
+.cofd-skill-field input[type="number"] {
+  grid-column: 2;
+  grid-row: 1;
+  text-align: center;
+}
+
+.cofd-skill-field input[type="text"] {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.cofd-track-inputs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.cofd-track-inputs input {
+  width: 3.25rem;
+  text-align: center;
+}
+
+.cofd-engine-card dl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+}
+
+.cofd-engine-card dd {
+  margin: 0;
+  text-align: right;
+}
+
+.cofd-error {
+  margin: 0.6rem 0 0;
+  color: #a22;
+  overflow-wrap: anywhere;
+}
+
+.cofd-notes textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+@media (max-width: 760px) {
+  .cofd-sheet-header,
+  .cofd-sheet-columns,
+  .cofd-field-grid,
+  .cofd-attribute-groups,
+  .cofd-skill-grid {
+    grid-template-columns: 1fr;
+  }
+}

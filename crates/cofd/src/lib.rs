@@ -208,6 +208,7 @@ fn splat_attribute_builder(
 	}
 
 	match template {
+		Template::Mortal => {}
 		Template::Werewolf => {
 			// builder = builder.add(Trait::);
 

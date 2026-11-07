@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
 # Build the Foundry system: compile cofd-foundry for wasm32-unknown-unknown,
-# stage the wasm and the static system files under dist/cofd-foundry/, and zip
-# the staged system with the Python standard library.
+# generate browser bindings with wasm-bindgen, stage the bindings and static
+# system files under dist/cofd/, and zip the staged system.
 
 set -euo pipefail
 
@@ -11,6 +11,8 @@ WORKSPACE_DIR="$(cd "$CRATE_DIR/../.." && pwd)"
 system_ID="cofd"
 TARGET="wasm32-unknown-unknown"
 WASM_NAME="cofd_foundry.wasm"
+WASM_BINDGEN_NAME="cofd_foundry"
+WASM_BINDGEN_VERSION="0.2.126"
 DIST_DIR="$CRATE_DIR/dist"
 STAGE_DIR="$DIST_DIR/$system_ID"
 
@@ -33,15 +35,31 @@ find_python() {
 }
 
 cd "$WORKSPACE_DIR"
+if ! command -v wasm-bindgen >/dev/null 2>&1; then
+	echo "build-system.sh: wasm-bindgen CLI is required (provided by devenv)" >&2
+	exit 1
+fi
+CLI_VERSION="$(wasm-bindgen --version | awk '{print $2}')"
+if [ "$CLI_VERSION" != "$WASM_BINDGEN_VERSION" ]; then
+	echo "build-system.sh: wasm-bindgen $WASM_BINDGEN_VERSION is required; found $CLI_VERSION" >&2
+	exit 1
+fi
+
 cargo build -p "$system_ID" --target "$TARGET" --release --locked
 
 rm -rf "$STAGE_DIR"
-mkdir -p "$STAGE_DIR/system"
+mkdir -p "$STAGE_DIR/templates"
 
-cp "target/$TARGET/release/$WASM_NAME" "$STAGE_DIR/$WASM_NAME"
+wasm-bindgen \
+	"target/$TARGET/release/$WASM_NAME" \
+	--target web \
+	--out-dir "$STAGE_DIR" \
+	--out-name "$WASM_BINDGEN_NAME"
 cp "$CRATE_DIR/system/system.json" "$STAGE_DIR/system.json"
 cp "$CRATE_DIR/system/README.md" "$STAGE_DIR/README.md"
 cp "$CRATE_DIR/system/$system_ID.js" "$STAGE_DIR/$system_ID.js"
+cp "$CRATE_DIR/system/$system_ID.css" "$STAGE_DIR/$system_ID.css"
+cp "$CRATE_DIR/system/templates/actor-sheet.hbs" "$STAGE_DIR/templates/actor-sheet.hbs"
 
 if ! PYTHON="$(find_python)"; then
 	echo "build-system.sh: python3 is required to package the system" >&2

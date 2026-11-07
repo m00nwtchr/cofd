@@ -1,50 +1,59 @@
 # cofd-foundry
 
 Foundry Virtual Tabletop packaging for the [`cofd`](../../crates/cofd) rules
-engine. The crate compiles to a raw WebAssembly module — no wasm-bindgen glue,
-no `wasm-pack`, no external toolchain — that Foundry loads directly.
+engine. The crate compiles to WebAssembly and uses `wasm-bindgen` to generate
+the browser bindings consumed by Foundry.
 
 ## Layout
 
 | Path                | Purpose                                                       |
 | ------------------- | ------------------------------------------------------------- |
-| `src/lib.rs`        | The crate and the raw WebAssembly exports                      |
-| `module/module.json`| Foundry module manifest                                        |
-| `module/scripts/`   | The ES module Foundry loads (`scripts/cofd-foundry.js`)        |
-| `build-module.sh`   | Builds the wasm and stages the distributable module           |
+| `src/lib.rs`        | The crate and the wasm-bindgen exports                           |
+| `system/system.json`| Foundry system manifest                                        |
+| `system/cofd.js`    | WASM binding consumer and character sheet registration          |
+| `system/templates/`| Handlebars templates for the system sheets                      |
+| `build-system.sh`   | Builds the wasm and stages the distributable system           |
 | `dist/`             | Build output (git-ignored)                                    |
 
-## WebAssembly ABI
+## WebAssembly bindings
 
-The exports are gated to `wasm32` builds and use a plain C ABI:
+The Rust crate uses `wasm-bindgen` `0.2.126` exports. `build-system.sh` runs
+the matching `wasm-bindgen` CLI with `--target web`, producing `cofd_foundry.js` and
+`cofd_foundry_bg.wasm` next to the system loader:
 
-| Export                                | Returns                                   |
-| ------------------------------------- | ----------------------------------------- |
-| `cofd_foundry_version_ptr`            | Pointer to the UTF-8 version string       |
-| `cofd_foundry_version_len`            | Length of the version string in bytes     |
-| `cofd_foundry_template_count`         | Number of character templates in `cofd`   |
-| `cofd_foundry_mortal_character_size`  | Size of a mortal character in bytes       |
+| Export                 | Purpose                                      |
+| ---------------------- | -------------------------------------------- |
+| `version`              | Version of the embedded `cofd` crate         |
+| `templateCount`        | Number of character templates                 |
+| `mortalCharacterSize`  | Size of a mortal character in memory         |
+| `mortalHealth`         | Engine-derived Health for stamina and size   |
+| `mortalWillpower`      | Engine-derived Willpower for Resolve and Composure |
 
-The module imports nothing, so it is instantiated with an empty import object:
+The system loader imports the generated module and initializes it normally:
 
 ```js
-const { instance } = await WebAssembly.instantiate(bytes, {});
+import init, { mortalHealth } from "./cofd_foundry.js";
+
+await init();
+console.log(mortalHealth(1, 5));
 ```
 
 ## Building
 
 ```
-./build-module.sh
+./build-system.sh
 ```
 
 The script runs
 
 ```
-cargo build -p cofd-foundry --target wasm32-unknown-unknown --release
+cargo build -p cofd-foundry --target wasm32-unknown-unknown --release --locked
+wasm-bindgen target/wasm32-unknown-unknown/release/cofd_foundry.wasm \
+  --target web --out-dir dist/cofd --out-name cofd_foundry
 ```
 
-copies `cofd_foundry.wasm` and the static module files into
-`dist/cofd-foundry/`, and writes `dist/cofd-foundry/cofd-foundry.zip` with the
+copies the generated binding files and static system files into `dist/cofd/`,
+and writes `dist/cofd/cofd.zip` with the
 Python standard library.
 
 ## Checking

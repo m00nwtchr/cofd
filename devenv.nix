@@ -26,6 +26,7 @@
       harfbuzz
       # build tools
       llvmPackages.clangUseLLVM # bindgen
+      wasm-bindgen-cli
       podman # Foundry VTT development container
       # GUI stack — meta-editor and cofdtools are eframe/egui binaries
       # that dlopen these at runtime (winit's wayland backend,

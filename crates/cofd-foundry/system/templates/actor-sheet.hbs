@@ -1,0 +1,97 @@
+<div class="cofd-actor-sheet">
+  <header class="cofd-sheet-header">
+    <img class="cofd-actor-image" src="{{actor.img}}" data-action="editImage" data-edit="img" alt="{{actor.name}}">
+    <div class="cofd-actor-heading">
+      <input class="cofd-actor-name" type="text" name="name" value="{{actor.name}}" placeholder="Character name" {{#unless editable}}disabled{{/unless}}>
+      <label>
+        <span>Template</span>
+        <input type="text" name="system.template" value="{{system.template}}" readonly>
+      </label>
+      <label>
+        <span>Size</span>
+        <input type="number" name="system.size" value="{{system.size}}" min="1" max="20" {{#unless editable}}disabled{{/unless}}>
+      </label>
+    </div>
+    <div class="cofd-wasm-status" title="{{wasm.error}}">
+      <span class="cofd-status-dot cofd-status-{{wasm.status}}"></span>
+      <span>WASM {{wasm.status}}</span>
+      {{#if wasm.version}}<small>v{{wasm.version}}</small>{{/if}}
+    </div>
+  </header>
+
+  <section class="cofd-identity">
+    <h2>Identity</h2>
+    <div class="cofd-field-grid">
+      <label>Concept<input type="text" name="system.concept" value="{{system.concept}}" {{#unless editable}}disabled{{/unless}}></label>
+      <label>Virtue<input type="text" name="system.virtue" value="{{system.virtue}}" {{#unless editable}}disabled{{/unless}}></label>
+      <label>Vice<input type="text" name="system.vice" value="{{system.vice}}" {{#unless editable}}disabled{{/unless}}></label>
+      <label>Chronicle<input type="text" name="system.chronicle" value="{{system.chronicle}}" {{#unless editable}}disabled{{/unless}}></label>
+    </div>
+  </section>
+
+  <div class="cofd-sheet-columns">
+    <main>
+      <section class="cofd-card">
+        <h2>Attributes</h2>
+        <div class="cofd-attribute-groups">
+          {{#each attributes}}
+            <fieldset>
+              <legend>{{label}}</legend>
+              {{#each attributes}}
+                <label class="cofd-dot-field">
+                  <span>{{label}}</span>
+                  <input type="number" name="system.attributes.{{key}}.value" value="{{value}}" min="0" max="5" {{#unless ../../editable}}disabled{{/unless}}>
+                </label>
+              {{/each}}
+            </fieldset>
+          {{/each}}
+        </div>
+      </section>
+
+      <section class="cofd-card">
+        <h2>Skills</h2>
+        <div class="cofd-skill-grid">
+          {{#each skills}}
+            <label class="cofd-skill-field" data-category="{{category}}">
+              <span>{{label}}</span>
+              <input type="number" name="system.skills.{{key}}.value" value="{{value}}" min="0" max="5" {{#unless ../editable}}disabled{{/unless}}>
+              <input type="text" name="system.skills.{{key}}.specialties" value="{{specialties}}" placeholder="Specialties" {{#unless ../editable}}disabled{{/unless}}>
+            </label>
+          {{/each}}
+        </div>
+      </section>
+    </main>
+
+    <aside>
+      <section class="cofd-card cofd-tracks">
+        <h2>Tracks</h2>
+        {{#each tracks}}
+          <label>
+            <span>{{label}}</span>
+            <span class="cofd-track-inputs">
+              <input type="number" name="system.{{key}}.value" value="{{value}}" min="0" max="99" {{#unless ../editable}}disabled{{/unless}}>
+              <span>/</span>
+              <input type="number" name="system.{{key}}.max" value="{{max}}" min="0" max="99" {{#if derived}}disabled{{/if}} {{#unless ../editable}}disabled{{/unless}}>
+            </span>
+          </label>
+        {{/each}}
+      </section>
+
+      <section class="cofd-card cofd-engine-card">
+        <h2>Engine</h2>
+        <dl>
+          <dt>Templates</dt>
+          <dd>{{wasm.templateCount}}</dd>
+          <dt>Mortal layout</dt>
+          <dd>{{wasm.mortalCharacterSize}} bytes</dd>
+        </dl>
+        {{#if wasm.error}}<p class="cofd-error">{{wasm.error}}</p>{{/if}}
+      </section>
+    </aside>
+  </div>
+
+  <section class="cofd-card cofd-notes">
+    <h2>Notes</h2>
+    <textarea name="system.notes" rows="6" placeholder="Character notes" {{#unless editable}}disabled{{/unless}}>{{system.notes}}</textarea>
+  </section>
+</div>

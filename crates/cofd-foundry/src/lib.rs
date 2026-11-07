@@ -1,21 +1,22 @@
-//! Raw WebAssembly bridge between the `cofd` rules engine and Foundry VTT.
+//! WebAssembly bridge between the `cofd` rules engine and Foundry VTT.
 //!
-//! The crate is compiled as a `cdylib` for `wasm32-unknown-unknown`. Foundry
-//! loads the resulting `cofd_foundry.wasm` directly — no wasm-bindgen glue, no
-//! external toolchain — and talks to it through the small C ABI exported at the
-//! bottom of this file.
+//! The crate is compiled as a `cdylib` for `wasm32-unknown-unknown`. The
+//! `wasm-bindgen` CLI generates the JavaScript loader and bindings consumed by
+//! the Foundry system.
 
 use std::mem::size_of;
 
 use cofd::{
 	character::Character,
-	schema::template::Template,
+	schema::{prelude::Attribute, template::Template, traits::DerivedTrait},
 	splat::{SplatCharacter, mortal::Mortal},
 	systema::prelude::Actor,
+	traits::Trait,
 };
 use facet::Facet;
+use wasm_bindgen::prelude::*;
 
-/// Version of the packaged module; kept in sync with `module/module.json`.
+/// Version of the packaged system; kept in sync with `system/system.json`.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Number of character templates described by the `cofd` schema.
@@ -33,7 +34,7 @@ pub fn template_count() -> u32 {
 /// Builds a mortal character with the `cofd` engine.
 #[must_use]
 pub fn mortal_character() -> SplatCharacter {
-	SplatCharacter::new(Template::Mortal)
+	SplatCharacter::Mortal(Character::<Mortal>::new(Mortal))
 }
 
 /// Size, in bytes, of the in-memory layout of a mortal character.
@@ -44,32 +45,58 @@ pub fn mortal_character_size() -> u32 {
 	size_of::<Character<Mortal>>() as u32
 }
 
-/// Pointer to the UTF-8 encoded version string.
-#[cfg(target_arch = "wasm32")]
-#[unsafe(no_mangle)]
-pub extern "C" fn cofd_foundry_version_ptr() -> *const u8 {
-	VERSION.as_ptr()
-}
-
-/// Length, in bytes, of the UTF-8 encoded version string.
-#[cfg(target_arch = "wasm32")]
-#[unsafe(no_mangle)]
-pub extern "C" fn cofd_foundry_version_len() -> u32 {
-	VERSION.len() as u32
+/// Version of the embedded rules engine.
+#[wasm_bindgen]
+pub fn version() -> String {
+	VERSION.to_owned()
 }
 
 /// Number of character templates known to the `cofd` schema.
-#[cfg(target_arch = "wasm32")]
-#[unsafe(no_mangle)]
-pub extern "C" fn cofd_foundry_template_count() -> u32 {
+#[wasm_bindgen(js_name = templateCount)]
+pub fn template_count_export() -> u32 {
 	template_count()
 }
 
 /// Size, in bytes, of the in-memory layout of a mortal character.
-#[cfg(target_arch = "wasm32")]
-#[unsafe(no_mangle)]
-pub extern "C" fn cofd_foundry_mortal_character_size() -> u32 {
+#[wasm_bindgen(js_name = mortalCharacterSize)]
+pub fn mortal_character_size_export() -> u32 {
 	mortal_character_size()
+}
+
+fn mortal_character_with_attributes(
+	stamina: u8,
+	size: u8,
+	resolve: u8,
+	composure: u8,
+) -> Character<Mortal> {
+	let SplatCharacter::Mortal(mut character) = mortal_character() else {
+		unreachable!("mortal_character must return a mortal character");
+	};
+
+	let attributes = character.attributes_mut();
+	attributes.set_raw_value(&Trait::Attribute(Attribute::Stamina), stamina);
+	attributes.set_raw_value(&Trait::Size, size);
+	attributes.set_raw_value(&Trait::Attribute(Attribute::Resolve), resolve);
+	attributes.set_raw_value(&Trait::Attribute(Attribute::Composure), composure);
+	character
+}
+
+/// Calculate a mortal character's derived Health with the CofD engine.
+#[wasm_bindgen(js_name = mortalHealth)]
+pub fn mortal_health(stamina: u8, size: u8) -> u8 {
+	mortal_character_with_attributes(stamina, size, 1, 1)
+		.attributes()
+		.value(&Trait::DerivedTrait(DerivedTrait::Health))
+		.unwrap_or_default()
+}
+
+/// Calculate a mortal character's derived Willpower with the CofD engine.
+#[wasm_bindgen(js_name = mortalWillpower)]
+pub fn mortal_willpower(resolve: u8, composure: u8) -> u8 {
+	mortal_character_with_attributes(1, 5, resolve, composure)
+		.attributes()
+		.value(&Trait::DerivedTrait(DerivedTrait::Willpower))
+		.unwrap_or_default()
 }
 
 #[cfg(test)]
@@ -92,5 +119,13 @@ mod tests {
 		let character = mortal_character();
 		assert!(matches!(character, SplatCharacter::Mortal(_)));
 		assert!(mortal_character_size() > 0);
+	}
+
+	#[test]
+	fn derived_values_use_the_cofd_engine() {
+		assert_eq!(mortal_health(1, 5), 6);
+		assert_eq!(mortal_health(3, 5), 8);
+		assert_eq!(mortal_willpower(1, 1), 2);
+		assert_eq!(mortal_willpower(3, 4), 7);
 	}
 }
