@@ -7,6 +7,8 @@ members = [
     "crates/cofd-derive",
     "crates/cofd-macros",
     "crates/cofd-util",
+    # cofd-foundry — Foundry VTT module (raw wasm)
+    "crates/cofd-foundry",
     # cofd-miner — PDF extraction pipeline
     "crates/cofd-miner",
     "crates/cofd-meta",
@@ -26,6 +28,7 @@ publish = false
 
 [workspace.dependencies]
 # Inter-crate deps (path overrides in this monorepo).
+cofd = { path = "crates/cofd" }
 cofd-schema = { path = "crates/cofd-schema" }
 cofd-util = { path = "crates/cofd-util" }
 cofd-macros = { path = "crates/cofd-macros" }

@@ -1,0 +1,17 @@
+[package]
+name = "cofd-foundry"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Foundry Virtual Tabletop module packaging the cofd rules engine as raw WebAssembly"
+readme = "README.md"
+publish = false
+
+[lib]
+name = "cofd_foundry"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+cofd.workspace = true
+facet.workspace = true

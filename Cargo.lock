@@ -944,6 +944,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "cofd-foundry"
+version = "0.1.0"
+dependencies = [
+ "cofd",
+ "facet",
+]
+
+[[package]]
 name = "cofd-macros"
 version = "0.1.0"
 dependencies = [

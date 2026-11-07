@@ -26,6 +26,7 @@
       harfbuzz
       # build tools
       llvmPackages.clangUseLLVM # bindgen
+      podman # Foundry VTT development container
       # GUI stack — meta-editor and cofdtools are eframe/egui binaries
       # that dlopen these at runtime (winit's wayland backend,
       # xkbcommon for keyboard, libglvnd/EGL/GL/GBM for rendering,
@@ -62,6 +63,11 @@
     enable = true;
     mold.enable = true;
     channel = "stable";
+    targets = [
+      "x86_64-unknown-linux-gnu"
+      "wasm32-unknown-unknown"
+    ];
+
     components = [
       "rust-src"
       "rustc"
@@ -74,7 +80,58 @@
 
   processes = {
     cofd.exec = "cargo run";
+
+    foundry = {
+      after = [ "cofd-foundry:build" ];
+      exec = ''
+        set -euo pipefail
+
+        if [ -z "''${FOUNDRY_LICENSE_KEY:-}" ] \
+          && { [ -z "''${FOUNDRY_USERNAME:-}" ] || [ -z "''${FOUNDRY_PASSWORD:-}" ]; }; then
+          echo "Set FOUNDRY_LICENSE_KEY or both FOUNDRY_USERNAME and FOUNDRY_PASSWORD" >&2
+          exit 1
+        fi
+        if [ -z "''${FOUNDRY_ADMIN_KEY:-}" ]; then
+          echo "FOUNDRY_ADMIN_KEY must be set to start Foundry VTT" >&2
+          exit 1
+        fi
+        if [ -z "''${FOUNDRY_RELEASE_URL:-}" ] \
+          && { [ -z "''${FOUNDRY_USERNAME:-}" ] || [ -z "''${FOUNDRY_PASSWORD:-}" ]; }; then
+          echo "Set FOUNDRY_RELEASE_URL or both FOUNDRY_USERNAME and FOUNDRY_PASSWORD" >&2
+          exit 1
+        fi
+
+        mkdir -p .devenv/foundry-data
+
+        exec ${pkgs.podman}/bin/podman run --rm --replace \
+          --name cofd-foundry \
+          --hostname cofd-foundry.local \
+          --publish 127.0.0.1:30000:30000/tcp \
+          --volume "$PWD/crates/cofd-foundry/dist/cofd-foundry:/data/Data/modules/cofd-foundry:ro" \
+          --volume "$PWD/.devenv/foundry-data:/data" \
+          --env FOUNDRY_USERNAME \
+          --env FOUNDRY_PASSWORD \
+          --env FOUNDRY_RELEASE_URL \
+          --env FOUNDRY_LICENSE_KEY \
+          --env FOUNDRY_ADMIN_KEY \
+          --env CONTAINER_PRESERVE_OWNER=/data/Data/modules/cofd-foundry \
+          --env FOUNDRY_TELEMETRY=false \
+          --env FOUNDRY_HOT_RELOAD=true \
+          --env FOUNDRY_MINIFY_STATIC_FILES=false \
+          ghcr.io/felddy/foundryvtt:12
+      '';
+      ready.http.get = {
+        host = "127.0.0.1";
+        port = 30000;
+        path = "/";
+      };
+      ready.initial_delay = 30;
+      ready.probe_timeout = 5;
+      ready.failure_threshold = 60;
+    };
   };
+
+  tasks."cofd-foundry:build".exec = "crates/cofd-foundry/build-module.sh";
 
   treefmt = {
     enable = true;
