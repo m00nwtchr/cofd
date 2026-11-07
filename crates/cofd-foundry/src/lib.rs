@@ -14,7 +14,7 @@ use cofd::{
 use facet::Facet;
 use wasm_bindgen::prelude::*;
 
-/// Version of the packaged system; kept in sync with `system/system.json`.
+/// Version of the packaged system, derived from this crate's Cargo metadata.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Number of character templates described by the `cofd` schema.

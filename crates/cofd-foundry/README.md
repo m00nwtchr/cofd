@@ -9,7 +9,7 @@ the browser bindings consumed by Foundry.
 | Path                | Purpose                                                       |
 | ------------------- | ------------------------------------------------------------- |
 | `src/lib.rs`        | The crate and the wasm-bindgen exports                           |
-| `system/system.json`| Foundry system manifest                                        |
+| `Cargo.toml`        | Crate and Foundry system metadata                             |
 | `system/cofd.js`    | WASM binding consumer and character sheet registration          |
 | `system/templates/`| Handlebars templates for the system sheets                      |
 | `build-system.sh`   | Builds the wasm and stages the distributable system           |
@@ -52,7 +52,8 @@ wasm-bindgen target/wasm32-unknown-unknown/release/cofd_foundry.wasm \
 ```
 
 copies the generated binding files and static system files into `dist/cofd/`,
-and writes `dist/cofd/cofd.zip` with the
+generates `dist/cofd/system.json` from `[package.metadata.foundry]` and the
+Cargo package version, and writes `dist/cofd/cofd.zip` with the
 Python standard library.
 
 ## Checking

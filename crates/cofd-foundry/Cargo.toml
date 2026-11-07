@@ -8,6 +8,23 @@ description = "Foundry Virtual Tabletop system packaging the cofd rules engine w
 readme = "README.md"
 publish = false
 
+[package.metadata.foundry]
+id = "cofd"
+title = "CofD Foundry"
+description = "The CofD rules engine (cofd) packaged as WebAssembly with generated bindings for Foundry Virtual Tabletop."
+url = "https://github.com/m00nwtchr/cofd"
+esmodules = ["cofd.js"]
+styles = ["cofd.css"]
+languages = []
+packs = []
+media = []
+readme = "README.md"
+documentTypes = { Actor = { character = {} } }
+
+[package.metadata.foundry.compatibility]
+minimum = "14"
+verified = "14"
+
 [lib]
 name = "cofd_foundry"
 crate-type = ["cdylib", "rlib"]

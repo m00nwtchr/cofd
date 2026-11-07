@@ -48,6 +48,15 @@ fi
 
 cargo build -p "$PACKAGE_NAME" --target "$TARGET" --release --locked
 
+if ! PYTHON="$(find_python)"; then
+	echo "build-system.sh: python3 is required to package the system" >&2
+	exit 1
+fi
+
+METADATA_FILE="$(mktemp)"
+trap 'rm -f "$METADATA_FILE"' EXIT
+cargo metadata --format-version 1 --no-deps --locked > "$METADATA_FILE"
+
 rm -rf "$STAGE_DIR"
 mkdir -p "$STAGE_DIR/templates"
 
@@ -56,16 +65,96 @@ wasm-bindgen \
 	--target web \
 	--out-dir "$STAGE_DIR" \
 	--out-name "$WASM_BINDGEN_NAME"
-cp "$CRATE_DIR/system/system.json" "$STAGE_DIR/system.json"
 cp "$CRATE_DIR/system/README.md" "$STAGE_DIR/README.md"
 cp "$CRATE_DIR/system/$system_ID.js" "$STAGE_DIR/$system_ID.js"
 cp "$CRATE_DIR/system/$system_ID.css" "$STAGE_DIR/$system_ID.css"
 cp "$CRATE_DIR/system/templates/actor-sheet.hbs" "$STAGE_DIR/templates/actor-sheet.hbs"
 
-if ! PYTHON="$(find_python)"; then
-	echo "build-system.sh: python3 is required to package the system" >&2
-	exit 1
-fi
+"$PYTHON" - "$METADATA_FILE" "$STAGE_DIR/system.json" "$PACKAGE_NAME" "$STAGE_DIR" "$system_ID" <<'PY'
+import json
+import pathlib
+import sys
+
+metadata_path = pathlib.Path(sys.argv[1])
+manifest_path = pathlib.Path(sys.argv[2])
+package_name = sys.argv[3]
+stage_path = pathlib.Path(sys.argv[4]).resolve()
+expected_id = sys.argv[5]
+
+metadata = json.loads(metadata_path.read_text())
+package = next((package for package in metadata["packages"] if package["name"] == package_name), None)
+if package is None:
+    raise SystemExit(f"package {package_name} not found in cargo metadata")
+
+foundry = (package.get("metadata") or {}).get("foundry")
+if not isinstance(foundry, dict):
+    raise SystemExit(f"missing [package.metadata.foundry] for {package_name}")
+
+manifest = dict(foundry)
+manifest["version"] = package["version"]
+
+required = {
+    "id",
+    "title",
+    "description",
+    "url",
+    "compatibility",
+    "esmodules",
+    "styles",
+    "languages",
+    "packs",
+    "media",
+    "documentTypes",
+    "readme",
+}
+missing = sorted(required - manifest.keys())
+if missing:
+    raise SystemExit(f"missing Foundry manifest fields: {', '.join(missing)}")
+if manifest["id"] != expected_id:
+    raise SystemExit(f"Foundry id {manifest['id']!r} does not match {expected_id!r}")
+
+for field in ("id", "title", "description", "url", "readme", "version"):
+    if not isinstance(manifest[field], str):
+        raise SystemExit(f"Foundry manifest field {field} must be a string")
+
+compatibility = manifest["compatibility"]
+if not isinstance(compatibility, dict) or any(
+    not isinstance(compatibility.get(field), str) for field in ("minimum", "verified")
+):
+    raise SystemExit("Foundry compatibility minimum and verified must be strings")
+
+for field in ("esmodules", "styles", "languages", "packs", "media"):
+    if not isinstance(manifest[field], list) or any(
+        not isinstance(path, str) for path in manifest[field]
+    ):
+        raise SystemExit(f"Foundry manifest field {field} must be a list of strings")
+
+if not isinstance(manifest["documentTypes"], dict):
+    raise SystemExit("Foundry documentTypes must be an object")
+
+def staged_file(path):
+    candidate = (stage_path / path).resolve()
+    try:
+        candidate.relative_to(stage_path)
+    except ValueError:
+        raise SystemExit(f"staged Foundry asset escapes output directory: {path}")
+    if not candidate.is_file():
+        raise SystemExit(f"staged Foundry asset is missing: {path}")
+
+for path in [manifest["readme"], *manifest["esmodules"], *manifest["styles"]]:
+    staged_file(path)
+
+def author_name(author):
+    if not isinstance(author, str):
+        raise SystemExit("Cargo package authors must be strings")
+    if "<" in author and author.endswith(">"):
+        author = author.rsplit("<", 1)[0].strip()
+    return author
+
+manifest["authors"] = [{"name": author_name(author)} for author in package["authors"]]
+
+manifest_path.write_text(json.dumps(manifest, indent="\t") + "\n")
+PY
 
 "$PYTHON" - "$STAGE_DIR" "$STAGE_DIR/$system_ID.zip" <<'PY'
 import pathlib
