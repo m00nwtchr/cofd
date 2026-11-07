@@ -1,5 +1,5 @@
 const MODULE_ID = "cofd-foundry";
-const WASM_URL = new URL("../cofd_foundry.wasm", import.meta.url);
+const WASM_URL = new URL("./cofd_foundry.wasm", import.meta.url);
 
 const api = {
   id: MODULE_ID,

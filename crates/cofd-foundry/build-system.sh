@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 #
-# Build the Foundry module: compile cofd-foundry for wasm32-unknown-unknown,
-# stage the wasm and the static module files under dist/cofd-foundry/, and zip
-# the staged module with the Python standard library.
+# Build the Foundry system: compile cofd-foundry for wasm32-unknown-unknown,
+# stage the wasm and the static system files under dist/cofd-foundry/, and zip
+# the staged system with the Python standard library.
 
 set -euo pipefail
 
 CRATE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(cd "$CRATE_DIR/../.." && pwd)"
-MODULE_ID="cofd-foundry"
+system_ID="cofd"
 TARGET="wasm32-unknown-unknown"
 WASM_NAME="cofd_foundry.wasm"
 DIST_DIR="$CRATE_DIR/dist"
-STAGE_DIR="$DIST_DIR/$MODULE_ID"
+STAGE_DIR="$DIST_DIR/$system_ID"
 
 find_python() {
 	if command -v python3 >/dev/null 2>&1; then
@@ -33,22 +33,22 @@ find_python() {
 }
 
 cd "$WORKSPACE_DIR"
-cargo build -p "$MODULE_ID" --target "$TARGET" --release --locked
+cargo build -p "$system_ID" --target "$TARGET" --release --locked
 
 rm -rf "$STAGE_DIR"
-mkdir -p "$STAGE_DIR/scripts"
+mkdir -p "$STAGE_DIR/system"
 
 cp "target/$TARGET/release/$WASM_NAME" "$STAGE_DIR/$WASM_NAME"
-cp "$CRATE_DIR/module/module.json" "$STAGE_DIR/module.json"
-cp "$CRATE_DIR/module/README.md" "$STAGE_DIR/README.md"
-cp "$CRATE_DIR/module/scripts/$MODULE_ID.js" "$STAGE_DIR/scripts/$MODULE_ID.js"
+cp "$CRATE_DIR/system/system.json" "$STAGE_DIR/system.json"
+cp "$CRATE_DIR/system/README.md" "$STAGE_DIR/README.md"
+cp "$CRATE_DIR/system/$system_ID.js" "$STAGE_DIR/$system_ID.js"
 
 if ! PYTHON="$(find_python)"; then
-	echo "build-module.sh: python3 is required to package the module" >&2
+	echo "build-system.sh: python3 is required to package the system" >&2
 	exit 1
 fi
 
-"$PYTHON" - "$STAGE_DIR" "$STAGE_DIR/$MODULE_ID.zip" <<'PY'
+"$PYTHON" - "$STAGE_DIR" "$STAGE_DIR/$system_ID.zip" <<'PY'
 import pathlib
 import sys
 import zipfile
@@ -65,4 +65,4 @@ with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as bundle:
 print(f"created {archive}")
 PY
 
-echo "cofd-foundry: module staged in $STAGE_DIR"
+echo "cofd-foundry: system staged in $STAGE_DIR"

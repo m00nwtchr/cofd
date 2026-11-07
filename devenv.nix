@@ -61,7 +61,7 @@
   # https://devenv.sh/languages/
   languages.rust = {
     enable = true;
-    mold.enable = true;
+    # mold.enable = true;
     channel = "stable";
     targets = [
       "x86_64-unknown-linux-gnu"
@@ -81,7 +81,7 @@
   dotenv.enable = true;
 
   processes = {
-    cofd.exec = "cargo run";
+    # cofdtools.exec = "cargo run -p cofdtools";
 
     foundry = {
       after = [ "cofd-foundry:build" ];
@@ -110,7 +110,7 @@
           --hostname cofd-foundry.local \
           --userns=keep-id \
           --publish 127.0.0.1:30000:30000/tcp \
-          --volume "$PWD/crates/cofd-foundry/dist/cofd-foundry:/data/Data/modules/cofd-foundry:ro" \
+          --volume "$PWD/crates/cofd-foundry/dist/cofd:/data/Data/systems/cofd:ro" \
           --volume "$PWD/.devenv/foundry-data:/data" \
           --env FOUNDRY_USERNAME \
           --env FOUNDRY_PASSWORD \
@@ -122,18 +122,18 @@
           --env FOUNDRY_MINIFY_STATIC_FILES=false \
           ghcr.io/felddy/foundryvtt:14
       '';
-      ready.http.get = {
-        host = "127.0.0.1";
-        port = 30000;
-        path = "/";
-      };
+      # ready.http.get = {
+      #   host = "127.0.0.1";
+      #   port = 30000;
+      #   path = "/";
+      # };
       ready.initial_delay = 30;
       ready.probe_timeout = 5;
       ready.failure_threshold = 60;
     };
   };
 
-  tasks."cofd-foundry:build".exec = "crates/cofd-foundry/build-module.sh";
+  tasks."cofd-foundry:build".exec = "crates/cofd-foundry/build-system.sh";
 
   treefmt = {
     enable = true;

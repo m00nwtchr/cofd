@@ -1,12 +1,11 @@
 {
-	"id": "cofd-foundry",
-	"type": "module",
+	"id": "cofd",
 	"title": "CofD Foundry",
 	"description": "The CofD rules engine (cofd) packaged as raw WebAssembly and loaded directly by Foundry Virtual Tabletop.",
 	"version": "0.1.0",
 	"compatibility": {
-		"minimum": "10",
-		"verified": "12"
+		"minimum": "14",
+		"verified": "14"
 	},
 	"authors": [
 		{
@@ -14,11 +13,12 @@
 		}
 	],
 	"url": "https://github.com/m00nwtchr/cofd",
-	"esmodules": ["scripts/cofd-foundry.js"],
+	"esmodules": [
+		"cofd.js"
+	],
 	"styles": [],
 	"languages": [],
 	"packs": [],
 	"media": [],
-	"library": true,
 	"readme": "README.md"
 }
