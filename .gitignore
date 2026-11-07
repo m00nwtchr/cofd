@@ -5,6 +5,7 @@ crates/cofd-foundry/dist/
 # Nix / devenv state
 .direnv/
 .devenv/
+.env
 *.local.nix
 
 # Local data

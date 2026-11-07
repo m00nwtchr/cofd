@@ -78,6 +78,8 @@
     ];
   };
 
+  dotenv.enable = true;
+
   processes = {
     cofd.exec = "cargo run";
 
@@ -106,6 +108,7 @@
         exec ${pkgs.podman}/bin/podman run --rm --replace \
           --name cofd-foundry \
           --hostname cofd-foundry.local \
+          --userns=keep-id \
           --publish 127.0.0.1:30000:30000/tcp \
           --volume "$PWD/crates/cofd-foundry/dist/cofd-foundry:/data/Data/modules/cofd-foundry:ro" \
           --volume "$PWD/.devenv/foundry-data:/data" \
@@ -114,11 +117,10 @@
           --env FOUNDRY_RELEASE_URL \
           --env FOUNDRY_LICENSE_KEY \
           --env FOUNDRY_ADMIN_KEY \
-          --env CONTAINER_PRESERVE_OWNER=/data/Data/modules/cofd-foundry \
           --env FOUNDRY_TELEMETRY=false \
           --env FOUNDRY_HOT_RELOAD=true \
           --env FOUNDRY_MINIFY_STATIC_FILES=false \
-          ghcr.io/felddy/foundryvtt:12
+          ghcr.io/felddy/foundryvtt:14
       '';
       ready.http.get = {
         host = "127.0.0.1";
