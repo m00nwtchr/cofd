@@ -12,7 +12,7 @@ system_ID="cofd"
 TARGET="wasm32-unknown-unknown"
 WASM_NAME="cofd_foundry.wasm"
 WASM_BINDGEN_NAME="cofd_foundry"
-WASM_BINDGEN_VERSION="0.2.126"
+WASM_BINDGEN_VERSION="0.2.130"
 DIST_DIR="$CRATE_DIR/dist"
 STAGE_DIR="$DIST_DIR/$system_ID"
 

@@ -17,7 +17,7 @@ the browser bindings consumed by Foundry.
 
 ## WebAssembly bindings
 
-The Rust crate uses `wasm-bindgen` `0.2.126` exports. `build-system.sh` runs
+The Rust crate uses `wasm-bindgen` `0.2.130` exports. `build-system.sh` runs
 the matching `wasm-bindgen` CLI with `--target web`, producing `cofd_foundry.js` and
 `cofd_foundry_bg.wasm` next to the system loader:
 
