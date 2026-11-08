@@ -1,0 +1,11 @@
+rust:
+  directory: ../..
+  manifestPath: crates/cofd-foundry/Cargo.toml
+
+bindings:
+  uniffiToml: uniffi.toml
+
+wasm2:
+  ts: dist/cofd
+  cargoExtras:
+    - --locked

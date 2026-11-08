@@ -1,79 +1,89 @@
 # cofd-foundry
 
 Foundry Virtual Tabletop packaging for the [`cofd`](../../crates/cofd) rules
-engine. The crate compiles to WebAssembly and uses `wasm-bindgen` to generate
-the browser bindings consumed by Foundry.
+engine. The crate compiles to WebAssembly and uses UniFFI plus
+`uniffi-bindgen-react-native` (`ubrn`) to generate the browser bindings consumed
+by Foundry.
 
 ## Layout
 
-| Path                | Purpose                                                       |
-| ------------------- | ------------------------------------------------------------- |
-| `src/lib.rs`        | The crate and the wasm-bindgen exports                           |
-| `Cargo.toml`        | Crate and Foundry system metadata                             |
-| `system/cofd.js`    | WASM binding consumer and character sheet registration          |
-| `system/templates/`| Handlebars templates for the system sheets                      |
-| `build-system.sh`   | Builds the wasm and stages the distributable system           |
-| `dist/`             | Build output (git-ignored)                                    |
+| Path                 | Purpose                                             |
+| -------------------- | --------------------------------------------------- |
+| `src/lib.rs`         | The crate and UniFFI scaffolding                    |
+| `Cargo.toml`         | Crate and Foundry system metadata                   |
+| `system/cofd.ts`     | WASM binding consumer and character sheet          |
+| `system/templates/`  | Handlebars templates for the system sheets          |
+| `build-system.sh`    | Builds the WASM and stages the distributable system |
+| `ubrn.config.yaml`   | UBRN build configuration                            |
+| `package.json`       | Pinned UBRN build dependencies                      |
+| `dist/`              | Build output (git-ignored)                          |
 
 ## WebAssembly bindings
 
-The Rust crate uses `wasm-bindgen` `0.2.130` exports. `build-system.sh` runs
-the matching `wasm-bindgen` CLI with `--target web`, producing `cofd_foundry.js` and
-`cofd_foundry_bg.wasm` next to the system loader:
+The Rust crate uses UniFFI `0.31` exports for compatibility with the pinned UBRN
+release. `build-system.sh` runs `ubrn build wasm2` against the compiled WASM,
+then uses `esbuild` to bundle the generated TypeScript and the authored system
+loader into `cofd.js`. The stage also contains the generated TypeScript sources,
+FFI signature tables, and `cofd_foundry.wasm`.
 
-| Export                  | Purpose                                      |
-| ----------------------- | -------------------------------------------- |
-| `version`               | Version of the embedded `cofd` crate         |
-| `listTemplates`         | Enumerates schema templates                  |
+| Export                   | Purpose                                      |
+| ------------------------ | -------------------------------------------- |
+| `version`                | Version of the embedded `cofd` crate        |
+| `listTemplates`          | Enumerates schema templates                  |
 | `listSupportedTemplates` | Enumerates constructible templates           |
-| `listAttributes`        | Enumerates schema attributes                 |
-| `listSkills`            | Enumerates schema skills                     |
-| `listDerivedTraits`     | Enumerates derived traits                    |
-| `CharacterHandle`       | Owns a live engine-backed character          |
-| `WeaponHandle`           | Owns a character weapon value                |
+| `listAttributes`         | Enumerates schema attributes                 |
+| `listSkills`             | Enumerates schema skills                     |
+| `listDerivedTraits`      | Enumerates derived traits                    |
+| `schemaEnums`            | Values for generated Rust schema enums       |
+| `CharacterHandle`        | Engine-backed character object               |
+| `WeaponHandle`           | Character weapon value                       |
 
-The system loader imports the generated module and initializes it normally:
+The system loader initializes the generated UBRN entrypoint before using the
+engine. UBRN objects are constructed with `new` and can be explicitly released
+with `uniffiDestroy`:
 
 ```js
-import init, { CharacterHandle } from "./cofd_foundry.js";
-
-await init();
-const character = new CharacterHandle("Mortal");
+const api = await globalThis.cofdFoundryWasmReady;
+const character = new api.CharacterHandle("Mortal");
 character.setTrait("Stamina", 3);
 character.setTrait("Size", 5);
-console.log(character.getTrait("Health"));
+console.log(api.version, character.getTrait("Health"));
+character.uniffiDestroy();
 ```
 
 `CharacterHandle` exposes engine-backed trait reads and writes, derived values,
 damage and wound operations (`applyDamage` fills one box per point and upgrades
 lesser damage only when the track is full; `clearDamage` removes boxes while
 `healDamage` downgrades severity), character info, specialties, collections,
-weapons, werewolf forms, and supported abilities. `weapon(index)` returns a
+weapons, werewolf forms, and supported abilities. `weaponAt(index)` returns a
 copy; use `setWeapon` to write edits back. Unsupported CofD templates return an
 error instead of entering an unfinished engine path.
 
 ## Building
 
-```
-./build-system.sh
-```
-
-The script runs
+From the repository root:
 
 ```
-cargo build -p cofd-foundry --target wasm32-unknown-unknown --release --locked
-wasm-bindgen target/wasm32-unknown-unknown/release/cofd_foundry.wasm \
-  --target web --out-dir dist/cofd --out-name cofd_foundry
+npm ci --prefix crates/cofd-foundry
+crates/cofd-foundry/build-system.sh
 ```
 
-copies the generated binding files and static system files into `dist/cofd/`,
-generates `dist/cofd/system.json` from `[package.metadata.foundry]` and the
-Cargo package version, and writes `dist/cofd/cofd.zip` with the
-Python standard library.
+`ubrn.config.yaml` points UBRN at the workspace crate and stages its `wasm2`
+output in `dist/cofd/`. The generated `index.ts` exports `uniffiInitAsync`, and
+the authored TypeScript loader calls it with the adjacent WASM asset before
+exposing the Foundry API.
+
+The script copies generated bindings and static system files into `dist/cofd/`,
+bundles `system/cofd.ts` as `cofd.js`, generates `dist/cofd/system.json` from
+`[package.metadata.foundry]` and the Cargo package version, and writes
+`dist/cofd/cofd.zip` with the Python standard library. UBRN and its
+`@ubjs/core`/`@ubjs/wasm` runtime packages, plus `esbuild`, are pinned in
+`package-lock.json`.
 
 ## Checking
 
 ```
 cargo check -p cofd-foundry
 cargo test -p cofd-foundry
+npm run test:bundle --prefix crates/cofd-foundry
 ```

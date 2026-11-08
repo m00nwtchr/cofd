@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 #
 # Build the Foundry system: compile cofd-foundry for wasm32-unknown-unknown,
-# generate browser bindings with wasm-bindgen, stage the bindings and static
-# system files under dist/cofd/, and zip the staged system.
+# generate browser bindings with UniFFI, bundle the TypeScript system loader,
+# stage the bindings and static system files under dist/cofd/, and zip the
+# staged system.
 
 set -euo pipefail
 
@@ -10,12 +11,11 @@ CRATE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(cd "$CRATE_DIR/../.." && pwd)"
 system_ID="cofd"
 PACKAGE_NAME="cofd-foundry"
-TARGET="wasm32-unknown-unknown"
-WASM_NAME="cofd_foundry.wasm"
-WASM_BINDGEN_NAME="cofd_foundry"
-WASM_BINDGEN_VERSION="0.2.130"
+UBRN_VERSION="0.31.0-6"
 DIST_DIR="$CRATE_DIR/dist"
 STAGE_DIR="$DIST_DIR/$system_ID"
+UBRN="$CRATE_DIR/node_modules/.bin/ubrn"
+ESBUILD="$CRATE_DIR/node_modules/.bin/esbuild"
 
 find_python() {
 	if command -v python3 >/dev/null 2>&1; then
@@ -36,17 +36,14 @@ find_python() {
 }
 
 cd "$WORKSPACE_DIR"
-if ! command -v wasm-bindgen >/dev/null 2>&1; then
-	echo "build-system.sh: wasm-bindgen CLI is required (provided by devenv)" >&2
+if [ ! -x "$UBRN" ]; then
+	echo "build-system.sh: uniffi-bindgen-react-native $UBRN_VERSION is required (run npm ci --prefix $CRATE_DIR)" >&2
 	exit 1
 fi
-CLI_VERSION="$(wasm-bindgen --version | awk '{print $2}')"
-if [ "$CLI_VERSION" != "$WASM_BINDGEN_VERSION" ]; then
-	echo "build-system.sh: wasm-bindgen $WASM_BINDGEN_VERSION is required; found $CLI_VERSION" >&2
+if [ ! -x "$ESBUILD" ]; then
+	echo "build-system.sh: esbuild is required to bundle the TypeScript system loader (run npm ci --prefix $CRATE_DIR)" >&2
 	exit 1
 fi
-
-cargo build -p "$PACKAGE_NAME" --target "$TARGET" --release --locked
 
 if ! PYTHON="$(find_python)"; then
 	echo "build-system.sh: python3 is required to package the system" >&2
@@ -57,16 +54,26 @@ METADATA_FILE="$(mktemp)"
 trap 'rm -f "$METADATA_FILE"' EXIT
 cargo metadata --format-version 1 --no-deps --locked > "$METADATA_FILE"
 
-rm -rf "$STAGE_DIR"
-mkdir -p "$STAGE_DIR/templates"
+(
+	cd "$CRATE_DIR"
+	rm -rf "$STAGE_DIR"
+	"$UBRN" build wasm2 --config ubrn.config.yaml --release
+)
 
-wasm-bindgen \
-	"target/$TARGET/release/$WASM_NAME" \
-	--target web \
-	--out-dir "$STAGE_DIR" \
-	--out-name "$WASM_BINDGEN_NAME"
+# UBRN emits browser-neutral TypeScript bindings and its WASM player entrypoint.
+# Bundle the authored TypeScript system loader with that entrypoint so Foundry
+# only has to load one JavaScript module and the adjacent WASM asset.
+cp "$CRATE_DIR/system/$system_ID.ts" "$STAGE_DIR/$system_ID-system.ts"
+"$ESBUILD" \
+	"$STAGE_DIR/$system_ID-system.ts" \
+	--bundle \
+	--format=esm \
+	--platform=browser \
+	--target=es2022 \
+	--outfile="$STAGE_DIR/$system_ID.js"
+rm "$STAGE_DIR/$system_ID-system.ts"
+mkdir -p "$STAGE_DIR/templates"
 cp "$CRATE_DIR/system/README.md" "$STAGE_DIR/README.md"
-cp "$CRATE_DIR/system/$system_ID.js" "$STAGE_DIR/$system_ID.js"
 cp "$CRATE_DIR/system/$system_ID.css" "$STAGE_DIR/$system_ID.css"
 cp "$CRATE_DIR/system/templates/actor-sheet.hbs" "$STAGE_DIR/templates/actor-sheet.hbs"
 
@@ -143,6 +150,7 @@ def staged_file(path):
 
 for path in [manifest["readme"], *manifest["esmodules"], *manifest["styles"]]:
     staged_file(path)
+staged_file("cofd_foundry.wasm")
 
 def author_name(author):
     if not isinstance(author, str):

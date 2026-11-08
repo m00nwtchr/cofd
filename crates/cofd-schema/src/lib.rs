@@ -11,6 +11,9 @@ pub mod prerequisites;
 pub mod template;
 pub mod traits;
 
+#[cfg(feature = "uniffi")]
+uniffi::setup_scaffolding!();
+
 pub mod prelude {
 	pub use super::{
 		book::BookInfo,

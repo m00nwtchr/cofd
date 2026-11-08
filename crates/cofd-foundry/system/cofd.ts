@@ -1,24 +1,28 @@
-import init, {
-  CharacterHandle,
-  listAttributes,
-  listDerivedTraits,
-  listSkills,
-  listSupportedTemplates,
-  listTemplates,
-  version,
-} from "./cofd_foundry.js";
+import * as generated from "./index";
+import * as schemaEnums from "./cofd_schema";
 
 const SYSTEM_ID = "cofd";
 const ACTOR_SHEET_TEMPLATE = "systems/cofd/templates/actor-sheet.hbs";
 
-const api = {
+type AnyRecord = Record<string, any>;
+
+declare global {
+  var Hooks: any;
+  var foundry: any;
+  var CONFIG: any;
+  var cofdFoundry: AnyRecord;
+  var cofdFoundryWasmReady: Promise<AnyRecord>;
+}
+
+const api: AnyRecord = {
   id: SYSTEM_ID,
-  CharacterHandle,
-  listAttributes,
-  listDerivedTraits,
-  listSkills,
-  listSupportedTemplates,
-  listTemplates,
+  CharacterHandle: null,
+  listAttributes: null,
+  listDerivedTraits: null,
+  listSkills: null,
+  listSupportedTemplates: null,
+  listTemplates: null,
+  schemaEnums,
   version: null,
   ready: false,
   error: null,
@@ -101,11 +105,11 @@ const MORTAL_DEFAULTS = {
   notes: "",
 };
 
-function clone(value) {
+function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value));
 }
 
-function mergeDefaults(target, defaults) {
+function mergeDefaults(target: AnyRecord, defaults: AnyRecord): AnyRecord {
   for (const [key, value] of Object.entries(defaults)) {
     if (target[key] === undefined) {
       target[key] = clone(value);
@@ -123,16 +127,16 @@ function mergeDefaults(target, defaults) {
   return target;
 }
 
-function mortalSystemData(existing) {
+function mortalSystemData(existing: AnyRecord | undefined): AnyRecord {
   return mergeDefaults(clone(existing ?? {}), MORTAL_DEFAULTS);
 }
 
-function numberValue(value, fallback = 0) {
+function numberValue(value: unknown, fallback = 0): number {
   const result = Number(value);
   return Number.isFinite(result) ? result : fallback;
 }
 
-function prepareAttributes(system) {
+function prepareAttributes(system: AnyRecord): AnyRecord[] {
   return ATTRIBUTE_GROUPS.map((group) => ({
     ...group,
     attributes: group.attributes.map((attribute) => ({
@@ -142,7 +146,7 @@ function prepareAttributes(system) {
   }));
 }
 
-function prepareSkills(system) {
+function prepareSkills(system: AnyRecord): AnyRecord[] {
   return SKILLS.map((skill) => ({
     ...skill,
     value: numberValue(system.skills?.[skill.key]?.value, 0),
@@ -150,7 +154,14 @@ function prepareSkills(system) {
   }));
 }
 
-function prepareTrack(system, key, label, fallbackValue, fallbackMax, derivedMax = null) {
+function prepareTrack(
+  system: AnyRecord,
+  key: string,
+  label: string,
+  fallbackValue: number,
+  fallbackMax: number,
+  derivedMax: number | null = null,
+): AnyRecord {
   const track = system[key] ?? {};
   return {
     key,
@@ -161,11 +172,11 @@ function prepareTrack(system, key, label, fallbackValue, fallbackMax, derivedMax
   };
 }
 
-function derivedMortalValues(system) {
+function derivedMortalValues(system: AnyRecord): { health: number | null; willpower: number | null } {
   if (!api.ready) return { health: null, willpower: null };
 
   try {
-    const character = new CharacterHandle(system.template ?? "Mortal");
+    const character = new api.CharacterHandle(system.template ?? "Mortal");
     try {
       for (const group of ATTRIBUTE_GROUPS) {
         for (const attribute of group.attributes) {
@@ -182,7 +193,7 @@ function derivedMortalValues(system) {
         willpower: character.getTrait("Willpower") ?? 0,
       };
     } finally {
-      character.free();
+      character.uniffiDestroy();
     }
   } catch (error) {
     console.error(`${SYSTEM_ID} | failed to evaluate character`, error);
@@ -190,7 +201,7 @@ function derivedMortalValues(system) {
   }
 }
 
-function wasmContext() {
+function wasmContext(): AnyRecord {
   return {
     ready: api.ready,
     loading: !api.ready && !api.error,
@@ -200,15 +211,15 @@ function wasmContext() {
   };
 }
 
-function textField(fields, initial = "") {
+function textField(fields: AnyRecord, initial = "") {
   return new fields.StringField({ required: false, blank: true, initial });
 }
 
-function numberField(fields, initial, max = 99) {
+function numberField(fields: AnyRecord, initial: number, max = 99) {
   return new fields.NumberField({ integer: true, initial, min: 0, max });
 }
 
-function attributeSchema(fields) {
+function attributeSchema(fields: AnyRecord) {
   return new fields.SchemaField(
     Object.fromEntries(
       ATTRIBUTE_GROUPS.flatMap((group) =>
@@ -221,7 +232,7 @@ function attributeSchema(fields) {
   );
 }
 
-function skillSchema(fields) {
+function skillSchema(fields: AnyRecord) {
   return new fields.SchemaField(
     Object.fromEntries(
       SKILLS.map(({ key }) => [
@@ -235,7 +246,7 @@ function skillSchema(fields) {
   );
 }
 
-function trackSchema(fields, value, max, label) {
+function trackSchema(fields: AnyRecord, value: number, max: number, label?: string) {
   const schema = {
     value: numberField(fields, value),
     max: numberField(fields, max),
@@ -245,13 +256,25 @@ function trackSchema(fields, value, max, label) {
 }
 
 async function loadWasm() {
-  return init();
+  await generated.uniffiInitAsync(new URL("./cofd_foundry.wasm", import.meta.url));
+  return generated;
 }
 
 const ready = loadWasm()
-  .then((exports) => {
+  .then((module) => {
+    const exports = module as AnyRecord;
     api.instance = exports;
-    api.version = version();
+    api.CharacterHandle = exports.CharacterHandle;
+    for (const name of [
+      "listAttributes",
+      "listDerivedTraits",
+      "listSkills",
+      "listSupportedTemplates",
+      "listTemplates",
+    ]) {
+      api[name] = exports[name];
+    }
+    api.version = exports.version();
     api.ready = true;
     return api;
   })
@@ -283,7 +306,7 @@ if (typeof Hooks !== "undefined") {
         body: { template: ACTOR_SHEET_TEMPLATE },
       };
 
-      async _prepareContext(options) {
+      async _prepareContext(options: AnyRecord) {
         const context = await super._prepareContext(options);
         const actor = this.document;
         const system = actor.system ?? {};
@@ -333,7 +356,7 @@ if (typeof Hooks !== "undefined") {
       types: ["character"],
     });
 
-    Hooks.on("preCreateActor", (actor, data) => {
+    Hooks.on("preCreateActor", (actor: AnyRecord, data: AnyRecord) => {
       if (actor.type !== "character") return;
       actor.updateSource({ system: mortalSystemData(data?.system ?? actor.system) });
     });

@@ -1,6 +1,7 @@
 use std::ops::Index;
 
 #[derive(Default, Debug, Clone, Copy)]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
 pub enum Wound {
 	#[default]
 	None,

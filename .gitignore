@@ -1,6 +1,7 @@
 # Build artefacts
 /target/
 crates/cofd-foundry/dist/
+node_modules/
 
 # Nix / devenv state
 .direnv/

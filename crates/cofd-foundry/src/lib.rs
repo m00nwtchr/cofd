@@ -1,17 +1,23 @@
 //! WebAssembly FFI between the `cofd` rules engine and Foundry VTT.
 //!
-//! The crate is compiled as a `cdylib` for `wasm32-unknown-unknown`. The
-//! `wasm-bindgen` CLI generates the JavaScript loader and bindings consumed by
+//! The crate is compiled as a `cdylib` for `wasm32-unknown-unknown`. UniFFI
+//! metadata is used to generate the JavaScript/TypeScript bindings consumed by
 //! the Foundry system.
 
+#[cfg(target_arch = "wasm32")]
+extern crate uniffi_runtime_wasm as _;
+
+#[cfg(feature = "uniffi")]
 mod ffi;
 
-use wasm_bindgen::prelude::*;
+#[cfg(feature = "uniffi")]
+uniffi::setup_scaffolding!();
 
 /// Version of the embedded rules engine.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[wasm_bindgen]
+#[cfg(feature = "uniffi")]
+#[uniffi::export]
 pub fn version() -> String {
 	VERSION.to_owned()
 }

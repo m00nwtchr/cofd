@@ -1,34 +1,58 @@
-use std::{fmt::Display, str::FromStr};
+use std::{
+	fmt::Display,
+	str::FromStr,
+	sync::{Arc, Mutex, MutexGuard},
+};
 
 use cofd::{
 	ability::Ability,
 	character::{
+		Character,
 		damage::{Damage, Wound},
 		info::{CharacterInfo, InfoTrait, Weapon},
-		Character,
 	},
 	prelude::AllVariants,
 	schema::{
 		prelude::{Attribute, Skill},
-		template::{werewolf::Form, Template},
+		template::{Template, werewolf::Form},
 		traits::{DerivedTrait, Trait as SchemaTrait},
 	},
 	splat::{
-		mortal::Mortal,
-		werewolf::{MoonGift, Werewolf, WerewolfExt, RENOWNS},
 		SplatCharacter, SplatTrait,
+		mortal::Mortal,
+		werewolf::{MoonGift, RENOWNS, Werewolf, WerewolfExt},
 	},
 	systema::prelude::Actor,
 	traits::Trait,
 };
 use strum::VariantArray;
-use wasm_bindgen::prelude::*;
 
-fn error(message: impl Display) -> JsError {
-	JsError::new(&message.to_string())
+#[derive(Debug, uniffi::Error)]
+pub enum FfiError {
+	Message { message: String },
 }
 
-fn whole_number(value: f64, min: f64, max: f64, name: &str) -> Result<f64, JsError> {
+impl Display for FfiError {
+	fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::Message { message } => formatter.write_str(message),
+		}
+	}
+}
+
+fn error(message: impl Display) -> FfiError {
+	FfiError::Message {
+		message: message.to_string(),
+	}
+}
+
+fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
+	mutex
+		.lock()
+		.expect("cofd Foundry object mutex was poisoned")
+}
+
+fn whole_number(value: f64, min: f64, max: f64, name: &str) -> Result<f64, FfiError> {
 	if value.is_finite() && value.fract() == 0.0 && (min..=max).contains(&value) {
 		Ok(value)
 	} else {
@@ -38,11 +62,11 @@ fn whole_number(value: f64, min: f64, max: f64, name: &str) -> Result<f64, JsErr
 	}
 }
 
-fn as_u8(value: f64, name: &str) -> Result<u8, JsError> {
+fn as_u8(value: f64, name: &str) -> Result<u8, FfiError> {
 	Ok(whole_number(value, 0.0, f64::from(u8::MAX), name)? as u8)
 }
 
-fn as_i8(value: f64, name: &str) -> Result<i8, JsError> {
+fn as_i8(value: f64, name: &str) -> Result<i8, FfiError> {
 	Ok(whole_number(value, f64::from(i8::MIN), f64::from(i8::MAX), name)? as i8)
 }
 
@@ -54,15 +78,15 @@ fn normalized(value: &str) -> String {
 		.collect()
 }
 
-fn parse_template(value: &str) -> Result<Template, JsError> {
+fn parse_template(value: &str) -> Result<Template, FfiError> {
 	Template::from_str(value).map_err(|_| error(format!("unknown CofD template: {value}")))
 }
 
-fn parse_skill(value: &str) -> Result<Skill, JsError> {
+fn parse_skill(value: &str) -> Result<Skill, FfiError> {
 	Skill::from_str(value).map_err(|_| error(format!("unknown CofD skill: {value}")))
 }
 
-fn parse_trait(value: &str) -> Result<Trait, JsError> {
+fn parse_trait(value: &str) -> Result<Trait, FfiError> {
 	if normalized(value) == "size" {
 		return Ok(Trait::Size);
 	}
@@ -78,7 +102,7 @@ fn parse_trait(value: &str) -> Result<Trait, JsError> {
 	})
 }
 
-fn validate_trait_value(trait_key: &Trait, value: u8) -> Result<(), JsError> {
+fn validate_trait_value(trait_key: &Trait, value: u8) -> Result<(), FfiError> {
 	let valid = match trait_key {
 		Trait::Attribute(_) | Trait::Skill(_) => value <= 5,
 		Trait::Size => (1..=20).contains(&value),
@@ -92,7 +116,7 @@ fn validate_trait_value(trait_key: &Trait, value: u8) -> Result<(), JsError> {
 	}
 }
 
-fn parse_wound(value: &str) -> Result<Wound, JsError> {
+fn parse_wound(value: &str) -> Result<Wound, FfiError> {
 	match normalized(value).as_str() {
 		"none" => Ok(Wound::None),
 		"bashing" => Ok(Wound::Bashing),
@@ -102,7 +126,7 @@ fn parse_wound(value: &str) -> Result<Wound, JsError> {
 	}
 }
 
-fn parse_info(value: &str) -> Result<Option<InfoTrait>, JsError> {
+fn parse_info(value: &str) -> Result<Option<InfoTrait>, FfiError> {
 	Ok(match normalized(value).as_str() {
 		"name" => Some(InfoTrait::Name),
 		"age" => Some(InfoTrait::Age),
@@ -126,7 +150,7 @@ fn parse_info(value: &str) -> Result<Option<InfoTrait>, JsError> {
 	})
 }
 
-fn parse_form(value: &str) -> Result<Form, JsError> {
+fn parse_form(value: &str) -> Result<Form, FfiError> {
 	match normalized(value).as_str() {
 		"hishu" => Ok(Form::Hishu),
 		"dalu" => Ok(Form::Dalu),
@@ -259,7 +283,7 @@ fn data_mut(character: &mut SplatCharacter) -> &mut dyn CharacterData {
 	}
 }
 
-fn supported_character(template: Template) -> Result<SplatCharacter, JsError> {
+fn supported_character(template: Template) -> Result<SplatCharacter, FfiError> {
 	match template {
 		Template::Mortal => Ok(SplatCharacter::Mortal(Character::<Mortal>::new(Mortal))),
 		Template::Werewolf => {
@@ -291,14 +315,14 @@ fn ability_values(character: &SplatCharacter) -> Vec<Ability> {
 	}
 }
 
-#[wasm_bindgen]
+#[derive(uniffi::Object)]
 pub struct WeaponHandle {
-	inner: Weapon,
+	inner: Mutex<Weapon>,
 }
 
-#[wasm_bindgen]
+#[uniffi::export]
 impl WeaponHandle {
-	#[wasm_bindgen(constructor)]
+	#[uniffi::constructor]
 	pub fn new(
 		name: String,
 		dice_pool: String,
@@ -306,146 +330,135 @@ impl WeaponHandle {
 		range: String,
 		initiative: f64,
 		size: f64,
-	) -> Result<Self, JsError> {
-		Ok(Self {
-			inner: Weapon {
+	) -> Result<Arc<Self>, FfiError> {
+		Ok(Arc::new(Self {
+			inner: Mutex::new(Weapon {
 				name,
 				dice_pool,
 				damage,
 				range,
 				initiative: as_i8(initiative, "initiative")?,
 				size: as_u8(size, "size")?,
-			},
-		})
+			}),
+		}))
 	}
 
 	pub fn name(&self) -> String {
-		self.inner.name.clone()
+		lock(&self.inner).name.clone()
 	}
 
-	#[wasm_bindgen(js_name = setName)]
-	pub fn set_name(&mut self, value: String) {
-		self.inner.name = value;
+	pub fn set_name(&self, value: String) {
+		lock(&self.inner).name = value;
 	}
 
-	#[wasm_bindgen(js_name = dicePool)]
 	pub fn dice_pool(&self) -> String {
-		self.inner.dice_pool.clone()
+		lock(&self.inner).dice_pool.clone()
 	}
 
-	#[wasm_bindgen(js_name = setDicePool)]
-	pub fn set_dice_pool(&mut self, value: String) {
-		self.inner.dice_pool = value;
+	pub fn set_dice_pool(&self, value: String) {
+		lock(&self.inner).dice_pool = value;
 	}
 
 	pub fn damage(&self) -> String {
-		self.inner.damage.clone()
+		lock(&self.inner).damage.clone()
 	}
 
-	#[wasm_bindgen(js_name = setDamage)]
-	pub fn set_damage(&mut self, value: String) {
-		self.inner.damage = value;
+	pub fn set_damage(&self, value: String) {
+		lock(&self.inner).damage = value;
 	}
 
 	pub fn range(&self) -> String {
-		self.inner.range.clone()
+		lock(&self.inner).range.clone()
 	}
 
-	#[wasm_bindgen(js_name = setRange)]
-	pub fn set_range(&mut self, value: String) {
-		self.inner.range = value;
+	pub fn set_range(&self, value: String) {
+		lock(&self.inner).range = value;
 	}
 
 	pub fn initiative(&self) -> i8 {
-		self.inner.initiative
+		lock(&self.inner).initiative
 	}
 
-	#[wasm_bindgen(js_name = setInitiative)]
-	pub fn set_initiative(&mut self, value: f64) -> Result<(), JsError> {
-		self.inner.initiative = as_i8(value, "initiative")?;
+	pub fn set_initiative(&self, value: f64) -> Result<(), FfiError> {
+		lock(&self.inner).initiative = as_i8(value, "initiative")?;
 		Ok(())
 	}
 
 	pub fn size(&self) -> u8 {
-		self.inner.size
+		lock(&self.inner).size
 	}
 
-	#[wasm_bindgen(js_name = setSize)]
-	pub fn set_size(&mut self, value: f64) -> Result<(), JsError> {
-		self.inner.size = as_u8(value, "size")?;
+	pub fn set_size(&self, value: f64) -> Result<(), FfiError> {
+		lock(&self.inner).size = as_u8(value, "size")?;
 		Ok(())
 	}
 }
 
-#[wasm_bindgen]
+#[derive(uniffi::Object)]
 pub struct CharacterHandle {
-	inner: SplatCharacter,
+	inner: Mutex<SplatCharacter>,
 }
 
-#[wasm_bindgen]
+#[uniffi::export]
 impl CharacterHandle {
-	#[wasm_bindgen(constructor)]
-	pub fn new(template: &str) -> Result<CharacterHandle, JsError> {
-		Ok(Self {
-			inner: supported_character(parse_template(template)?)?,
-		})
+	#[uniffi::constructor]
+	pub fn new(template: &str) -> Result<Arc<Self>, FfiError> {
+		Ok(Arc::new(Self {
+			inner: Mutex::new(supported_character(parse_template(template)?)?),
+		}))
 	}
 
-	#[wasm_bindgen(js_name = template)]
 	pub fn template_name(&self) -> String {
-		data(&self.inner).template().to_string()
+		data(&lock(&self.inner)).template().to_string()
 	}
 
-	#[wasm_bindgen(js_name = getTrait)]
-	pub fn get_trait(&self, key: &str) -> Result<Option<u8>, JsError> {
+	pub fn get_trait(&self, key: &str) -> Result<Option<u8>, FfiError> {
 		let trait_key = parse_trait(key)?;
-		Ok(self.inner.attributes().value(&trait_key))
+		Ok(lock(&self.inner).attributes().value(&trait_key))
 	}
 
-	#[wasm_bindgen(js_name = getBaseTrait)]
-	pub fn get_base_trait(&self, key: &str) -> Result<Option<u8>, JsError> {
+	pub fn get_base_trait(&self, key: &str) -> Result<Option<u8>, FfiError> {
 		let trait_key = parse_trait(key)?;
-		Ok(self.inner.attributes().base_value(&trait_key))
+		Ok(lock(&self.inner).attributes().base_value(&trait_key))
 	}
 
-	#[wasm_bindgen(js_name = setTrait)]
-	pub fn set_trait(&mut self, key: &str, value: f64) -> Result<(), JsError> {
+	pub fn set_trait(&self, key: &str, value: f64) -> Result<(), FfiError> {
+		let mut inner = lock(&self.inner);
 		let trait_key = parse_trait(key)?;
 		let value = as_u8(value, "trait value")?;
 		if matches!(trait_key, Trait::DerivedTrait(_)) {
 			return Err(error(format!("derived trait {key} is read-only")));
 		}
-		if self.inner.attributes().base_value(&trait_key).is_none() {
+		if inner.attributes().base_value(&trait_key).is_none() {
 			return Err(error(format!(
 				"trait {key} is not available for {}",
-				self.template_name()
+				data(&inner).template()
 			)));
 		}
 		validate_trait_value(&trait_key, value)?;
-		self.inner.attributes_mut().set_raw_value(&trait_key, value);
+		inner.attributes_mut().set_raw_value(&trait_key, value);
 		Ok(())
 	}
 
-	#[wasm_bindgen(js_name = listAbilities)]
 	pub fn list_abilities(&self) -> Vec<String> {
-		ability_values(&self.inner)
+		ability_values(&lock(&self.inner))
 			.into_iter()
 			.map(|ability| ability.to_string())
 			.collect()
 	}
 
-	#[wasm_bindgen(js_name = getAbility)]
-	pub fn get_ability(&self, name: &str) -> Result<Option<u8>, JsError> {
-		let ability = ability_values(&self.inner)
+	pub fn get_ability(&self, name: &str) -> Result<Option<u8>, FfiError> {
+		let inner = lock(&self.inner);
+		let ability = ability_values(&inner)
 			.into_iter()
 			.find(|ability| ability.to_string().eq_ignore_ascii_case(name))
 			.ok_or_else(|| error(format!("unknown ability: {name}")))?;
-		Ok(self.inner.attributes().value(&Trait::Ability(ability)))
+		Ok(inner.attributes().value(&Trait::Ability(ability)))
 	}
 
-	#[wasm_bindgen(js_name = setAbility)]
-	pub fn set_ability(&mut self, name: &str, value: f64) -> Result<(), JsError> {
-		let ability = ability_values(&self.inner)
+	pub fn set_ability(&self, name: &str, value: f64) -> Result<(), FfiError> {
+		let mut inner = lock(&self.inner);
+		let ability = ability_values(&inner)
 			.into_iter()
 			.find(|ability| ability.to_string().eq_ignore_ascii_case(name))
 			.ok_or_else(|| error(format!("unknown ability: {name}")))?;
@@ -454,33 +467,32 @@ impl CharacterHandle {
 		}
 		let value = as_u8(value, "ability value")?;
 		validate_trait_value(&Trait::Ability(ability.clone()), value)?;
-		self.inner
+		inner
 			.attributes_mut()
 			.set_raw_value(&Trait::Ability(ability), value);
 		Ok(())
 	}
 
-	#[wasm_bindgen(js_name = damage)]
-	pub fn damage_for(&self, wound: &str) -> Result<u8, JsError> {
-		Ok(data(&self.inner).health().get(parse_wound(wound)?))
+	pub fn damage_for(&self, wound: &str) -> Result<u8, FfiError> {
+		Ok(data(&lock(&self.inner)).health().get(parse_wound(wound)?))
 	}
 
-	#[wasm_bindgen(js_name = damageTotal)]
 	pub fn damage_total(&self) -> u8 {
-		data(&self.inner).health().total()
+		data(&lock(&self.inner)).health().total()
 	}
 
-	#[wasm_bindgen(js_name = applyDamage)]
-	pub fn apply_damage(&mut self, wound: &str, points: f64) -> Result<(), JsError> {
+	pub fn apply_damage(&self, wound: &str, points: f64) -> Result<(), FfiError> {
+		let mut inner = lock(&self.inner);
 		let wound = parse_wound(wound)?;
 		let points = as_u8(points, "damage points")?;
 		if matches!(wound, Wound::None) {
 			return Err(error("damage must be bashing, lethal, or aggravated"));
 		}
-		let health = self
-			.get_trait("Health")?
+		let health = inner
+			.attributes()
+			.value(&Trait::DerivedTrait(DerivedTrait::Health))
 			.ok_or_else(|| error("character has no derived Health trait"))?;
-		if !data_mut(&mut self.inner)
+		if !data_mut(&mut inner)
 			.health_mut()
 			.apply(wound, points, health)
 		{
@@ -489,13 +501,13 @@ impl CharacterHandle {
 		Ok(())
 	}
 
-	#[wasm_bindgen(js_name = pokeDamage)]
-	pub fn poke_damage(&mut self, index: f64) -> Result<String, JsError> {
+	pub fn poke_damage(&self, index: f64) -> Result<String, FfiError> {
+		let mut inner = lock(&self.inner);
 		let index = as_u8(index, "damage index")?;
-		if index >= data(&self.inner).health().total() {
+		if index >= data(&inner).health().total() {
 			return Err(error(format!("damage index out of range: {index}")));
 		}
-		let wound = data_mut(&mut self.inner).health_mut().poke_index(index);
+		let wound = data_mut(&mut inner).health_mut().poke_index(index);
 		Ok(match wound {
 			Wound::None => "none",
 			Wound::Bashing => "bashing",
@@ -505,15 +517,15 @@ impl CharacterHandle {
 		.to_owned())
 	}
 
-	#[wasm_bindgen(js_name = clearDamage)]
-	pub fn clear_damage(&mut self, wound: &str, points: f64) -> Result<(), JsError> {
+	pub fn clear_damage(&self, wound: &str, points: f64) -> Result<(), FfiError> {
+		let mut inner = lock(&self.inner);
 		let wound = parse_wound(wound)?;
 		let points = as_u8(points, "damage points")?;
 		if matches!(wound, Wound::None) {
 			return Err(error("damage must be bashing, lethal, or aggravated"));
 		}
 		for _ in 0..points {
-			let Some(value) = data_mut(&mut self.inner).health_mut().get_mut(wound) else {
+			let Some(value) = data_mut(&mut inner).health_mut().get_mut(wound) else {
 				break;
 			};
 			if *value == 0 {
@@ -524,151 +536,139 @@ impl CharacterHandle {
 		Ok(())
 	}
 
-	#[wasm_bindgen(js_name = healDamage)]
-	pub fn heal_damage(&mut self, wound: &str, points: f64) -> Result<(), JsError> {
+	pub fn heal_damage(&self, wound: &str, points: f64) -> Result<(), FfiError> {
+		let mut inner = lock(&self.inner);
 		let wound = parse_wound(wound)?;
 		let points = as_u8(points, "damage points")?;
 		if matches!(wound, Wound::None) {
 			return Err(error("damage must be bashing, lethal, or aggravated"));
 		}
-		data_mut(&mut self.inner).health_mut().heal(wound, points);
+		data_mut(&mut inner).health_mut().heal(wound, points);
 		Ok(())
 	}
 
-	#[wasm_bindgen(js_name = woundPenalty)]
 	pub fn wound_penalty(&self) -> u8 {
-		data(&self.inner).wound_penalty()
+		data(&lock(&self.inner)).wound_penalty()
 	}
 
-	#[wasm_bindgen(js_name = maxFuel)]
 	pub fn max_fuel(&self) -> Option<u8> {
-		data(&self.inner).max_fuel()
+		data(&lock(&self.inner)).max_fuel()
 	}
 
-	#[wasm_bindgen(js_name = getInfo)]
-	pub fn get_info(&self, key: &str) -> Result<String, JsError> {
+	pub fn get_info(&self, key: &str) -> Result<String, FfiError> {
+		let inner = lock(&self.inner);
 		match parse_info(key)? {
-			Some(info) => Ok(data(&self.inner).info().get(info).clone()),
-			None => Ok(data(&self.inner).info().other.clone()),
+			Some(info) => Ok(data(&inner).info().get(info).clone()),
+			None => Ok(data(&inner).info().other.clone()),
 		}
 	}
 
-	#[wasm_bindgen(js_name = setInfo)]
-	pub fn set_info(&mut self, key: &str, value: String) -> Result<(), JsError> {
+	pub fn set_info(&self, key: &str, value: String) -> Result<(), FfiError> {
+		let mut inner = lock(&self.inner);
 		match parse_info(key)? {
-			Some(info) => *data_mut(&mut self.inner).info_mut().get_mut(info) = value,
-			None => data_mut(&mut self.inner).info_mut().other = value,
+			Some(info) => *data_mut(&mut inner).info_mut().get_mut(info) = value,
+			None => data_mut(&mut inner).info_mut().other = value,
 		}
 		Ok(())
 	}
 
-	#[wasm_bindgen(js_name = specialties)]
-	pub fn specialties_for(&self, skill: &str) -> Result<Vec<String>, JsError> {
+	pub fn specialties_for(&self, skill: &str) -> Result<Vec<String>, FfiError> {
 		let skill = parse_skill(skill)?;
-		Ok(data(&self.inner)
+		Ok(data(&lock(&self.inner))
 			.specialties()
 			.get(&skill)
 			.cloned()
 			.unwrap_or_default())
 	}
 
-	#[wasm_bindgen(js_name = setSpecialties)]
-	pub fn set_specialties(&mut self, skill: &str, values: Vec<String>) -> Result<(), JsError> {
+	pub fn set_specialties(&self, skill: &str, values: Vec<String>) -> Result<(), FfiError> {
 		let skill = parse_skill(skill)?;
-		data_mut(&mut self.inner)
+		data_mut(&mut lock(&self.inner))
 			.specialties_mut()
 			.insert(skill, values);
 		Ok(())
 	}
 
-	#[wasm_bindgen(js_name = touchstones)]
 	pub fn touchstones(&self) -> Vec<String> {
-		data(&self.inner).touchstones().clone()
+		data(&lock(&self.inner)).touchstones().clone()
 	}
 
-	#[wasm_bindgen(js_name = setTouchstones)]
-	pub fn set_touchstones(&mut self, values: Vec<String>) {
-		*data_mut(&mut self.inner).touchstones_mut() = values;
+	pub fn set_touchstones(&self, values: Vec<String>) {
+		let mut inner = lock(&self.inner);
+		*data_mut(&mut inner).touchstones_mut() = values;
 	}
 
-	#[wasm_bindgen(js_name = conditions)]
 	pub fn conditions(&self) -> Vec<String> {
-		data(&self.inner).conditions().clone()
+		data(&lock(&self.inner)).conditions().clone()
 	}
 
-	#[wasm_bindgen(js_name = setConditions)]
-	pub fn set_conditions(&mut self, values: Vec<String>) {
-		*data_mut(&mut self.inner).conditions_mut() = values;
+	pub fn set_conditions(&self, values: Vec<String>) {
+		let mut inner = lock(&self.inner);
+		*data_mut(&mut inner).conditions_mut() = values;
 	}
 
-	#[wasm_bindgen(js_name = aspirations)]
 	pub fn aspirations(&self) -> Vec<String> {
-		data(&self.inner).aspirations().clone()
+		data(&lock(&self.inner)).aspirations().clone()
 	}
 
-	#[wasm_bindgen(js_name = setAspirations)]
-	pub fn set_aspirations(&mut self, values: Vec<String>) {
-		*data_mut(&mut self.inner).aspirations_mut() = values;
+	pub fn set_aspirations(&self, values: Vec<String>) {
+		let mut inner = lock(&self.inner);
+		*data_mut(&mut inner).aspirations_mut() = values;
 	}
 
-	#[wasm_bindgen(js_name = weaponCount)]
 	pub fn weapon_count(&self) -> u32 {
-		data(&self.inner).weapons().len() as u32
+		data(&lock(&self.inner)).weapons().len() as u32
 	}
 
-	#[wasm_bindgen(js_name = weapon)]
-	pub fn weapon_at(&self, index: u32) -> Result<WeaponHandle, JsError> {
-		data(&self.inner)
+	pub fn weapon_at(&self, index: u32) -> Result<Arc<WeaponHandle>, FfiError> {
+		data(&lock(&self.inner))
 			.weapons()
 			.get(index as usize)
 			.cloned()
-			.map(|inner| WeaponHandle { inner })
+			.map(|inner| {
+				Arc::new(WeaponHandle {
+					inner: Mutex::new(inner),
+				})
+			})
 			.ok_or_else(|| error(format!("weapon index out of range: {index}")))
 	}
 
-	#[wasm_bindgen(js_name = addWeapon)]
-	pub fn add_weapon(&mut self, weapon: &WeaponHandle) {
-		data_mut(&mut self.inner)
+	pub fn add_weapon(&self, weapon: Arc<WeaponHandle>) {
+		let mut inner = lock(&self.inner);
+		data_mut(&mut inner)
 			.weapons_mut()
-			.push(weapon.inner.clone());
+			.push(lock(&weapon.inner).clone());
 	}
 
-	#[wasm_bindgen(js_name = setWeapon)]
-	pub fn set_weapon(&mut self, index: u32, weapon: &WeaponHandle) -> Result<(), JsError> {
-		let Some(slot) = data_mut(&mut self.inner)
-			.weapons_mut()
-			.get_mut(index as usize)
-		else {
+	pub fn set_weapon(&self, index: u32, weapon: Arc<WeaponHandle>) -> Result<(), FfiError> {
+		let mut inner = lock(&self.inner);
+		let Some(slot) = data_mut(&mut inner).weapons_mut().get_mut(index as usize) else {
 			return Err(error(format!("weapon index out of range: {index}")));
 		};
-		*slot = weapon.inner.clone();
+		*slot = lock(&weapon.inner).clone();
 		Ok(())
 	}
 
-	#[wasm_bindgen(js_name = removeWeapon)]
-	pub fn remove_weapon(&mut self, index: u32) -> Result<WeaponHandle, JsError> {
-		if index as usize >= data(&self.inner).weapons().len() {
+	pub fn remove_weapon(&self, index: u32) -> Result<Arc<WeaponHandle>, FfiError> {
+		let mut inner = lock(&self.inner);
+		if index as usize >= data(&inner).weapons().len() {
 			return Err(error(format!("weapon index out of range: {index}")));
 		}
-		Ok(WeaponHandle {
-			inner: data_mut(&mut self.inner)
-				.weapons_mut()
-				.remove(index as usize),
-		})
+		Ok(Arc::new(WeaponHandle {
+			inner: Mutex::new(data_mut(&mut inner).weapons_mut().remove(index as usize)),
+		}))
 	}
 
-	#[wasm_bindgen(js_name = form)]
-	pub fn form_name(&self) -> Result<String, JsError> {
-		match &self.inner {
+	pub fn form_name(&self) -> Result<String, FfiError> {
+		match &*lock(&self.inner) {
 			SplatCharacter::Werewolf(character) => Ok(form_name(*character.form()).to_string()),
 			_ => Err(error("form is only available for werewolves")),
 		}
 	}
 
-	#[wasm_bindgen(js_name = setForm)]
-	pub fn set_form(&mut self, form: &str) -> Result<(), JsError> {
+	pub fn set_form(&self, form: &str) -> Result<(), FfiError> {
 		let form = parse_form(form)?;
-		match &mut self.inner {
+		match &mut *lock(&self.inner) {
 			SplatCharacter::Werewolf(character) => {
 				character.set_form(form);
 				Ok(())
@@ -678,12 +678,12 @@ impl CharacterHandle {
 	}
 }
 
-#[wasm_bindgen(js_name = listTemplates)]
+#[uniffi::export]
 pub fn list_templates() -> Vec<String> {
 	Template::VARIANTS.iter().map(ToString::to_string).collect()
 }
 
-#[wasm_bindgen(js_name = listSupportedTemplates)]
+#[uniffi::export]
 pub fn list_supported_templates() -> Vec<String> {
 	[Template::Mortal, Template::Werewolf]
 		.into_iter()
@@ -691,7 +691,7 @@ pub fn list_supported_templates() -> Vec<String> {
 		.collect()
 }
 
-#[wasm_bindgen(js_name = listAttributes)]
+#[uniffi::export]
 pub fn list_attributes() -> Vec<String> {
 	Attribute::VARIANTS
 		.iter()
@@ -699,12 +699,12 @@ pub fn list_attributes() -> Vec<String> {
 		.collect()
 }
 
-#[wasm_bindgen(js_name = listSkills)]
+#[uniffi::export]
 pub fn list_skills() -> Vec<String> {
 	Skill::VARIANTS.iter().map(ToString::to_string).collect()
 }
 
-#[wasm_bindgen(js_name = listDerivedTraits)]
+#[uniffi::export]
 pub fn list_derived_traits() -> Vec<String> {
 	DerivedTrait::VARIANTS
 		.iter()
@@ -718,7 +718,7 @@ mod tests {
 
 	#[test]
 	fn mortal_traits_are_live_engine_values() {
-		let mut character = CharacterHandle::new("Mortal").unwrap();
+		let character = CharacterHandle::new("Mortal").unwrap();
 		character.set_trait("Stamina", 3.0).unwrap();
 		character.set_trait("Size", 5.0).unwrap();
 		character.set_trait("Resolve", 3.0).unwrap();
@@ -730,7 +730,7 @@ mod tests {
 
 	#[test]
 	fn damage_uses_engine_upgrade_rules() {
-		let mut character = CharacterHandle::new("Mortal").unwrap();
+		let character = CharacterHandle::new("Mortal").unwrap();
 		character.apply_damage("bashing", 2.0).unwrap();
 		character.apply_damage("lethal", 1.0).unwrap();
 
@@ -741,7 +741,6 @@ mod tests {
 		assert_eq!(character.damage_for("aggravated").unwrap(), 1);
 	}
 
-	#[cfg(target_arch = "wasm32")]
 	#[test]
 	fn unsupported_templates_are_errors() {
 		assert!(CharacterHandle::new("Vampire").is_err());
@@ -749,10 +748,9 @@ mod tests {
 		assert!(list_templates().len() > list_supported_templates().len());
 	}
 
-	#[cfg(target_arch = "wasm32")]
 	#[test]
 	fn validation_rejects_unsafe_values_and_missing_traits() {
-		let mut character = CharacterHandle::new("Mortal").unwrap();
+		let character = CharacterHandle::new("Mortal").unwrap();
 		assert!(character.set_trait("Stamina", 256.0).is_err());
 		assert!(character.set_trait("Stamina", -1.0).is_err());
 		assert!(character.set_trait("Size", 0.0).is_err());
@@ -762,7 +760,7 @@ mod tests {
 
 	#[test]
 	fn info_abilities_and_damage_are_exposed() {
-		let mut character = CharacterHandle::new("Werewolf").unwrap();
+		let character = CharacterHandle::new("Werewolf").unwrap();
 		character
 			.set_info("Faction", "Forsaken".to_owned())
 			.unwrap();
@@ -772,7 +770,6 @@ mod tests {
 		assert_eq!(character.get_info("faction").unwrap(), "Forsaken");
 		assert_eq!(character.get_info("group-name").unwrap(), "Blood Talons");
 		assert!(character.list_abilities().iter().any(|name| name == "Full"));
-		#[cfg(target_arch = "wasm32")]
 		assert!(character.set_ability("Full", 1.0).is_err());
 
 		character.set_trait("Stamina", 3.0).unwrap();
@@ -787,7 +784,7 @@ mod tests {
 
 	#[test]
 	fn wound_penalty_uses_the_health_track_position() {
-		let mut character = CharacterHandle::new("Mortal").unwrap();
+		let character = CharacterHandle::new("Mortal").unwrap();
 		character.set_trait("Stamina", 3.0).unwrap();
 		character.set_trait("Size", 5.0).unwrap();
 		assert_eq!(character.wound_penalty(), 0);
@@ -801,7 +798,7 @@ mod tests {
 
 	#[test]
 	fn full_bashing_tracks_upgrade_on_further_bashing() {
-		let mut character = CharacterHandle::new("Mortal").unwrap();
+		let character = CharacterHandle::new("Mortal").unwrap();
 		character.set_trait("Stamina", 3.0).unwrap();
 		character.set_trait("Size", 5.0).unwrap();
 		character.apply_damage("bashing", 8.0).unwrap();
@@ -813,7 +810,7 @@ mod tests {
 
 	#[test]
 	fn full_lethal_tracks_upgrade_on_further_damage() {
-		let mut character = CharacterHandle::new("Mortal").unwrap();
+		let character = CharacterHandle::new("Mortal").unwrap();
 		character.set_trait("Stamina", 3.0).unwrap();
 		character.set_trait("Size", 5.0).unwrap();
 		character.apply_damage("lethal", 8.0).unwrap();
@@ -825,7 +822,7 @@ mod tests {
 
 	#[test]
 	fn weapon_handles_are_borrowed_when_added() {
-		let mut character = CharacterHandle::new("Mortal").unwrap();
+		let character = CharacterHandle::new("Mortal").unwrap();
 		let weapon = WeaponHandle::new(
 			"Knife".to_owned(),
 			"Dexterity + Weaponry".to_owned(),
@@ -835,7 +832,7 @@ mod tests {
 			1.0,
 		)
 		.unwrap();
-		character.add_weapon(&weapon);
+		character.add_weapon(Arc::clone(&weapon));
 		assert_eq!(weapon.name(), "Knife");
 		assert_eq!(character.weapon_count(), 1);
 		assert_eq!(character.weapon_at(0).unwrap().damage(), "1L");
@@ -843,7 +840,7 @@ mod tests {
 
 	#[test]
 	fn werewolf_forms_update_derived_values() {
-		let mut character = CharacterHandle::new("Werewolf").unwrap();
+		let character = CharacterHandle::new("Werewolf").unwrap();
 		character.set_trait("Stamina", 3.0).unwrap();
 		character.set_trait("Size", 5.0).unwrap();
 		assert_eq!(character.get_trait("Health").unwrap(), Some(8));

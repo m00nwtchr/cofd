@@ -22,6 +22,9 @@ pub mod dice_pool;
 pub mod merits;
 pub mod splat;
 pub mod traits;
+
+#[cfg(feature = "uniffi")]
+uniffi::setup_scaffolding!();
 #[allow(dead_code)]
 mod util;
 
