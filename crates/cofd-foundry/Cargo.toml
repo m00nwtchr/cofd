@@ -31,5 +31,5 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 cofd.workspace = true
-facet.workspace = true
 wasm-bindgen.workspace = true
+strum.workspace = true

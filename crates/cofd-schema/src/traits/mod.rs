@@ -26,7 +26,19 @@ impl TraitCategory {
 	}
 }
 
-#[derive(Debug, Clone, Hash, Copy, facet::Facet, EnumString, Display, AsRefStr, PartialEq, Eq)]
+#[derive(
+	Debug,
+	Clone,
+	Hash,
+	Copy,
+	facet::Facet,
+	EnumString,
+	Display,
+	AsRefStr,
+	strum::VariantArray,
+	PartialEq,
+	Eq,
+)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[strum(ascii_case_insensitive)]

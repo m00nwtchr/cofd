@@ -265,8 +265,8 @@ pub enum COp {
 impl Op<u8> for COp {
 	fn apply(&self, a: u8, b: u8) -> u8 {
 		match self {
-			COp::Add => a + b,
-			COp::Sub => a - b,
+			COp::Add => a.saturating_add(b),
+			COp::Sub => a.saturating_sub(b),
 			COp::GreaterThan(v, op) => {
 				if b.gt(v) {
 					op.apply(a, b)

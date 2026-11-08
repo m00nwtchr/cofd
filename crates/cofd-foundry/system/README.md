@@ -24,20 +24,28 @@ and asks the embedded engine for derived mortal Health and Willpower values.
 
 ```js
 const api = await globalThis.cofdFoundryWasmReady;
-console.log(api.version, api.templateCount);
-console.log(api.mortalHealth(1, 5));
+const character = new api.CharacterHandle("Mortal");
+character.setTrait("Stamina", 3);
+character.setTrait("Size", 5);
+console.log(api.version, character.getTrait("Health"));
 ```
 
 `globalThis.cofdFoundry` is available immediately and is filled in as soon as the
 WebAssembly module has been instantiated:
 
-| Field                        | Meaning                                            |
-| ---------------------------- | -------------------------------------------------- |
-| `version`                    | Version of the embedded `cofd` crate               |
-| `templateCount`              | Number of character templates known to `cofd`      |
-| `ready`                      | `true` once the WebAssembly module is instantiated |
-| `error`                      | The error that prevented loading, if any           |
-| `instance`                   | The generated wasm-bindgen exports object           |
+| Field                   | Meaning                                            |
+| ----------------------- | -------------------------------------------------- |
+| `id`                    | Foundry system identifier                          |
+| `CharacterHandle`       | wasm-bindgen character constructor                 |
+| `listTemplates`         | All schema templates                                |
+| `listSupportedTemplates` | Constructible templates                            |
+| `listAttributes`        | Schema attributes                                  |
+| `listSkills`            | Schema skills                                      |
+| `listDerivedTraits`     | Schema derived traits                              |
+| `version`               | Version of the embedded `cofd` crate               |
+| `ready`                 | `true` once the WebAssembly module is instantiated |
+| `error`                 | The error that prevented loading, if any           |
+| `instance`              | The generated wasm-bindgen exports object          |
 
 A smoke message is written to the console when Foundry fires its `init` hook.
 

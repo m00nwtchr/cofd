@@ -948,7 +948,7 @@ name = "cofd-foundry"
 version = "0.1.0"
 dependencies = [
  "cofd",
- "facet",
+ "strum",
  "wasm-bindgen",
 ]
 

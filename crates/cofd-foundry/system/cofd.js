@@ -1,7 +1,10 @@
 import init, {
-  mortalHealth,
-  mortalWillpower,
-  templateCount,
+  CharacterHandle,
+  listAttributes,
+  listDerivedTraits,
+  listSkills,
+  listSupportedTemplates,
+  listTemplates,
   version,
 } from "./cofd_foundry.js";
 
@@ -10,10 +13,13 @@ const ACTOR_SHEET_TEMPLATE = "systems/cofd/templates/actor-sheet.hbs";
 
 const api = {
   id: SYSTEM_ID,
+  CharacterHandle,
+  listAttributes,
+  listDerivedTraits,
+  listSkills,
+  listSupportedTemplates,
+  listTemplates,
   version: null,
-  templateCount: 0,
-  mortalHealth: null,
-  mortalWillpower: null,
   ready: false,
   error: null,
   instance: null,
@@ -67,6 +73,7 @@ const SKILLS = [
   { key: "larceny", label: "Larceny", category: "physical" },
   { key: "stealth", label: "Stealth", category: "physical" },
   { key: "survival", label: "Survival", category: "physical" },
+  { key: "weaponry", label: "Weaponry", category: "physical" },
   { key: "animalKen", label: "Animal Ken", category: "social" },
   { key: "empathy", label: "Empathy", category: "social" },
   { key: "expression", label: "Expression", category: "social" },
@@ -157,16 +164,30 @@ function prepareTrack(system, key, label, fallbackValue, fallbackMax, derivedMax
 function derivedMortalValues(system) {
   if (!api.ready) return { health: null, willpower: null };
 
-  const attributes = system.attributes ?? {};
-  const stamina = numberValue(attributes.stamina?.value, 1);
-  const resolve = numberValue(attributes.resolve?.value, 1);
-  const composure = numberValue(attributes.composure?.value, 1);
-  const size = numberValue(system.size, 5);
+  try {
+    const character = new CharacterHandle(system.template ?? "Mortal");
+    try {
+      for (const group of ATTRIBUTE_GROUPS) {
+        for (const attribute of group.attributes) {
+          character.setTrait(
+            attribute.key,
+            numberValue(system.attributes?.[attribute.key]?.value, 1),
+          );
+        }
+      }
+      character.setTrait("Size", numberValue(system.size, 5));
 
-  return {
-    health: api.mortalHealth(stamina, size),
-    willpower: api.mortalWillpower(resolve, composure),
-  };
+      return {
+        health: character.getTrait("Health") ?? 0,
+        willpower: character.getTrait("Willpower") ?? 0,
+      };
+    } finally {
+      character.free();
+    }
+  } catch (error) {
+    console.error(`${SYSTEM_ID} | failed to evaluate character`, error);
+    return { health: null, willpower: null };
+  }
 }
 
 function wasmContext() {
@@ -175,7 +196,6 @@ function wasmContext() {
     loading: !api.ready && !api.error,
     status: api.ready ? "Ready" : api.error ? "Unavailable" : "Loading",
     version: api.version,
-    templateCount: api.templateCount,
     error: api.error?.message ?? null,
   };
 }
@@ -232,9 +252,6 @@ const ready = loadWasm()
   .then((exports) => {
     api.instance = exports;
     api.version = version();
-    api.templateCount = templateCount();
-    api.mortalHealth = mortalHealth;
-    api.mortalWillpower = mortalWillpower;
     api.ready = true;
     return api;
   })
@@ -339,10 +356,8 @@ if (typeof Hooks !== "undefined") {
 
   Hooks.once("init", () => {
     ready
-      .then(({ version, templateCount }) => {
-        console.log(
-          `${SYSTEM_ID} | CofD engine ready (wasm ${version}, ${templateCount} templates)`,
-        );
+      .then(({ version }) => {
+        console.log(`${SYSTEM_ID} | CofD engine ready (wasm ${version})`);
       })
       .catch(() => {});
   });

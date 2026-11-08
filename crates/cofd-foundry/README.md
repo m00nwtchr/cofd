@@ -21,21 +21,36 @@ The Rust crate uses `wasm-bindgen` `0.2.130` exports. `build-system.sh` runs
 the matching `wasm-bindgen` CLI with `--target web`, producing `cofd_foundry.js` and
 `cofd_foundry_bg.wasm` next to the system loader:
 
-| Export                 | Purpose                                      |
-| ---------------------- | -------------------------------------------- |
-| `version`              | Version of the embedded `cofd` crate         |
-| `templateCount`        | Number of character templates                 |
-| `mortalHealth`         | Engine-derived Health for stamina and size   |
-| `mortalWillpower`      | Engine-derived Willpower for Resolve and Composure |
+| Export                  | Purpose                                      |
+| ----------------------- | -------------------------------------------- |
+| `version`               | Version of the embedded `cofd` crate         |
+| `listTemplates`         | Enumerates schema templates                  |
+| `listSupportedTemplates` | Enumerates constructible templates           |
+| `listAttributes`        | Enumerates schema attributes                 |
+| `listSkills`            | Enumerates schema skills                     |
+| `listDerivedTraits`     | Enumerates derived traits                    |
+| `CharacterHandle`       | Owns a live engine-backed character          |
+| `WeaponHandle`           | Owns a character weapon value                |
 
 The system loader imports the generated module and initializes it normally:
 
 ```js
-import init, { mortalHealth } from "./cofd_foundry.js";
+import init, { CharacterHandle } from "./cofd_foundry.js";
 
 await init();
-console.log(mortalHealth(1, 5));
+const character = new CharacterHandle("Mortal");
+character.setTrait("Stamina", 3);
+character.setTrait("Size", 5);
+console.log(character.getTrait("Health"));
 ```
+
+`CharacterHandle` exposes engine-backed trait reads and writes, derived values,
+damage and wound operations (`applyDamage` fills one box per point and upgrades
+lesser damage only when the track is full; `clearDamage` removes boxes while
+`healDamage` downgrades severity), character info, specialties, collections,
+weapons, werewolf forms, and supported abilities. `weapon(index)` returns a
+copy; use `setWeapon` to write edits back. Unsupported CofD templates return an
+error instead of entering an unfinished engine path.
 
 ## Building
 

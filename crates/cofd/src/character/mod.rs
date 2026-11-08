@@ -15,7 +15,7 @@ use crate::{
 	traits::Trait,
 };
 
-pub(crate) mod damage;
+pub mod damage;
 pub mod info;
 pub mod modifier;
 // pub mod traits;
@@ -131,11 +131,11 @@ impl<S: SplatTrait> Character<S> {
 	}
 
 	pub fn wound_penalty(&self) -> u8 {
-		let mh = self
+		let health = self
 			.attributes
 			.value(&Trait::DerivedTrait(DerivedTrait::Health))
 			.unwrap_or_default();
-		match mh - self.health.total().min(mh) {
+		match health.saturating_sub(self.health.total().min(health)) {
 			2 => 1,
 			1 => 2,
 			0 => 3,

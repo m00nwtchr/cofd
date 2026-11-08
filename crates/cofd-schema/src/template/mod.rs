@@ -6,7 +6,19 @@ pub mod mage;
 pub mod vampire;
 pub mod werewolf;
 
-#[derive(SplatEnum, Debug, Clone, Copy, facet::Facet, EnumString, Display, PartialEq, Eq, Hash)]
+#[derive(
+	SplatEnum,
+	Debug,
+	Clone,
+	Copy,
+	facet::Facet,
+	EnumString,
+	Display,
+	strum::VariantArray,
+	PartialEq,
+	Eq,
+	Hash,
+)]
 #[cfg_attr(feature = "json_schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[strum(ascii_case_insensitive)]
