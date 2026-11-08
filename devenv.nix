@@ -26,7 +26,6 @@
       harfbuzz
       # build tools
       llvmPackages.clangUseLLVM # bindgen
-      nodejs # UBRN TypeScript/WebAssembly binding generator
       wasm-bindgen-cli # UBRN wasm2 fallback for wasm-bindgen dependencies
       podman # Foundry VTT development container
       # GUI stack — meta-editor and cofdtools are eframe/egui binaries
@@ -78,6 +77,11 @@
       "rustfmt"
       "rust-analyzer"
     ];
+  };
+
+  languages.javascript = {
+    enable = true;
+    pnpm.enable = true;
   };
 
   dotenv.enable = true;

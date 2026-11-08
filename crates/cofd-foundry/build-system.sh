@@ -15,7 +15,7 @@ UBRN_VERSION="0.31.0-6"
 DIST_DIR="$CRATE_DIR/dist"
 STAGE_DIR="$DIST_DIR/$system_ID"
 UBRN="$CRATE_DIR/node_modules/.bin/ubrn"
-ESBUILD="$CRATE_DIR/node_modules/.bin/esbuild"
+TSDOWN="$CRATE_DIR/node_modules/.bin/tsdown"
 
 find_python() {
 	if command -v python3 >/dev/null 2>&1; then
@@ -37,11 +37,11 @@ find_python() {
 
 cd "$WORKSPACE_DIR"
 if [ ! -x "$UBRN" ]; then
-	echo "build-system.sh: uniffi-bindgen-react-native $UBRN_VERSION is required (run npm ci --prefix $CRATE_DIR)" >&2
+	echo "build-system.sh: uniffi-bindgen-react-native $UBRN_VERSION is required (run pnpm --dir $CRATE_DIR install --frozen-lockfile)" >&2
 	exit 1
 fi
-if [ ! -x "$ESBUILD" ]; then
-	echo "build-system.sh: esbuild is required to bundle the TypeScript system loader (run npm ci --prefix $CRATE_DIR)" >&2
+if [ ! -x "$TSDOWN" ]; then
+	echo "build-system.sh: tsdown is required to bundle the TypeScript system loader (run pnpm --dir $CRATE_DIR install --frozen-lockfile)" >&2
 	exit 1
 fi
 
@@ -64,13 +64,15 @@ cargo metadata --format-version 1 --no-deps --locked > "$METADATA_FILE"
 # Bundle the authored TypeScript system loader with that entrypoint so Foundry
 # only has to load one JavaScript module and the adjacent WASM asset.
 cp "$CRATE_DIR/system/$system_ID.ts" "$STAGE_DIR/$system_ID-system.ts"
-"$ESBUILD" \
+"$TSDOWN" \
 	"$STAGE_DIR/$system_ID-system.ts" \
-	--bundle \
 	--format=esm \
 	--platform=browser \
 	--target=es2022 \
-	--outfile="$STAGE_DIR/$system_ID.js"
+	--out-dir "$STAGE_DIR" \
+	--no-dts \
+	--no-clean
+mv "$STAGE_DIR/$system_ID-system.mjs" "$STAGE_DIR/$system_ID.js"
 rm "$STAGE_DIR/$system_ID-system.ts"
 mkdir -p "$STAGE_DIR/templates"
 cp "$CRATE_DIR/system/README.md" "$STAGE_DIR/README.md"

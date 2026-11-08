@@ -22,7 +22,7 @@ by Foundry.
 
 The Rust crate uses UniFFI `0.31` exports for compatibility with the pinned UBRN
 release. `build-system.sh` runs `ubrn build wasm2` against the compiled WASM,
-then uses `esbuild` to bundle the generated TypeScript and the authored system
+then uses `tsdown` to bundle the generated TypeScript and the authored system
 loader into `cofd.js`. The stage also contains the generated TypeScript sources,
 FFI signature tables, and `cofd_foundry.wasm`.
 
@@ -64,7 +64,7 @@ error instead of entering an unfinished engine path.
 From the repository root:
 
 ```
-npm ci --prefix crates/cofd-foundry
+pnpm --dir crates/cofd-foundry install --frozen-lockfile
 crates/cofd-foundry/build-system.sh
 ```
 
@@ -77,13 +77,13 @@ The script copies generated bindings and static system files into `dist/cofd/`,
 bundles `system/cofd.ts` as `cofd.js`, generates `dist/cofd/system.json` from
 `[package.metadata.foundry]` and the Cargo package version, and writes
 `dist/cofd/cofd.zip` with the Python standard library. UBRN and its
-`@ubjs/core`/`@ubjs/wasm` runtime packages, plus `esbuild`, are pinned in
-`package-lock.json`.
+`@ubjs/core`/`@ubjs/wasm` runtime packages, plus `tsdown`, are pinned in
+`pnpm-lock.yaml`.
 
 ## Checking
 
 ```
 cargo check -p cofd-foundry
 cargo test -p cofd-foundry
-npm run test:bundle --prefix crates/cofd-foundry
+pnpm --dir crates/cofd-foundry run test:bundle
 ```

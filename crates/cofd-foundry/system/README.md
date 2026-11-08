@@ -5,7 +5,7 @@ Virtual Tabletop system.
 
 The system ships a WebAssembly build of the `cofd` Rust crate with JavaScript
 bindings generated from UniFFI TypeScript by `uniffi-bindgen-react-native` and
-`esbuild`. The `cofd.js` bundle initializes the generated UBRN entrypoint and
+`tsdown`. The `cofd.js` bundle initializes the generated UBRN entrypoint and
 registers the character sheet.
 
 ## Installation
@@ -61,7 +61,7 @@ A smoke message is written to the console when Foundry fires its `init` hook.
 From the repository root:
 
 ```
-npm ci --prefix crates/cofd-foundry
+pnpm --dir crates/cofd-foundry install --frozen-lockfile
 crates/cofd-foundry/build-system.sh
 ```
 
